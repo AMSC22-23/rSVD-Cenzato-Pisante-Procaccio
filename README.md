@@ -2,8 +2,6 @@
 
 Contributors:
 
-Pisante Giuseppe
-Procaccio Arianna
-Cenzato Matteo
-
-Test edit
+- Cenzato Matteo
+- Pisante Giuseppe
+- Procaccio Arianna
