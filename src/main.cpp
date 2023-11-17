@@ -11,8 +11,7 @@ int main(){
 	obj[0][0]=2.;
 	std::cout<<obj[0][0]<<std::endl;
 
-	for(auto i:obj[0])
-		std::cout<<i<<" ";
+	obj.print(std::cout);
 
 	std::cout<<std::endl;
 
