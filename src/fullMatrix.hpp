@@ -30,7 +30,7 @@ class FullMatrix{
 		 */
 		FullMatrix(const size_t n=1,const size_t m=1,const Real initVal=0){
 			m_entries.reserve(n);
-			for(size_t i=0;i<m;i++){
+			for(size_t i=0;i<n;++i){
 				m_entries.emplace_back(m,initVal);
 			}
 		}
@@ -67,6 +67,24 @@ class FullMatrix{
 			return m_entries[i][j];
 		}
 
+		/*
+			Static method that constructs a new matrix filled with zeros
+		*/
+		static FullMatrix& Zero(const size_t n, const size_t m){
+			static FullMatrix toReturn(n,m);
+			return toReturn;
+		}
+
+		/*
+			Resize of the matrix
+			Note that all the elements added will be defaulted, and all elements in excess are truncated 
+		*/
+		void resize(const size_t n, const size_t m){
+			m_entries.resize(n);
+			for(size_t i=0;i<n;++i)
+				m_entries[i].resize(m);
+		}
+ 		
 		/*
 			 Method for printing all elements in the matrix in a generic stream
 			 (same as the professor did in one of the labs)
