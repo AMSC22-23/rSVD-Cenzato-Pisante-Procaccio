@@ -41,19 +41,12 @@ void QR_Decomposition::Givens_solve(Eigen::MatrixXd A){
                 
                 double a=R.coeffRef(i-1,j);
                 double b=R.coeffRef(i,j);
-                double c,s,r;
-                        if (b == 0){
-                            c = 1;
-                            s = 0;
-                        }   else if (abs(b) > abs(a)){
-                                r = -a / b;
-                                s = 1 / sqrt(1 + r*r);
-                                c = s*r;
-                        }   else{
-                                r = -b / a;
-                                c = 1 / sqrt(1 + r*r);
-                                s = c*r;
-                            }
+                double c,s;
+                       
+                                
+                c = a / sqrt(a*a + b*b);
+                s = b / sqrt(a*a+b*b);
+                            
 
                 /**
                  * Apply c,s to the Givens matrix G_i
