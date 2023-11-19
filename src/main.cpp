@@ -5,9 +5,10 @@
 
 int main(){
 
+/*
 Eigen::MatrixXd A(7,5);
 
-    // Assegnazione di valori agli elementi
+     Assegnazione di valori agli elementi
     A<<1, 2, 3, 7, 19,
 	4, 5, 6, 7, 10,
     9, 10, 13, 12, 18,
@@ -18,6 +19,7 @@ Eigen::MatrixXd A(7,5);
 
     
     QR_Decomposition QR_A(A);
+    
     QR_A.Givens_solve(QR_A.getA());
     Eigen::MatrixXd R=QR_A.getR();
     Eigen::MatrixXd Q=QR_A.getQ();
@@ -27,7 +29,7 @@ Eigen::MatrixXd A(7,5);
     std::cout<<R<<std::endl;
 
     //Result of the code
-    /*
+    
     0.0285365 -0.000447577  -0.00923518    0.0896866     0.860478    -0.500633            0
     0.114146   -0.0567528   -0.0207903     0.115026    -0.287365     -0.46637     0.818539
     0.256829    -0.150595   -0.0318767     0.114757     0.394358     0.713735     0.481912
@@ -43,7 +45,7 @@ Eigen::MatrixXd A(7,5);
        0        0        0        0  10.5653
        0        0        0        0        0
        0        0        0        0        0
-    */
+    
 
     //Result of matlab
     /*
@@ -80,7 +82,6 @@ R =
          0         0         0         0         0
 
 
-*/
 
 // Assegnazione di valori agli elementi
     Eigen::MatrixXd B(4,3);
@@ -100,7 +101,7 @@ R =
     std::cout<<R2<<std::endl;
 
 //C++ results:
-/*
+
 Q=
 0.5 -0.5  0.5 -0.5
  0.5  0.5 -0.5 -0.5
@@ -129,6 +130,7 @@ R =
          0         0   -4.0000
          0         0         0
 */
+
 
 	return 0;
 }

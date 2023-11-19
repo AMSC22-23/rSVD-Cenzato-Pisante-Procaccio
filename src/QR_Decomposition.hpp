@@ -16,7 +16,10 @@ public:
      * Function Givens_solve uses Givens to find the QR factorization 
     */
     void Givens_solve(const Eigen::MatrixXd A);
-
+    /**
+     * Function HouseHolder_solve uses HouseHolder to find the QR factorization 
+    */
+    void HouseHolder_solve(Eigen::MatrixXd A);
     /**
      * Getter functions to matrix A,R,Q
     */
