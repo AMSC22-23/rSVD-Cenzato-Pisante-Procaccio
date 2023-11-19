@@ -68,6 +68,75 @@ class FullMatrix{
 		}
 
 		/*
+			Overload of the multiplication operator for matrix-vector
+		*/
+		friend std::vector<Real> operator*(const FullMatrix& A, const std::vector<Real>& x){
+			
+			std::vector<Real> toReturn;
+
+			//Check if matrix-vector multiplication is feasible
+			if(A.cols()!=x.size())
+				return toReturn;
+
+			toReturn.reserve(A.rows());
+			Real sum=0.;
+
+			for(size_t i=0;i<A.rows();++i){
+				sum=0.;
+				for(size_t j=0;j<x.size();++j){
+					sum+=A.m_entries[i][j]*x[j];
+				}
+				toReturn.emplace_back(sum);
+			}
+
+			return toReturn;
+		}
+
+		/*
+			Overload of the multiplication operator for matrix-matrix
+		*/
+		friend FullMatrix operator*(const FullMatrix& A, const FullMatrix& B){
+			
+			FullMatrix toReturn;
+			
+			//Check if matrix-matrix multiplication is feasible
+			if(A.cols()!=B.rows())
+				return toReturn;
+
+			toReturn.resize(A.rows(),B.cols());
+
+			Real sum=0.;
+
+			for(size_t i=0;i<A.rows();++i){
+				for(size_t j=0;j<B.cols();++j){
+					sum=0.;
+
+					for(size_t k=0;k<B.rows();++k){
+						sum+=A[i][k]*B[k][j];
+					}
+
+					toReturn[i][j]=sum;
+				}
+			}
+
+			return toReturn;
+		}
+
+		/*
+			Method to access the number of rows of the matrix
+		*/
+		const size_t rows() const{
+			return m_entries.size();
+		}
+
+		/*
+			Method to access the number of cols of the matrix
+		*/
+		const size_t cols() const{
+			return m_entries[0].size();
+		}
+
+		/*
 			Static method that constructs a new matrix filled with zeros
 		*/
 		static FullMatrix& Zero(const size_t n, const size_t m){
@@ -83,6 +152,19 @@ class FullMatrix{
 			m_entries.resize(n);
 			for(size_t i=0;i<n;++i)
 				m_entries[i].resize(m);
+		}
+
+		/*
+			Method to return the transposed of a matrix
+		*/
+		FullMatrix transpose() const{
+			FullMatrix toReturn(cols(),rows());
+
+			for(size_t i=0;i<rows();++i)
+				for(size_t j=0;j<cols();++j)
+					toReturn[j][i]=m_entries[i][j];
+
+			return toReturn;
 		}
  		
 		/*
