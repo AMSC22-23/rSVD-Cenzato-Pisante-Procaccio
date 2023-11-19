@@ -36,7 +36,7 @@ void QR_Decomposition::Givens_solve(Eigen::MatrixXd A){
                  * r: length of the vector in R^2
                  * 
                  * The idea is to calculate the rotations on smaller vectors, iterating on the cells 
-                 * below the diagonal to take them to zero
+                 * below the diagonal to pull them to zero
                 */
                 
                 double a=R.coeffRef(i-1,j);
@@ -44,8 +44,8 @@ void QR_Decomposition::Givens_solve(Eigen::MatrixXd A){
                 double c,s;
                        
                                 
-                c = a / sqrt(a*a + b*b);
-                s = b / sqrt(a*a+b*b);
+                c = a / sqrt(pow(a,2) + pow(b,2));
+                s = b / sqrt(pow(a,2) + pow(b,2));
                             
 
                 /**
@@ -63,15 +63,15 @@ void QR_Decomposition::Givens_solve(Eigen::MatrixXd A){
                 Q = Q*Eigen::MatrixXd(G.transpose());
                 R = G*R;
 
+                /**
+                * Forcing rotated component to zero to avoid floating point approximations
+                */
+                R.coeffRef(i,j)=0;
+
                 G=Eigen::MatrixXd::Zero(m, m);;
 
             }
         }
     }
-
-
-
-
-
 
 
