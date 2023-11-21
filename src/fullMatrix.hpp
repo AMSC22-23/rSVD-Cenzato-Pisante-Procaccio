@@ -68,10 +68,33 @@ class FullMatrix{
 		}
 
 		/*
-			Overload of the multiplication operator for matrix-vector
-		*/
+			 Override of the multiplication for matrix-scalar
+			 Note that it returns a new matrix
+		 */
+		friend FullMatrix operator*(const FullMatrix& A, const Real k){
+			FullMatrix toReturn(A.rows(),A.cols());
+
+			for(size_t i=0;i<A.rows();++i){
+				for(size_t j=0;j<A.cols();++j){
+					toReturn[i][j]=A[i][j]*k;
+				}
+			}
+
+			return toReturn;
+		}
+
+		/*
+			 Override of the associative multiplication scalar-matrix
+		 */
+		friend FullMatrix operator*(const Real k, const FullMatrix& A){
+			return A*k;
+		}
+
+		/*
+			 Overload of the multiplication operator for matrix-vector
+		 */
 		friend std::vector<Real> operator*(const FullMatrix& A, const std::vector<Real>& x){
-			
+
 			std::vector<Real> toReturn;
 
 			//Check if matrix-vector multiplication is feasible
@@ -93,12 +116,12 @@ class FullMatrix{
 		}
 
 		/*
-			Overload of the multiplication operator for matrix-matrix
-		*/
+			 Overload of the multiplication operator for matrix-matrix
+		 */
 		friend FullMatrix operator*(const FullMatrix& A, const FullMatrix& B){
-			
+
 			FullMatrix toReturn;
-			
+
 			//Check if matrix-matrix multiplication is feasible
 			if(A.cols()!=B.rows())
 				return toReturn;
@@ -123,31 +146,31 @@ class FullMatrix{
 		}
 
 		/*
-			Method to access the number of rows of the matrix
-		*/
+			 Method to access the number of rows of the matrix
+		 */
 		const size_t rows() const{
 			return m_entries.size();
 		}
 
 		/*
-			Method to access the number of cols of the matrix
-		*/
+			 Method to access the number of cols of the matrix
+		 */
 		const size_t cols() const{
 			return m_entries[0].size();
 		}
 
 		/*
-			Static method that constructs a new matrix filled with zeros
-		*/
+			 Static method that constructs a new matrix filled with zeros
+		 */
 		static FullMatrix& Zero(const size_t n, const size_t m){
 			static FullMatrix toReturn(n,m);
 			return toReturn;
 		}
 
 		/*
-			Resize of the matrix
-			Note that all the elements added will be defaulted, and all elements in excess are truncated 
-		*/
+			 Resize of the matrix
+			 Note that all the elements added will be defaulted, and all elements in excess are truncated 
+		 */
 		void resize(const size_t n, const size_t m){
 			m_entries.resize(n);
 			for(size_t i=0;i<n;++i)
@@ -155,8 +178,17 @@ class FullMatrix{
 		}
 
 		/*
-			Method to return the transposed of a matrix
-		*/
+			 Method to multiply the current matrix by a constant
+		 */
+		void scale(const Real k){
+			for(size_t i=0;i<rows();++i)
+				for(size_t j=0;j<cols();++j)
+					m_entries[i][j]*=k;
+		}
+
+		/*
+			 Method to return the transposed of a matrix
+		 */
 		FullMatrix transpose() const{
 			FullMatrix toReturn(cols(),rows());
 
@@ -166,7 +198,7 @@ class FullMatrix{
 
 			return toReturn;
 		}
- 		
+
 		/*
 			 Method for printing all elements in the matrix in a generic stream
 			 (same as the professor did in one of the labs)
