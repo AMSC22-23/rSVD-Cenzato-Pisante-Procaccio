@@ -13,7 +13,6 @@ void QR_Decomposition::Givens_solve(Eigen::MatrixXd A){
    Eigen::MatrixXd G(m,m);
         for(int i=0;i<m;i++){
             Q.coeffRef(i,i)=1;
-            G.coeffRef(i,i)=1;
         }
    R=A;
 
@@ -28,7 +27,10 @@ void QR_Decomposition::Givens_solve(Eigen::MatrixXd A){
                 /**
                  * G initialized back to identity
                 */
-                for(int k=0;k<m;k++)    {   G.coeffRef(k,k)=1;  }
+                G=Eigen::MatrixXd::Zero(m, m);
+                for(int k=0;k<m;k++)    {   
+                  G.coeffRef(k,k)=1;  
+                  }
                     
                 /**
                  * Givens rotation gets applied by calculating the values of:
@@ -69,7 +71,7 @@ void QR_Decomposition::Givens_solve(Eigen::MatrixXd A){
                 */
                 R.coeffRef(i,j)=0;
 
-                G=Eigen::MatrixXd::Zero(m, m);;
+                
 
             }
         }
@@ -100,7 +102,8 @@ void QR_Decomposition::HouseHolder_solve(Eigen::MatrixXd A){
     /**
      * Starting the computation of Q,R
     */
-
+    double mag=0.0;
+    double alpha=0.0;
     for(int j=0;j<n;j++){
         /**
          * Initialize u,v to zero at each iteration-i
@@ -111,20 +114,33 @@ void QR_Decomposition::HouseHolder_solve(Eigen::MatrixXd A){
        /**
         * evaluating each component of the matrix R
        */
-      for(int i=j-1;i<m;i++){
+       mag=0.0;
+      for(int i=j;i<m;i++){
         u.coeffRef(i)=R.coeffRef(i,j);
+        mag+=u.coeffRef(i)*u.coeffRef(i);
       }
-      double alpha = (u.coeffRef(j) < 0) ? u.size() : -u.size() ;
+      mag=sqrt(mag);
+      alpha = (u.coeffRef(j) < 0) ? mag : -mag ;
+
+      mag=0.0;
       for(int i=0;i<m;i++){
         v.coeffRef(i)= (j == i) ? (u.coeffRef(i) + alpha) : u.coeffRef(i);
+        alpha = (u.coeffRef(j) < 0) ? mag : -mag ;
+        mag+=v.coeffRef(i)*v.coeffRef(i);
       }
-      v=v/v.norm();
-    
+      mag=sqrt(mag);
+
+
+
+      for (int i = j; i < m; i++) v.coeffRef(i) /= mag;
+      
+
     /**
      * Computing P at the j-th iterate and applying the rotation to R,Q
     */
       P=I-2.0*v*v.transpose();
       R=P*R;
+      std::cout<<R<<std::endl<<std::endl;
       Q=Q*P;
     }
     
