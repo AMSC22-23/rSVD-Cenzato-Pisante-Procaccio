@@ -12,10 +12,6 @@ void QR_Decomposition::Givens_solve(Matrix A){
      * Initialize matrix Q (size m x m), matrix R(m x n) and matrix of rotations G(m x m)
     */
    Q.resize(m,m);
-   Matrix G(m,m);
-        for(int i=0;i<m;i++){
-            Q.coeffRef(i,i)=1;
-        }
    R=A;
 
    /**
@@ -26,14 +22,7 @@ void QR_Decomposition::Givens_solve(Matrix A){
         for (int j = 0;j<n;j++){
             for(int i=m-1;i>j;i--){
                 
-                /**
-                 * G initialized back to identity
                 
-                G=Matrix::Zero(m, m);
-                for(int k=0;k<m;k++)    {   
-                  G.coeffRef(k,k)=1;  
-                  }
-                */    
                 /**
                  * Givens rotation gets applied by calculating the values of:
                  * c: cosine of the angle of rotation

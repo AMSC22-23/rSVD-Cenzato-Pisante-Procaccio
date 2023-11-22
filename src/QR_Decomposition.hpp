@@ -4,34 +4,36 @@
 #include <Eigen/Dense>
 #include <cmath>
 
+using Matrix=Eigen::MatrixXd;
+
 class QR_Decomposition{
 public:
     /**
      * Build the constructor
     */
-    QR_Decomposition(const Eigen::MatrixXd& A_)    :   A(A_)
+    QR_Decomposition(const Matrix& A_)    :   A(A_)
     {};
 
     /**
      * Function Givens_solve uses Givens to find the QR factorization 
     */
-    void Givens_solve(const Eigen::MatrixXd A);
+    void Givens_solve(const Matrix A);
     /**
      * Function HouseHolder_solve uses HouseHolder to find the QR factorization 
     */
-    void HouseHolder_solve(Eigen::MatrixXd A);
+    void HouseHolder_solve(Matrix A);
     /**
      * Getter functions to matrix A,R,Q
     */
-    Eigen::MatrixXd getA() const{
+    Matrix getA() const{
         return A;
     };
 
-    Eigen::MatrixXd getR() const{
+    Matrix getR() const{
         return R;
     };
 
-    Eigen::MatrixXd getQ() const{
+    Matrix getQ() const{
         return Q;
     };
 
@@ -41,7 +43,7 @@ public:
 ~QR_Decomposition() = default;
 
 private:
-    const Eigen::MatrixXd A;
-    Eigen::MatrixXd Q,R;
+    const Matrix A;
+    Matrix Q,R;
 
 };
