@@ -5,20 +5,18 @@
 int main(){
 
 
-Eigen::MatrixXd A(7,5);
+Eigen::MatrixXd A(5,3);
     // Assegnazione di valori agli elementi
      
-    A<<1, 2, 3, 7, 19,
-	4, 5, 6, 7, 10,
-    9, 10, 13, 12, 18,
-	29, 35, 42, 15, 2,
-	12, 45, 343, 1000, 2,
-	12, 68, 89, 100, 45,
-	1, 3, 13, 71, 98;
+    A<<0.8147, 0.0975, 0.1576,
+0.9058, 0.2785, 0.9706,
+0.1270, 0.5469, 0.9572,
+0.9134, 0.9575, 0.4854,
+0.6324, 0.9649, 0.8003;
     
     QR_Decomposition QR_A(A);
     
-    QR_A.HouseHolder_solve(QR_A.getA());
+    QR_A.Givens_solve(QR_A.getA());
     Eigen::MatrixXd R=QR_A.getR();
     Eigen::MatrixXd Q=QR_A.getQ(); 
     std::cout<<R<<std::endl;

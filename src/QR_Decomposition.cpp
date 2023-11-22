@@ -1,7 +1,9 @@
 #include "QR_Decomposition.hpp"
 
+using Matrix=Eigen::MatrixXd;
+using Vector=Eigen::VectorXd;
 
-void QR_Decomposition::Givens_solve(Eigen::MatrixXd A){
+void QR_Decomposition::Givens_solve(Matrix A){
 
     int m=A.rows();
     int n=A.cols();
@@ -10,7 +12,7 @@ void QR_Decomposition::Givens_solve(Eigen::MatrixXd A){
      * Initialize matrix Q (size m x m), matrix R(m x n) and matrix of rotations G(m x m)
     */
    Q.resize(m,m);
-   Eigen::MatrixXd G(m,m);
+   Matrix G(m,m);
         for(int i=0;i<m;i++){
             Q.coeffRef(i,i)=1;
         }
@@ -26,12 +28,12 @@ void QR_Decomposition::Givens_solve(Eigen::MatrixXd A){
                 
                 /**
                  * G initialized back to identity
-                */
-                G=Eigen::MatrixXd::Zero(m, m);
+                
+                G=Matrix::Zero(m, m);
                 for(int k=0;k<m;k++)    {   
                   G.coeffRef(k,k)=1;  
                   }
-                    
+                */    
                 /**
                  * Givens rotation gets applied by calculating the values of:
                  * c: cosine of the angle of rotation
@@ -46,38 +48,62 @@ void QR_Decomposition::Givens_solve(Eigen::MatrixXd A){
                 double b=R.coeffRef(i,j);
                 double c,s;
                        
+                if (abs(a)>abs(b)){
                                 
-                c = a / sqrt(pow(a,2) + pow(b,2));
-                s = b / sqrt(pow(a,2) + pow(b,2));
-                            
+                  c = 1 / sqrt(1+(b/a)*(b/a));
+                  s = c*b/a;
+                } else  {
+                  s = 1 / sqrt(1+(a/b)*(a/b));
+                  c=s*a/b;
+                }
 
+                std::cout<<c<<std::endl;
+                std::cout<<std::endl;            
+                std::cout<<s<<std::endl;
+                std::cout<<std::endl; 
+                std::cout<<R<<std::endl;
+                std::cout<<std::endl;  
                 /**
                  * Apply c,s to the Givens matrix G_i
-                */
+                
 
                 G.coeffRef(i-1,i-1)=c;
                 G.coeffRef(i-1,i)=s;
                 G.coeffRef(i,i-1)=-s;
                 G.coeffRef(i,i)=c;
+                */
+                /**
+                 * Instead of creating the Givens matrix, I do directly the computation on Q and R
+                 * In addition I use a temporal variable to avoid changing the matrix before the computation
+                */
+                double tmp=0.0;
+                for(int k=0;k<n;k++){
+                  tmp=c*R.coeffRef(i-1,k)+s*R.coeffRef(i,k);
+                  R.coeffRef(i,k)=-s*R.coeffRef(i-1,k)+c*R.coeffRef(i,k); 
+                  R.coeffRef(i-1,k)=tmp;
+                }
+                
+                
+
 
                 /**
                  * Compute Q, R
-                */
-                Q = Q*Eigen::MatrixXd(G.transpose());
+                
+                Q = Q*Matrix(G.transpose());
                 R = G*R;
-
+                */
                 /**
                 * Forcing rotated component to zero to avoid floating point approximations
-                */
+                
                 R.coeffRef(i,j)=0;
-
+                */
                 
 
             }
         }
     }
 
-void QR_Decomposition::HouseHolder_solve(Eigen::MatrixXd A){
+void QR_Decomposition::HouseHolder_solve(Matrix A){
 
     int m=A.rows();
     int n=A.cols();
@@ -85,19 +111,19 @@ void QR_Decomposition::HouseHolder_solve(Eigen::MatrixXd A){
     /**
      * Initialize v,u
     */
-    Eigen::VectorXd u(m),v(m);
+    Vector u(m),v(m);
 
     /**
      * Initialize matrix Q (size m x m), matrix R(m x n) and rotation matrix P(m x m)
     */
-    Eigen::MatrixXd I(m,m);
+    Matrix I(m,m);
     for(int i=0;i<m;i++){
         I.coeffRef(i,i)=1;
     }
-    Eigen::MatrixXd Q=I;
-    Eigen::MatrixXd P=I;
+    Matrix Q=I;
+    Matrix P=I;
 
-    Eigen::MatrixXd R=A;
+    Matrix R=A;
 
     /**
      * Starting the computation of Q,R
@@ -108,8 +134,8 @@ void QR_Decomposition::HouseHolder_solve(Eigen::MatrixXd A){
         /**
          * Initialize u,v to zero at each iteration-i
         */
-       u=Eigen::VectorXd::Zero(m);
-       v=Eigen::VectorXd::Zero(m);
+       u=Vector::Zero(m);
+       v=Vector::Zero(m);
 
        /**
         * evaluating each component of the matrix R

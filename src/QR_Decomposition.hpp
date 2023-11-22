@@ -38,7 +38,7 @@ public:
 /**
      *I call the distructor
     */
-~QR_Decomposition() {}
+~QR_Decomposition() = default;
 
 private:
     const Eigen::MatrixXd A;
