@@ -56,13 +56,7 @@ void QR_Decomposition::Givens_solve(Matrix A){
                   s = 1 / sqrt(1+(a/b)*(a/b));
                   c=s*a/b;
                 }
-
-                std::cout<<c<<std::endl;
-                std::cout<<std::endl;            
-                std::cout<<s<<std::endl;
-                std::cout<<std::endl; 
-                std::cout<<R<<std::endl;
-                std::cout<<std::endl;  
+ 
                 /**
                  * Apply c,s to the Givens matrix G_i
                 
