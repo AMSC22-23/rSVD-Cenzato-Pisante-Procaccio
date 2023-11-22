@@ -2,6 +2,7 @@
 
 #include <unordered_map>
 #include <functional>
+#include <cmath>
 
 /*
 	Everything in this file is a test for the correct implementation of the class FullMatrix.
@@ -167,14 +168,76 @@ int main(){
 	std::cout<<correct<<std::endl;
 	correct=true;
 
+	//Now check the multiplication with a scalar
+	Real scalar=1.5;
+	testMultResult=1.5*testMatrix;
+
+	std::cout<<std::endl;
+	std::cout<<"Matrix multiplied by the scalar "<<scalar<<" :"<<std::endl;
+	testMultResult.print(std::cout);
+	std::cout<<std::endl;
+
+	std::cout<<"Test: Correctness of the scalar-matrix multiplication: ";
+	if(testMultResult.cols()!=testMatrix.cols() || testMultResult.rows()!=testMatrix.rows())
+		correct=false;
+	for(size_t i=0;i<testMultResult.rows();++i)
+		for(size_t j=0;j<testMultResult.cols();++j)
+			//Check up to a tollerance
+			if(std::abs(testMultResult[i][j]-testMatrix[i][j]*scalar)>1e-10)
+				correct=false;
+	std::cout<<correct<<std::endl;
+	correct=true;
+
+	//Now check the copy constructor (if it correctly did a deep copy)
+	FullMatrix<Real> testMatrixCopy=testMatrix;
+	//Modify just one value
+	testMatrixCopy[0][0]=64.;
+
+	std::cout<<std::endl;
+	std::cout<<"Matrix copied:"<<std::endl;
+	testMatrixCopy.print(std::cout);
+	std::cout<<std::endl;
+
+	std::cout<<"Test: Correctness of the deep copy of a matrix: ";
+	if(testMatrixCopy.rows()!=testMatrix.rows() || testMatrixCopy.cols()!=testMatrix.cols())
+		correct=false;
+	for(size_t i=0;i<testMultResult.rows();++i)
+		for(size_t j=0;j<testMultResult.cols();++j){
+			Real diff=std::abs(testMatrixCopy[i][j]-testMatrix[i][j]);
+			if(i==0 && j==0){
+				if(diff<1e-10)
+					correct=false;
+			}
+			else{
+				if(diff>=1e-10)
+					correct=false;
+			}
+		}
+	std::cout<<correct<<std::endl;
+	correct=true;
+
+	//Now check the scale method
+	testMatrixCopy[0][0]=testMatrix[0][0];
+	testMatrixCopy.scale(scalar);
+
+	std::cout<<std::endl;
+	std::cout<<"Matrix copy scaled:"<<std::endl;
+	testMatrixCopy.print(std::cout);
+	std::cout<<std::endl;
+
+	std::cout<<"Test: Correctness of the rescaling of a matrix: ";
+	if(testMatrixCopy.rows()!=testMatrix.rows() || testMatrixCopy.cols()!=testMatrix.cols())
+		correct=false;
+	for(size_t i=0;i<testMatrixCopy.rows();++i)
+		for(size_t j=0;j<testMatrixCopy.cols();++j)
+			//Check up to a tollerance
+			if(std::abs(testMatrixCopy[i][j]-testMatrix[i][j]*scalar)>1e-10)
+				correct=false;
+	std::cout<<correct<<std::endl;
+	correct=true;
+
 	return 0;
 }
-
-
-
-
-
-
 
 
 
