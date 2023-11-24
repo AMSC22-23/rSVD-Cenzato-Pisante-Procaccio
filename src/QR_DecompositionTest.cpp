@@ -20,7 +20,7 @@ Eigen::MatrixXd A(5,3);
      
     std::cout<<R<<std::endl;
     std::cout<<Q<<std::endl;
-
+	std::cout<<Q*R<<std::endl;
 
 	return 0;
 }

@@ -4,7 +4,7 @@ using Matrix=Eigen::MatrixXd;
 using Vector=Eigen::VectorXd;
 
 
-std::stuple<Matrix, Matrix> QR_Decomposition::Givens_solve(Matrix A){
+std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve(Matrix A){
     
     int m=A.rows();
     int n=A.cols();
@@ -13,8 +13,9 @@ std::stuple<Matrix, Matrix> QR_Decomposition::Givens_solve(Matrix A){
         * Initialize matrix Q (size m x m), matrix R(m x n) and matrix of rotations G(m x m)
     */
     Q.resize(m,m);
-    Q.coeffRef(m-1,m-1)=1;
-    
+    //Q.coeffRef(m-1,m-1)=1;
+    for(int i=0;i<m;++i) Q.coeffRef(i,i)=1.;
+
     R=A;
     /**
     * Assembling the matrix Q by applying the Givens rotation at each 
@@ -67,7 +68,7 @@ std::stuple<Matrix, Matrix> QR_Decomposition::Givens_solve(Matrix A){
             /**
              * Computation of Q, at each iterate
             */
-            Q.coeffRef(i-1,i-1)=1;
+            //Q.coeffRef(i-1,i-1)=1;
             for(int k=0;k<m;k++){
                 tmp=Q.coeffRef(k,i-1)*c+Q.coeffRef(k,i)*-s;
                 Q.coeffRef(k,i)=Q.coeffRef(k,i-1)*s+Q.coeffRef(k,i)*c; 
