@@ -39,10 +39,12 @@ int main(){
 	//Change the value of one element and check if it is still correct
 	testMatrix[n-1][0]=1.;
 
+	#ifdef VERBOSE
 	std::cout<<std::endl;
 	std::cout<<"Now matrix changed to:"<<std::endl;
 	testMatrix.print(std::cout);
 	std::cout<<std::endl;
+	#endif
 
 	std::cout<<"Test: Changed just one value: ";
 	for(size_t i=0;i<n;++i)
@@ -62,10 +64,12 @@ int main(){
 	//Resize the matrix to be of new dimensions 
 	testMatrix.resize(new_n,new_m);
 
+	#ifdef VERBOSE
 	std::cout<<std::endl;
 	std::cout<<"Now matrix changed to:"<<std::endl;
 	testMatrix.print(std::cout);
 	std::cout<<std::endl;
+	#endif
 
 	std::cout<<"Test: Correctness of resize: ";
 	if(testMatrix.rows()!=new_n||testMatrix.cols()!=new_m)
@@ -78,18 +82,22 @@ int main(){
 		for(size_t j=0;j<new_m;++j)
 			testMatrix[i][j]=i+j;
 
+	#ifdef VERBOSE
 	std::cout<<std::endl;
 	std::cout<<"Now matrix changed to:"<<std::endl;
 	testMatrix.print(std::cout);
 	std::cout<<std::endl;
+	#endif
 
 	//Create a vector for which the matrix multiplication is not valid
 	std::vector<Real> testVector(new_m-1,1.);
 
+	#ifdef VERBOSE
 	std::cout<<"Using vector:"<<std::endl;
 	for(size_t i=0;i<testVector.size();++i)
 		std::cout<<testVector[i]<<std::endl;
 	std::cout<<std::endl;
+	#endif
 
 	std::cout<<"Test: Correctness of erroneous input in matrix-vector multiplication: ";
 	std::vector<Real> testResult=testMatrix*testVector;
@@ -101,11 +109,13 @@ int main(){
 	//Now correct the vector
 	testVector.emplace_back(1.);
 
+	#ifdef VERBOSE
 	std::cout<<std::endl;
 	std::cout<<"Now using vector;"<<std::endl;
 	for(size_t i=0;i<testVector.size();++i)
 		std::cout<<testVector[i]<<std::endl;
 	std::cout<<std::endl;
+	#endif
 
 	std::cout<<"Test: Correctness of result in matrix-vector multiplication: ";
 	testResult=testMatrix*testVector;
@@ -118,14 +128,16 @@ int main(){
 	//Now test the matrix-matrix multiplication
 	FullMatrix<Real> testMultMatrix(new_m-1, 1, 1.);
 
+	#ifdef VERBOSE
 	std::cout<<std::endl;
 	std::cout<<"New matrix:"<<std::endl;
 	testMultMatrix.print(std::cout);
 	std::cout<<std::endl;
+	#endif
 
 	std::cout<<"Test: Correctness of erroneous input in matrix-matrix multiplication: ";
 	FullMatrix<Real> testMultResult=testMatrix*testMultMatrix;
-	if(testMultResult.rows()==1&&testMultResult.cols()==1&&testMultResult[0][0]!=0.){
+	if(testMultResult.rows()!=1||testMultResult.cols()!=1||testMultResult[0][0]!=0.){
 			correct=false;
 	}
 	std::cout<<correct<<std::endl;
@@ -134,10 +146,12 @@ int main(){
 	testMultMatrix.resize(testMultMatrix.rows()+1,1);
 	testMultMatrix[testMultMatrix.rows()-1][0]=1.;
 
+	#ifdef VERBOSE
 	std::cout<<std::endl;
 	std::cout<<"Matrix updated to:"<<std::endl;
 	testMultMatrix.print(std::cout);
 	std::cout<<std::endl;
+	#endif
 
 	std::cout<<"Test: Correctness of result in matrix-matrix multiplication: ";
 	testMultResult=testMatrix*testMultMatrix;
@@ -155,10 +169,12 @@ int main(){
 	//Noew check the correct transposed
 	FullMatrix<Real> testTransposed=testMatrix.transpose();
 
+	#ifdef VERBOSE
 	std::cout<<std::endl;
 	std::cout<<"Matrix transposed:"<<std::endl;
 	testTransposed.print(std::cout);
 	std::cout<<std::endl;
+	#endif
 
 	std::cout<<"Test: Correctness of the transposed: ";
 	for(size_t i=0;i<testTransposed.rows();++i)
@@ -172,10 +188,12 @@ int main(){
 	Real scalar=1.5;
 	testMultResult=1.5*testMatrix;
 
+	#ifdef VERBOSE
 	std::cout<<std::endl;
 	std::cout<<"Matrix multiplied by the scalar "<<scalar<<" :"<<std::endl;
 	testMultResult.print(std::cout);
 	std::cout<<std::endl;
+	#endif
 
 	std::cout<<"Test: Correctness of the scalar-matrix multiplication: ";
 	if(testMultResult.cols()!=testMatrix.cols() || testMultResult.rows()!=testMatrix.rows())
@@ -193,10 +211,12 @@ int main(){
 	//Modify just one value
 	testMatrixCopy[0][0]=64.;
 
+	#ifdef VERBOSE
 	std::cout<<std::endl;
 	std::cout<<"Matrix copied:"<<std::endl;
 	testMatrixCopy.print(std::cout);
 	std::cout<<std::endl;
+	#endif
 
 	std::cout<<"Test: Correctness of the deep copy of a matrix: ";
 	if(testMatrixCopy.rows()!=testMatrix.rows() || testMatrixCopy.cols()!=testMatrix.cols())
@@ -220,10 +240,12 @@ int main(){
 	testMatrixCopy[0][0]=testMatrix[0][0];
 	testMatrixCopy.scale(scalar);
 
+	#ifdef VERBOSE
 	std::cout<<std::endl;
 	std::cout<<"Matrix copy scaled:"<<std::endl;
 	testMatrixCopy.print(std::cout);
 	std::cout<<std::endl;
+	#endif
 
 	std::cout<<"Test: Correctness of the rescaling of a matrix: ";
 	if(testMatrixCopy.rows()!=testMatrix.rows() || testMatrixCopy.cols()!=testMatrix.cols())
@@ -236,8 +258,52 @@ int main(){
 	std::cout<<correct<<std::endl;
 	correct=true;
 
+	//Now check addition and subtraction of two matrices
+	FullMatrix<Real> testMatrixAdd=testMatrix+FullMatrix<Real>(new_n-1,new_m);
+
+	std::cout<<"Test: Correctness of the erroneous summation of two matrices: ";
+	if(testMatrixAdd.rows()!=1||testMatrixAdd.cols()!=1||testMatrixAdd[0][0]!=0.){
+			correct=false;
+	}
+	std::cout<<correct<<std::endl;
+	correct=true;
+
+	//Correct addition
+	testMatrixAdd=testMatrix+testMatrix*scalar;
+
+	#ifdef VERBOSE
+	std::cout<<std::endl;
+	std::cout<<"Matrix + Matrix*"<<scalar<<":"<<std::endl;
+	testMatrixAdd.print(std::cout);
+	std::cout<<std::endl;
+	#endif
+
+	std::cout<<"Test: Correctness of the summation of two matrices: ";
+	for(size_t i=0;i<testMatrixAdd.rows();++i)
+		for(size_t j=0;j<testMatrixAdd.cols();++j)
+			if(std::abs(testMatrix[i][j]*(1+scalar)-testMatrixAdd[i][j])>1e-10)
+				correct=false;
+	std::cout<<correct<<std::endl;
+	correct=true;
+	
+	//Now do subtraction
+	testMatrixAdd=testMatrixAdd-testMatrix*scalar;
+
+	#ifdef VERBOSE
+	std::cout<<std::endl;
+	std::cout<<"Matrix now subtracted:"<<std::endl;
+	testMatrixAdd.print(std::cout);
+	std::cout<<std::endl;
+	#endif
+
+	std::cout<<"Test: Correctness of the subtraction of two matrices: ";
+	for(size_t i=0;i<testMatrixAdd.rows();++i)
+		for(size_t j=0;j<testMatrixAdd.cols();++j)
+			if(std::abs(testMatrix[i][j]-testMatrixAdd[i][j])>1e-10)
+				correct=false;
+	std::cout<<correct<<std::endl;
+	correct=true;
+
 	return 0;
 }
-
-
 

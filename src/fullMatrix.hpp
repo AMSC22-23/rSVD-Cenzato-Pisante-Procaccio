@@ -91,6 +91,38 @@ class FullMatrix{
 		}
 
 		/*
+			 Override of the operator for the summation (?) of two matrices
+		 */
+		friend FullMatrix operator+(const FullMatrix& A,const FullMatrix& B){
+			FullMatrix toReturn;
+			if(A.rows()!=B.rows() || A.cols()!=B.cols())
+				return toReturn;
+
+			toReturn.resize(A.rows(),A.cols());
+
+			for(size_t i=0;i<A.rows();++i)
+				for(size_t j=0;j<A.cols();++j)
+					toReturn[i][j]=A[i][j]+B[i][j];
+
+			return toReturn;
+		}
+		/*
+			 Override of the operator for the subtraction of two matrices
+		 */
+		friend FullMatrix operator-(const FullMatrix& A,const FullMatrix& B){
+			FullMatrix toReturn;
+			if(A.rows()!=B.rows() || A.cols()!=B.cols())
+				return toReturn;
+
+			toReturn.resize(A.rows(),A.cols());
+
+			for(size_t i=0;i<A.rows();++i)
+				for(size_t j=0;j<A.cols();++j)
+					toReturn[i][j]=A[i][j]-B[i][j];
+
+			return toReturn;
+		}
+		/*
 			 Overload of the multiplication operator for matrix-vector
 		 */
 		friend std::vector<Real> operator*(const FullMatrix& A, const std::vector<Real>& x){
@@ -116,7 +148,8 @@ class FullMatrix{
 		}
 
 		/*
-			 Overload of the multiplication operator for matrix-matrix
+			 Override of the multiplication operator for matrix-matrix
+			 It is cache friendly: reference: https://siboehm.com/articles/22/Fast-MMM-on-CPU
 		 */
 		friend FullMatrix operator*(const FullMatrix& A, const FullMatrix& B){
 
@@ -128,19 +161,22 @@ class FullMatrix{
 
 			toReturn.resize(A.rows(),B.cols());
 
-			Real sum=0.;
-
 			for(size_t i=0;i<A.rows();++i){
-				for(size_t j=0;j<B.cols();++j){
-					sum=0.;
-
-					for(size_t k=0;k<B.rows();++k){
-						sum+=A[i][k]*B[k][j];
+				for(size_t k=0;k<B.rows();++k){
+					for(size_t j=0;j<B.cols();++j){
+						toReturn[i][j]+=A[i][k]*B[k][j];
 					}
-
-					toReturn[i][j]=sum;
 				}
 			}
+			/*
+				for(size_t i=0;i<A.rows();++i){
+				 	for(size_t j=0;j<B.cols();++j){
+				 		for(size_t k=0;k<B.rows();++k){
+				 			toReturn[i][j]+=A[i][k]*B[k][j];
+				 		}
+				 	}
+				}
+			 */
 
 			return toReturn;
 		}
