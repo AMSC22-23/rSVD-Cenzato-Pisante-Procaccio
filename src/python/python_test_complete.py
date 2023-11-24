@@ -66,12 +66,13 @@ U,S,Vt=linalg.svd(a) # Can be also full_matrices=False
 Q,R=linalg.qr(a,'reduced') # Can be also 'complete'
 
 # Split the filename to add the extensions
-filename=filename.split(".")
+ext=".txt"
+filename=filename.split(ext)
 
 # Print the results to a file
-print_matrix_to_file(filename[0]+"_U."+filename[1],U)
-print_vector_to_file(filename[0]+"_S."+filename[1],S)
-print_matrix_to_file(filename[0]+"_Vt."+filename[1],Vt)
-print_matrix_to_file(filename[0]+"_Q."+filename[1],Q)
-print_matrix_to_file(filename[0]+"_R."+filename[1],R)
+print_matrix_to_file(filename[0]+"_U"+ext,U)
+print_vector_to_file(filename[0]+"_S"+ext,S)
+print_matrix_to_file(filename[0]+"_Vt"+ext,Vt)
+print_matrix_to_file(filename[0]+"_Q"+ext,Q)
+print_matrix_to_file(filename[0]+"_R"+ext,R)
 print("Successfully printed everything, check your folder :)")

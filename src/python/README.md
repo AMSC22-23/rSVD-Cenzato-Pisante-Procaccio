@@ -2,7 +2,7 @@
 
 This folder contains two scripts in python that perform some testing on matrices using NumPy.
 
-In order to execute the files you need of course [python](https://www.makeuseof.com/install-python-ubuntu/) and [NumPy](https://numpy.org/install/) installed.
+In order to execute the files you need of course [Python](https://www.makeuseof.com/install-python-ubuntu/) and [NumPy](https://numpy.org/install/) installed.
 
 ### General format
 
