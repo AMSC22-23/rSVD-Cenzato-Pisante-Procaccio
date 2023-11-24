@@ -14,11 +14,10 @@ Eigen::MatrixXd A(5,3);
 0.9134, 0.9575, 0.4854,
 0.6324, 0.9649, 0.8003;
     
-    QR_Decomposition QR_A(A);
+    QR_Decomposition QR_A;
     
-    QR_A.Givens_solve(QR_A.getA());
-    Eigen::MatrixXd R=QR_A.getR();
-    Eigen::MatrixXd Q=QR_A.getQ(); 
+    auto [Q,R]=QR_A.Givens_solve(A);
+     
     std::cout<<R<<std::endl;
     std::cout<<Q<<std::endl;
 

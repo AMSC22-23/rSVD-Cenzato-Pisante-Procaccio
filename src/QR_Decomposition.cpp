@@ -4,7 +4,7 @@ using Matrix=Eigen::MatrixXd;
 using Vector=Eigen::VectorXd;
 
 
-void QR_Decomposition::Givens_solve(Matrix A){
+std::stuple<Matrix, Matrix> QR_Decomposition::Givens_solve(Matrix A){
     
     int m=A.rows();
     int n=A.cols();
@@ -78,6 +78,7 @@ void QR_Decomposition::Givens_solve(Matrix A){
 
         }
     }
+    return std::make_tuple(Q,R);
 }
 
 
