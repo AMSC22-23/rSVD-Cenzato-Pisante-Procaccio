@@ -13,12 +13,8 @@ void QR_Decomposition::Givens_solve(Matrix A){
         * Initialize matrix Q (size m x m), matrix R(m x n) and matrix of rotations G(m x m)
     */
     Q.resize(m,m);
-
-    //Ottimizzabile
-    for(int i=0;i<m;i++){
-        Q.coeffRef(i,i)=1;
-    }
-
+    Q.coeffRef(m-1,m-1)=1;
+    
     R=A;
     /**
     * Assembling the matrix Q by applying the Givens rotation at each 
@@ -41,19 +37,16 @@ void QR_Decomposition::Givens_solve(Matrix A){
             double a=R.coeffRef(i-1,j);
             double b=R.coeffRef(i,j);
             double c,s;
-
-            Matrix G(2,2);       
+      
             if (abs(a)>abs(b)){
                             
-                G.coeffRef(0,0) = 1 / sqrt(1+(b/a)*(b/a));
-                G.coeffRef(0,1)  = -G.coeffRef(0,0)*b/a;
+                c = 1 / sqrt(1+(b/a)*(b/a));
+                s  = -c*b/a;
             } else  {
-                G.coeffRef(0,1) = -1 / sqrt(1+(a/b)*(a/b));
-                G.coeffRef(0,0)=-G.coeffRef(0,1)*a/b;
+                s = -1 / sqrt(1+(a/b)*(a/b));
+                c=-s*a/b;
             }
 
-            G.coeffRef(1,0)=-G.coeffRef(0,1);
-            G.coeffRef(1,1)=G.coeffRef(0,0);
         
             /**
                 * Instead of creating the Givens matrix, I do directly the computation on Q and R
@@ -61,8 +54,8 @@ void QR_Decomposition::Givens_solve(Matrix A){
             */
             double tmp=0.0;
             for(int k=0;k<n;k++){
-                tmp=G.coeffRef(0,0)*R.coeffRef(i-1,k)+G.coeffRef(1,0)*R.coeffRef(i,k);
-                R.coeffRef(i,k)=G.coeffRef(0,1)*R.coeffRef(i-1,k)+G.coeffRef(1,1)*R.coeffRef(i,k); 
+                tmp=c*R.coeffRef(i-1,k)-s*R.coeffRef(i,k);
+                R.coeffRef(i,k)=s*R.coeffRef(i-1,k)+c*R.coeffRef(i,k); 
                 R.coeffRef(i-1,k)=tmp;
             }
                 /**
@@ -74,10 +67,10 @@ void QR_Decomposition::Givens_solve(Matrix A){
             /**
              * Computation of Q, at each iterate
             */
-            
+            Q.coeffRef(i-1,i-1)=1;
             for(int k=0;k<m;k++){
-                tmp=Q.coeffRef(k,i-1)*G.coeffRef(0,0)+Q.coeffRef(k,i)*G.coeffRef(1,0);
-                Q.coeffRef(k,i)=Q.coeffRef(k,i-1)*G.coeffRef(0,1)+Q.coeffRef(k,i)*G.coeffRef(1,1); 
+                tmp=Q.coeffRef(k,i-1)*c+Q.coeffRef(k,i)*-s;
+                Q.coeffRef(k,i)=Q.coeffRef(k,i-1)*s+Q.coeffRef(k,i)*c; 
                 Q.coeffRef(k,i-1)=tmp;
             }
             
@@ -85,11 +78,6 @@ void QR_Decomposition::Givens_solve(Matrix A){
 
         }
     }
-    //test
-    Matrix R1=Q.transpose()*A;
-    std::cout<<R1<<std::endl;
-    std::cout<<std::endl;
-    std::cout<<std::endl;
 }
 
 
