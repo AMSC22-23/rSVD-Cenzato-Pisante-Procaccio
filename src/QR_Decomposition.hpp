@@ -25,15 +25,15 @@ public:
     /**
      * Getter functions to matrix A,R,Q
     */
-    Matrix getA() const{
+    const Matrix getA() const{
         return A;
     };
 
-    Matrix getR() const{
+    const Matrix getR() const{
         return R;
     };
 
-    Matrix getQ() const{
+    const Matrix getQ() const{
         return Q;
     };
 

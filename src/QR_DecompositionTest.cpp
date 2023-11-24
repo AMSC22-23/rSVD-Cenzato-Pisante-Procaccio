@@ -20,6 +20,7 @@ Eigen::MatrixXd A(5,3);
     Eigen::MatrixXd R=QR_A.getR();
     Eigen::MatrixXd Q=QR_A.getQ(); 
     std::cout<<R<<std::endl;
+    std::cout<<Q<<std::endl;
 
 
 	return 0;
