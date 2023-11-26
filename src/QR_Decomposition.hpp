@@ -20,7 +20,7 @@ public:
     /**
      * Function HouseHolder_solve uses HouseHolder to find the QR factorization 
     */
-    void HouseHolder_solve(Matrix A);
+    std::tuple<Matrix, Matrix> HouseHolder_solve(const Matrix A);
     
 
     /**

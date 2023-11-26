@@ -43,17 +43,17 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve(Matrix A){
                 if(a!=0.0){
                     c = 1 / sqrt(1+(b/a)*(b/a));
                     s  = -c*b/a;
-                } else{
-                    c=0.0;
-                    s=1.0;
-                }  
-            } else if (b!=0.0)  {
-                s = -1 / sqrt(1+(a/b)*(a/b));
-                c=-s*a/b;
-            } else{
-                s=1.0;
-                c=0.0;
-            }
+                    } else{
+                        c=0.0;
+                        s=(a >= 0.0 ? 1.0 : -1.0);
+                }
+                }else if (b!=0.0)  {
+                    s = -1 / sqrt(1+(a/b)*(a/b));
+                    c=-s*a/b;
+                    } else{
+                        s=0.0;
+                        c=1.0;
+                }
 
         
             /**
@@ -67,23 +67,19 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve(Matrix A){
                 R.coeffRef(i-1,k)=tmp;
             }
                 /**
-            * Forcing rotated component to zero to avoid floating point approximations
-            */
+                    * Forcing rotated component to zero to avoid floating point approximations
+                */
             
             R.coeffRef(i,j)=0;
 
             /**
-             * Computation of Q, at each iterate
+                * Computation of Q, at each iterate
             */
-            //Q.coeffRef(i-1,i-1)=1;
             for(int k=0;k<m;k++){
                 tmp=Q.coeffRef(k,i-1)*c+Q.coeffRef(k,i)*-s;
                 Q.coeffRef(k,i)=Q.coeffRef(k,i-1)*s+Q.coeffRef(k,i)*c; 
                 Q.coeffRef(k,i-1)=tmp;
             }
-            
-
-
         }
     }
     return std::make_tuple(Q,R);
@@ -94,7 +90,7 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve(Matrix A){
 
 
 
-    void QR_Decomposition::HouseHolder_solve(Matrix A){
+std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve(Matrix A){
 
     int m=A.rows();
     int n=A.cols();
@@ -107,14 +103,13 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve(Matrix A){
     /**
         * Initialize matrix Q (size m x m), matrix R(m x n) and rotation matrix P(m x m)
     */
-        Matrix I(m,m);
+    Matrix I(m,m);
     for(int i=0;i<m;i++){
         I.coeffRef(i,i)=1;
     }
 
-        Matrix Q=I;
+    Matrix Q=I;
     Matrix P=I;
-
     Matrix R=A;
 
     /**
@@ -136,28 +131,31 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve(Matrix A){
         */
         mag=0.0;
         for(int i=j;i<m;i++){
-        u.coeffRef(i)=R.coeffRef(i,j);
-        mag+=u.coeffRef(i)*u.coeffRef(i);
+            u.coeffRef(i)=R.coeffRef(i,j);
+            mag+=u.coeffRef(i)*u.coeffRef(i);
         }
         mag=sqrt(mag);
         alpha = (u.coeffRef(j) < 0) ? mag : -mag ;
+
         mag=0.0;
+
         for(int i=0;i<m;i++){
-        v.coeffRef(i)= (j == i) ? (u.coeffRef(i) + alpha) : u.coeffRef(i);
-        alpha = (u.coeffRef(j) < 0) ? mag : -mag ;
-        mag+=v.coeffRef(i)*v.coeffRef(i);
+            v.coeffRef(i)= (j == i) ? (u.coeffRef(i) + alpha) : u.coeffRef(i);
+            alpha = (u.coeffRef(j) < 0) ? -mag : mag ;
+            mag+=v.coeffRef(i)*v.coeffRef(i);
         }
+
         mag=sqrt(mag);
-        for (int i = j; i < m; i++) v.coeffRef(i) /= mag;
-        
+        //for (int i = j; i < m; i++) v.coeffRef(i) /= mag;
+        v=v/v.norm();
     /**
         * Computing P at the j-th iterate and applying the rotation to R,Q
     */
         P=I-2.0*v*v.transpose();
         R=P*R;
-        std::cout<<R<<std::endl<<std::endl;
         Q=Q*P;
-    }
+        }
 
+    return std::make_tuple(Q,R);
     }
 
