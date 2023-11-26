@@ -4,7 +4,7 @@ This folder contains two scripts in matlab that perform some testing on matrices
 
 In order to execute the files you need of course matlab installed [https://it.mathworks.com/help/install/ug/install-products-with-internet-connection.html].
 
-To calculate the factorizations we can execute the [file](Test1.m), which uses the function svdsim provided in the script [file](svdsim.m). 
+To calculate the factorizations we can execute the [file](Test1.m), which uses the function svdsim provided in the script [file](svd_qr_test.m). 
 
 This will produce some other files in the same directory as the files provided in input.
 

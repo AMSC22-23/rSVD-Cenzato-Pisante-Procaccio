@@ -1,35 +1,29 @@
-function [u,s,v] = svdsim(a,tol)
+function [u,s,v] = svd_qr_test(a,tol)
 %SVDSIM  simple SVD program
 %
-% A simple program that demonstrates how to use the
-% QR decomposition to perform the SVD of a matrix.
-% A may be rectangular and complex.
+% usage: [U,S,V]= svd_qr_test(A)
+%     or      S = svd_qr_test(A)
 %
-% usage: [U,S,V]= SVDSIM(A)
-%     or      S = SVDSIM(A)
+% Input:
+% A : matrix of size m x n
+% tol . tolerance for the error
 %
-% with A = U*S*V' , S>=0 , U'*U = Iu  , and V'*V = Iv
+% Output:
+% U : matrix of left singular vectors
+% S : matrix of singular values
+% V : matrix of right singular vectors
+%
 %
 % The idea is to use the QR decomposition on A to gradually "pull" U out from
 % the left and then use QR on A transposed to "pull" V out from the right.
 % This process makes A lower triangular and then upper triangular alternately.
 % Eventually, A becomes both upper and lower triangular at the same time,
 % (i.e. Diagonal) with the singular values on the diagonal.
-%
-% Matlab's own SVD routine should always be the first choice to use,
-% but this routine provides a simple "algorithmic alternative"
-% depending on the users' needs.
-% 
-%see also: SVD, EIG, QR, BIDIAG, HESS
-%
-
-% Paul Godfrey
-% October 23, 2006
 
 if ~exist('tol','var')
    tol=eps*1024;
 end
-   
+
 %reserve space in advance
 sizea=size(a);
 loopmax=100*max(sizea);

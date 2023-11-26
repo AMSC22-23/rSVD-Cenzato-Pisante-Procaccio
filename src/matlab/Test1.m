@@ -9,4 +9,7 @@ A=[	1, 2, 3, 7, 19;
 	1, 3, 13, 71, 98]
 tol=1.e-10;
 
-[U,S,V] = svdsim(A,tol)
+[U,S,V] = svd_qr_test(A,tol)
+writematrix(U, 'test_matrix_U.txt')
+writematrix(S, 'test_matrix_S.txt')
+writematrix(V, 'test_matrix_V.txt')
