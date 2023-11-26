@@ -39,13 +39,20 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve(Matrix A){
             double b=R.coeffRef(i,j);
             double c,s;
       
-            if (abs(a)>abs(b)){
-                            
-                c = 1 / sqrt(1+(b/a)*(b/a));
-                s  = -c*b/a;
-            } else  {
+            if (abs(a)>abs(b) ){
+                if(a!=0.0){
+                    c = 1 / sqrt(1+(b/a)*(b/a));
+                    s  = -c*b/a;
+                } else{
+                    c=0.0;
+                    s=1.0;
+                }  
+            } else if (b!=0.0)  {
                 s = -1 / sqrt(1+(a/b)*(a/b));
                 c=-s*a/b;
+            } else{
+                s=1.0;
+                c=0.0;
             }
 
         
