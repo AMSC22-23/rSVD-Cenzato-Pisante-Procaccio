@@ -12,4 +12,6 @@ In particular the files generated are:
 
 +  `test_matrix_U.txt` : matrix of left singular vectors
 +  `test_matrix_S.txt` : array of singular values
-+  `test_matrix_V.txt`: matrix of right singular vectors
++  `test_matrix_V.txt` : matrix of right singular vectors
++  `test_matrix_Q.txt` : orthogonal matrix reduced
++  `test_matrix_R.txt` : upper triangular matrix
