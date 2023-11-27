@@ -1,4 +1,4 @@
-function [u,s,v] = svd_qr_test(a,tol)
+function [U,S,V] = svd_qr_test(A,tol)
 %SVDSIM  simple SVD program
 %
 % usage: [U,S,V]= svd_qr_test(A)
@@ -25,44 +25,46 @@ if ~exist('tol','var')
 end
 
 %reserve space in advance
-sizea=size(a);
-loopmax=100*max(sizea);
-loopcount=0;
+sizeA=size(A);
+iter_max=100*max(sizeA);
+iter=0;
 
 % or use Bidiag(A) to initialize U, S, and V
-u=eye(sizea(1));
-s=a';
-v=eye(sizea(2));
+U=eye(sizeA(1));
+S=A';
+V=eye(sizeA(2));
 
 Err=realmax;
-while Err>tol & loopcount<loopmax ;
-%   log10([Err tol loopcount loopmax]); pause
-    [q,s]=qr(s'); u=u*q;
-    [q,s]=qr(s'); v=v*q;
+while Err>tol & iter<iter_max ;
 
-% exit when we get "close"
-    e=triu(s,1);
-    E=norm(e(:));
-    F=norm(diag(s));
+    [Q,S]=qr(S'); 
+    U=U*Q;
+    [Q,S]=qr(S'); 
+    V=V*Q;
+
+%Compute the error
+    E=triu(S,1);
+    E=norm(E(:));
+    F=norm(diag(S));
     if F==0, F=1;end
     Err=E/F;
-    loopcount=loopcount+1;
+    iter=iter+1;
 end
 % [Err/tol loopcount/loopmax]
 
 %fix the signs in S
-ss=diag(s);
-s=zeros(sizea);
+ss=diag(S);
+S=zeros(sizeA);
 for n=1:length(ss)
     ssn=ss(n);
-    s(n,n)=abs(ssn);
+    S(n,n)=abs(ssn);
     if ssn<0
-       u(:,n)=-u(:,n);
+       U(:,n)=-U(:,n);
     end
 end
 
 if nargout<=1
-   u=diag(s);
+   U=diag(S);
 end
 
 return
