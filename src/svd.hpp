@@ -1,5 +1,5 @@
-#ifndef SVD_WITH_PM_HPP
-#define SVD_WITH_PM_HPP
+#ifndef SVD_HPP
+#define SVD_HPP
 
 #include <Eigen/Dense>
 #include <iostream>
@@ -16,20 +16,6 @@ class SVD{
             epsilon : precision  */
         SVD(double epsilon) : 
         m_epsilon(epsilon) {}
-
-
-    /*Given an m × n matrix A, a target number k of singular vectors, and an exponent q 
-    (say q = 1 or q = 2), this procedure computes an approximate rank-2k factorization UΣV∗, 
-    where U and V are orthonormal, and Σ is nonnegative and diagonal.
-        Stage A:
-        1. Generate an n × 2k Gaussian test matrix Ω.
-        2. Form Y=(AA*)^qAΩ by multiplying alternately with A and A*
-        3. Construct a matrix Q whose columns form an orthonormal basis for the range of Y.
-        Stage B:
-        4. Form B = Q∗A
-        5. Compute an SVD of the small matrix: B = U_hat ΣV*
-        6. Set U = Q U_hat */
-    std::tuple<Matrix, Vector, Matrix> rsvd(Matrix A, int k);
 
 
     /* SVD using QR factorization :
@@ -61,15 +47,48 @@ class SVD{
         int m = A.rows(), n = A.cols();
         auto[U,s,V]=svd_with_PM(A); 
         
-        Matrix S_inv = Matrix::Zero(n,n);
-        for(size_t i=0; i<n; i++){
-            S_inv(i,i) = 1 / s[i];
-        }
-        return V * S_inv * U.transpose();
+        for(size_t i=0; i<n; i++)
+            s[i] = 1 / s[i];
+
+        return mult(V,s,U);
     }
+
+
+    /*Given an m × n matrix A, a target number k of singular vectors, and an exponent q 
+    (say q = 1 or q = 2), this procedure computes an approximate rank-2k factorization UΣV∗, 
+    where U and V are orthonormal, and Σ is nonnegative and diagonal.
+        Stage A:
+        1. Generate an n × 2k Gaussian test matrix Ω.
+        2. Form Y=(AA*)^qAΩ by multiplying alternately with A and A*
+        3. Construct a matrix Q whose columns form an orthonormal basis for the range of Y.
+        Stage B:
+        4. Form B = Q∗A
+        5. Compute an SVD of the small matrix: B = U_hat ΣV*
+        6. Set U = Q U_hat */
+    std::tuple<Matrix, Vector, Matrix> rsvd(Matrix A, int k);
+
 
     /* Computes the rank of the matrix A */
     int compute_rank(Matrix A);
+
+    /* Multiplication to obtain A (m x n) from the svd,
+        Input:
+            U = matrix (m x n) -- va bene anche per U (m x m)
+            s = vector (n)
+            V = matrix (n x n) 
+        [Also used to calculate the inverse of A (n x m)]*/
+    Matrix mult(Matrix U, Vector s, Matrix V){
+        int m = U.rows(), n = U.cols();
+        if (m == n) n = V.rows();       // to compute the inverse
+        int k = (m > n) ? n : m;
+        Matrix A = Matrix::Zero(m,n);
+ 
+        for(size_t r=0; r<m; r++)
+            for(size_t c=0; c<n; c++)
+                for(size_t i=0; i<k; i++)
+                    A(r,c) += s[i] * U(r,i) * V(c,i);
+        return A;
+    }
 
 
     /* Destructor */
@@ -149,4 +168,4 @@ class SVD{
     const double m_epsilon;
 };
 
-#endif // SVD_WITH_PM_HPP
+#endif // SVD_HPP
