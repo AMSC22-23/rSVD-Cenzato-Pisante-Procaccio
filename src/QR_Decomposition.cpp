@@ -21,7 +21,7 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve(Matrix A){
     * Assembling the matrix Q by applying the Givens rotation at each 
     * iteration and applying each component of Q to R in order to make it triangular
     */
-    
+    int count=1;
     for (int j = 0;j<n;j++){
         for(int i=m-1;i>j;i--){
 
@@ -41,18 +41,20 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve(Matrix A){
       
             if (abs(a)>abs(b) ){
                 if(a!=0.0){
-                    c = 1 / sqrt(1+(b/a)*(b/a));
-                    s  = -c*b/a;
+                    int segno = std::signbit(a) ? -1 : 1;
+                    c = segno / sqrt(1+(b/a)*(b/a));
+                    s  = abs(c/a)*b;
                     } else{
                         c=0.0;
                         s=(a >= 0.0 ? 1.0 : -1.0);
-                }
+                    }
                 }else if (b!=0.0)  {
-                    s = -1 / sqrt(1+(a/b)*(a/b));
-                    c=-s*a/b;
+                    int segno = (std::signbit(b) ? -1 : 1);
+                    s = segno / sqrt(1+(a/b)*(a/b));
+                    c=abs(s/b)*a;
                     } else{
                         s=0.0;
-                        c=1.0;
+                        c=(b >= 0.0 ? 1.0 : -1.0);
                 }
 
         
@@ -62,26 +64,44 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve(Matrix A){
             */
             double tmp=0.0;
             for(int k=0;k<n;k++){
-                tmp=c*R.coeffRef(i-1,k)-s*R.coeffRef(i,k);
-                R.coeffRef(i,k)=s*R.coeffRef(i-1,k)+c*R.coeffRef(i,k); 
+                tmp=c*R.coeffRef(i-1,k)+s*R.coeffRef(i,k);
+                R.coeffRef(i,k)=-s*R.coeffRef(i-1,k)+c*R.coeffRef(i,k); 
                 R.coeffRef(i-1,k)=tmp;
             }
+            
                 /**
                     * Forcing rotated component to zero to avoid floating point approximations
                 */
             
             R.coeffRef(i,j)=0;
-
+            
             /**
                 * Computation of Q, at each iterate
             */
             for(int k=0;k<m;k++){
-                tmp=Q.coeffRef(k,i-1)*c+Q.coeffRef(k,i)*-s;
-                Q.coeffRef(k,i)=Q.coeffRef(k,i-1)*s+Q.coeffRef(k,i)*c; 
+                tmp=Q.coeffRef(k,i-1)*c+Q.coeffRef(k,i)*s;
+                Q.coeffRef(k,i)=Q.coeffRef(k,i-1)*-s+Q.coeffRef(k,i)*c; 
                 Q.coeffRef(k,i-1)=tmp;
             }
         }
     }
+    for(int i=0;i<n-1;i++){
+        if(R(i,i)>0){
+            for(int j=i;j<n;j++){
+                R.coeffRef(i,j)=-R.coeffRef(i,j);
+            }
+            for(int j=0;j<m;j++){
+                Q.coeffRef(j,i)=-Q.coeffRef(j,i);
+            }
+        }
+    }
+
+    std::cout<<"Q="<<std::endl;
+    std::cout<<Q<<std::endl;
+    std::cout<<"======================="<<std::endl;
+    std::cout<<"R="<<std::endl;
+    std::cout<<R<<std::endl;
+    std::cout<<"======================="<<std::endl;
     return std::make_tuple(Q,R);
 }
 
