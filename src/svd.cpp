@@ -1,87 +1,49 @@
 #include "svd.hpp"
 
-    std::tuple<Matrix, Vector, Matrix> SVD::rsvd(Matrix A, int k){      //da vedere bene!
-        int m=A.rows(), n=A.cols();
-        Matrix U(m,m), V(n,n), Omega = genmat(n, 2*k), Y(m,2*k), B(m,n);
-        Vector s(n);
-        QR_Decomposition QR;
+std::tuple<Matrix, Vector, Matrix> SVD::svd_with_qr(Matrix A){      //non funziona ancora!
+    Matrix B = A.transpose() * A;
+    int n = B.cols();
+    Matrix U = eye(n),V(n,n);
+    Vector s(n);
+    QR_Decomposition obj_qr;
+    int nmax = 100;
 
-        Y = (A * A.transpose()) * A * Omega;        
-        auto [Q,R]=QR.Givens_solve(Y);
-        B = Q * A;
-        std::tie(U,s,V) = svd_with_PM(B);
-        U = Q * U;
-
-        return std::make_tuple(U,s,V);
+    std::cout<<B<<std::endl<<std::endl;;
+    //QR algorithm to find eigenvalues of B
+    for(size_t i=0;i<nmax;i++){
+        auto [Q,R] = obj_qr.Givens_solve(B);
+        B = R * Q;
+        U = U * Q;
     }
 
+    std::cout<<B<<std::endl<<std::endl;;
+    std::cout<<U*B*U.transpose()<<std::endl;
 
-    std::tuple<Matrix, Vector, Matrix> SVD::svd_with_qr(Matrix A){      //non funziona ancora!
-        int m=A.rows(), n=A.cols();
-        Matrix U = eye(m), V = eye(n);
-        Matrix Q1(m,m), Q2(n,n), R2 = A.transpose(), R1;
-        Vector s=genvec(n), sold(n);
-        QR_Decomposition QR;
-        double err=1; 
-
-        /*while(err > m_epsilon){          
-            std::tie(Q1,A) = QR.Givens_solve(A);
-            std::tie(Q2,R2) = QR.Givens_solve(R2);
-            A = A * Q2;
-            R2 = R2 * Q1; 
-            U = U * Q1;
-            V = V * Q2;
-            sold=s;
-            for(size_t i=0; i<n;i++){
-            s[i] = A(i,i);
-            }
-            err = FrobeniusNorm(sold-s);       //c'è modo migliore?
-        }*/
-
-        Matrix B = A.transpose() * A;
-        while( err > m_epsilon ){
-            std::tie(Q1,R1) = QR.Givens_solve(B);
-            B = R1 * Q1;
-            U = U * Q1;
-            sold=s;
-            for(size_t i=0; i<n;i++){
-            s[i] = B(i,i);
-            }
-            err = FrobeniusNorm(sold-s);
-        }
-
-        Vector v(n),u(m);
-        for(size_t i=0; i<n; i++){
-            u = U[i];
-            v = A * u / s[i];
-            V.col(i)=v;
-        }
-
-        return std::make_tuple(U,s,V);
-    }
+    return std::make_tuple(U,s,V);
+}
 
 
 
-    std::tuple<Matrix, Vector, Matrix> SVD::svd_with_PM(Matrix A){
-        int n=A.cols(), m=A.rows(), i=0;
-        Matrix B(n,n), U(m,n), V(n,n);
-        Vector u(m), v(n), s(n);
-        double sigma=1.;
-        while((sigma > m_epsilon) && i<n){                                
-            B =  A.transpose() * A;
-            v = PowerMethod(B);
-            sigma = norm(A * v);
-            u = A * v / sigma;
+std::tuple<Matrix, Vector, Matrix> SVD::svd_with_PM(Matrix A){
+    int n=A.cols(), m=A.rows(), i=0;
+    Matrix B(n,n), U(m,n), V(n,n);
+    Vector u(m), v(n), s(n);
+    double sigma=1.;
+    while((sigma > m_epsilon) && i<n){                                
+        B =  A.transpose() * A;
+        v = PowerMethod(B);
+        sigma = norm(A * v);
+        u = A * v / sigma;
 
-            U.col(i) = u;           
-            s[i]=sigma;
-            V.col(i) = v; 
+        U.col(i) = u;           
+        s[i]=sigma;
+        V.col(i) = v; 
             
-            A = A - sigma * u * v.transpose(); 
-            i++;
-        }
-        return std::make_tuple(U,s,V);
+        A = A - sigma * u * v.transpose(); 
+        i++;
     }
+    return std::make_tuple(U,s,V);
+}
 
 
 int SVD::compute_rank(Matrix A) {       // costa O(n^3) !!!!!
@@ -108,4 +70,19 @@ int SVD::compute_rank(Matrix A) {       // costa O(n^3) !!!!!
         }
     }
     return rank;
+}
+
+std::tuple<Matrix, Vector, Matrix> SVD::rsvd(Matrix A, int k){      //da vedere bene!
+    int m=A.rows(), n=A.cols();
+    Matrix U(m,m), V(n,n), Omega = genmat(n, 2*k), Y(m,2*k), B(m,n);
+    Vector s(n);
+    QR_Decomposition QR;
+
+    Y = (A * A.transpose()) * A * Omega;        
+    auto [Q,R]=QR.Givens_solve(Y);
+    B = Q * A;
+    std::tie(U,s,V) = svd_with_PM(B);
+    U = Q * U;
+
+    return std::make_tuple(U,s,V);
 }

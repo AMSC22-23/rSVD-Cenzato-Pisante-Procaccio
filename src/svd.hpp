@@ -36,31 +36,31 @@ class SVD{
         Input:
             A (m x n) : matrix
         Outputs:
-            U (m x m) : right singular vectors
-            s (n)     : vector containing singular values
-            V (n x n) : left singular vectors
-        Initialization T0 = A and S0 = AT
-        For k = 1, 2, · · ·(repeat until convergence)
-            Tk−1 = Uk Rk, Sk−1 = Vk Zk (QR Factorization)
-            Tk = Rk Vk and Sk = Zk Uk */
+            U (m x m) : matrix whose coloumns are left singular vectors of A 
+                        [eigenvectors of A*At]
+            s (n)     : vector the containing singular values of A
+            V (n x n) : matrix whose coloumns are right singular vectors of A 
+                        [eigenvectors of At*A] */
     std::tuple<Matrix, Vector, Matrix> svd_with_qr(Matrix A);
 
 
-    /* reduced SVD using the Power Method :
+    /* Reduced SVD using the Power Method :
         Input:
             A (m x n) : matrix
         Outputs:
-            U (m x n) : right singular vectors
-            s (n)     : vector containing singular values
-            V (n x n) : left singular vectors */
+            U (m x m) : matrix whose coloumns are left singular vectors of A 
+                        [eigenvectors of A*At]
+            s (n)     : vector containing the singular values of A
+            V (n x n) : matrix whose coloumns are right singular vectors of A 
+                        [eigenvectors of At*A] */
     std::tuple<Matrix, Vector, Matrix> svd_with_PM(Matrix A);
 
 
-    /* Compute the pseudo-inverse of a matrix A (m x n) using SVD */
+    /* Computes the pseudo-inverse of a matrix A (m x n) using SVD */
     Matrix pseudoinverse(const Matrix A){
         int m = A.rows(), n = A.cols();
-        auto[U,s,V]=svd_with_PM(A); //it's the reduced SVD!
-        //inverse of sigma
+        auto[U,s,V]=svd_with_PM(A); 
+        
         Matrix S_inv = Matrix::Zero(n,n);
         for(size_t i=0; i<n; i++){
             S_inv(i,i) = 1 / s[i];
@@ -68,6 +68,7 @@ class SVD{
         return V * S_inv * U.transpose();
     }
 
+    /* Computes the rank of the matrix A */
     int compute_rank(Matrix A);
 
 
@@ -133,18 +134,6 @@ class SVD{
             norm += v[i] * v[i];
         }
         return sqrt(norm);
-    }
-
-
-    /* Frobenius norm : ||A|| = sqrt(sigma1^2 + ... + sigmar^2),
-                    where A is diagonal with singular values 
-        In this function the input v contains the singular values of A*/
-    double FrobeniusNorm(const Vector v){
-        double aux = 0;
-        for(size_t i=0;i<v.size();i++){
-            aux += v[i] * v[i];
-        }
-        return sqrt(aux);
     }
 
 
