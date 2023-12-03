@@ -63,12 +63,13 @@ Matrix A(3,3);
     std::cout<<Q<<std::endl;
     std::cout << "Time of execution: " << duration_s.count() << " secondi" << std::endl;
 
+
     std::cout<<std::endl;
     std::cout<<"Parallel:"<<std::endl;
     /**
      * Parallel execution on OpenMP
     */
-    
+ /*   
     auto start_parallel = std::chrono::high_resolution_clock::now();
     auto [Qp,Rp]=QR_A.Givens_solve_parallel(A);
     auto end_parallel = std::chrono::high_resolution_clock::now();
@@ -80,6 +81,14 @@ Matrix A(3,3);
     std::cout<<"Q_parallel="<<std::endl;
     std::cout<<Qp<<std::endl;
     std::cout << "Time of execution: " << duration_p.count() << " s" << std::endl;
+*/
+
+    auto [Qh,Rh]=QR_A.HouseHolder_solve(A);
+    std::cout<<"R_Serial="<<std::endl;
+    std::cout<<Rh<<std::endl;
+    std::cout<<"Q_Serial="<<std::endl;
+    std::cout<<Qh<<std::endl;
+    
 
 
 	return 0;

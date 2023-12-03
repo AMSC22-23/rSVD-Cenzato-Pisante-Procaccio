@@ -13,12 +13,7 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve(Matrix A){
      * Set Q back to the identity, set R equal to A
     */
     Q.resize(m,m);
-    for(int i=0;i<m;++i){
-        for(int j=0;j<m;j++){
-            Q.coeffRef(i,j)=0.;
-        }
-        Q.coeffRef(i,i)+=1.;
-    } 
+    Q.setIdentity();
 
     R=A;
     /**
@@ -33,7 +28,6 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve(Matrix A){
                 * Givens rotation gets applied by calculating the values of:
                 * c: cosine of the angle of rotation
                 * s: sine of the angle of rotation
-                * r: length of the vector in R^2
                 * 
                 * The idea is to calculate the rotations on smaller vectors, iterating on the cells 
                 * below the diagonal to pull them to zero
@@ -157,22 +151,52 @@ std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve(Matrix A){
 
         mag=0.0;
 
-        for(int i=0;i<m;i++){
+        for(int i=j;i<m;i++){
             v.coeffRef(i)= (j == i) ? (u.coeffRef(i) + alpha) : u.coeffRef(i);
-            alpha = (u.coeffRef(j) < 0) ? -mag : mag ;
             mag+=v.coeffRef(i)*v.coeffRef(i);
         }
-
-        mag=sqrt(mag);
-        //for (int i = j; i < m; i++) v.coeffRef(i) /= mag;
         v=v/v.norm();
+        mag=sqrt(mag);
+
+        if (mag < 0.0000000001) continue;
+        //for (int i = j; i < m; i++) v.coeffRef(i) /= mag;
+        
     /**
         * Computing P at the j-th iterate and applying the rotation to R,Q
     */
         P=I-2.0*v*v.transpose();
         R=P*R;
         Q=Q*P;
+
+        /**
+         * Force j-th col of R to zero
+        */
+        for(int i=j+1; i<n; i++){
+            R.coeffRef(i,j)=0;
         }
+        }
+
+        /**
+         * Prepare R,Q for svd
+        */
+        for(int i=0;i<n-1;i++){
+        if(R(i,i)>0){
+            for(int j=i;j<n;j++){
+                R.coeffRef(i,j)=-R.coeffRef(i,j);
+            }
+            for(int j=0;j<m;j++){
+                Q.coeffRef(j,i)=-Q.coeffRef(j,i);
+            }
+        }
+        if(R(n-1,n-1)<0){
+                R.coeffRef(n-1,n-1)=-R.coeffRef(n-1,n-1);
+            
+            for(int j=0;j<m;j++){
+                Q.coeffRef(j,n-1)=-Q.coeffRef(j,n-1);
+            }
+        }
+        
+    }
 
     return std::make_tuple(Q,R);
     }
