@@ -1,6 +1,8 @@
 #include <iostream>
+#include <chrono>
 #include "fullMatrix.hpp"
 #include "QR_Decomposition.hpp"
+
 
 int main(){
 
@@ -44,11 +46,40 @@ Matrix A(3,3);
         1.e-12,1.e-12,1.e-12,-1,2;
  */   
     QR_Decomposition QR_A;
-    
+
+    /**
+     * Serial execution on OpenMP
+    */
+    std::cout<<"Serial:"<<std::endl;
+    auto start_serial = std::chrono::high_resolution_clock::now();
     auto [Q,R]=QR_A.Givens_solve(A);
-    
+    auto end_serial = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double> duration_s = end_serial - start_serial;
+
+    std::cout<<"R_Serial="<<std::endl;
     std::cout<<R<<std::endl;
+    std::cout<<"Q_Serial="<<std::endl;
     std::cout<<Q<<std::endl;
+    std::cout << "Time of execution: " << duration_s.count() << " secondi" << std::endl;
+
+    std::cout<<std::endl;
+    std::cout<<"Parallel:"<<std::endl;
+    /**
+     * Parallel execution on OpenMP
+    */
+    
+    auto start_parallel = std::chrono::high_resolution_clock::now();
+    auto [Qp,Rp]=QR_A.Givens_solve_parallel(A);
+    auto end_parallel = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double> duration_p = end_parallel - start_parallel;
+    
+    std::cout<<"R_parallel="<<std::endl;
+    std::cout<<Rp<<std::endl;
+    std::cout<<"Q_parallel="<<std::endl;
+    std::cout<<Qp<<std::endl;
+    std::cout << "Time of execution: " << duration_p.count() << " s" << std::endl;
 
 
 	return 0;
