@@ -1,23 +1,24 @@
 #include "svd.hpp"
 
-std::tuple<Matrix, Vector, Matrix> SVD::svd_with_qr(Matrix A){      //non funziona ancora!
+std::tuple<Matrix, Vector, Matrix> SVD::svd_with_qr(Matrix A){   
+    int m = A.rows(), n = A.cols();
     Matrix B = A.transpose() * A;
-    int n = B.cols();
-    Matrix U = eye(n),V(n,n);
+    Matrix V = eye(n),U(m,m);
     Vector s(n);
     QR_Decomposition obj_qr;
     int nmax = 20;
 
-    std::cout<<B<<std::endl<<std::endl;;
-    //QR algorithm to find eigenvalues of B
+    //QR algorithm to find eigenvalues of B (n x n)
     for(size_t i=0;i<nmax;i++){
         auto [Q,R] = obj_qr.Givens_solve(B);
         B = R * Q;
-        U = U * Q;
+        V = V * Q;           
     }
 
-    std::cout<<B<<std::endl<<std::endl;;
-    std::cout<<U*B*U.transpose()<<std::endl;
+    for(size_t i=0; i<n; i++){
+        s[i] = B(i,i);
+        U.col(i) = A * V.col(i) / B(i,i);
+    }
 
     return std::make_tuple(U,s,V);
 }
@@ -35,9 +36,9 @@ std::tuple<Matrix, Vector, Matrix> SVD::svd_with_PM(Matrix A){
         sigma = norm(A * v);
         u = A * v / sigma;
 
+        V.col(i) = v; 
         U.col(i) = u;           
         s[i]=sigma;
-        V.col(i) = v; 
             
         A = A - sigma * u * v.transpose(); 
         i++;
@@ -46,15 +47,14 @@ std::tuple<Matrix, Vector, Matrix> SVD::svd_with_PM(Matrix A){
 }
 
 
-int SVD::compute_rank(Matrix A) {       // costa O(n^3) !!!!!
+int SVD::compute_rank(Matrix A) {       // costa O(n^3)
     int n=A.cols(), m=A.rows();
-    int rank = 0, j;
+    int rank = 0;
     std::vector<bool> row_selected(n, false);
-    for (int i = 0; i < m; ++i) {
-        for (j = 0; j < n; ++j) {
-            if (!row_selected[j] && abs(A(j,i)) > m_epsilon)
-                break;
-        }
+    for (size_t i = 0; i < m; ++i) {
+        int j=0;
+        while((row_selected[j] || abs(A(j,i)) < m_epsilon) && j<n)
+            j++;
 
         if (j != n) {
             ++rank;
