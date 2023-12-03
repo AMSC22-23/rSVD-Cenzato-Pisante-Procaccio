@@ -10,11 +10,15 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve(Matrix A){
     int n=A.cols();
 
     /**
-        * Initialize matrix Q (size m x m), matrix R(m x n) and matrix of rotations G(m x m)
+     * Set Q back to the identity, set R equal to A
     */
-    Q=Eigen::MatrixXd::Zero(m,m);
-    //Q.coeffRef(m-1,m-1)=1;
-    for(int i=0;i<m;++i) Q.coeffRef(i,i)=1.;
+    Q.resize(m,m);
+    for(int i=0;i<m;++i){
+        for(int j=0;j<m;j++){
+            Q.coeffRef(i,j)=0.;
+        }
+        Q.coeffRef(i,i)+=1.;
+    } 
 
     R=A;
     /**
@@ -38,7 +42,7 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve(Matrix A){
             double a=R.coeffRef(i-1,j);
             double b=R.coeffRef(i,j);
             double c,s;
-      
+        
             if (abs(a)>abs(b) ){
                 if(a!=0.0){
                     int segno = std::signbit(a) ? -1 : 1;
@@ -96,12 +100,6 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve(Matrix A){
         }
     }
 
-    std::cout<<"Q="<<std::endl;
-    std::cout<<Q<<std::endl;
-    std::cout<<"======================="<<std::endl;
-    std::cout<<"R="<<std::endl;
-    std::cout<<R<<std::endl;
-    std::cout<<"======================="<<std::endl;
     return std::make_tuple(Q,R);
 }
 
