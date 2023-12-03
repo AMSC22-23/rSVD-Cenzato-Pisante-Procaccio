@@ -12,7 +12,7 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve(Matrix A){
     /**
         * Initialize matrix Q (size m x m), matrix R(m x n) and matrix of rotations G(m x m)
     */
-    Q.resize(m,m);
+    Q=Eigen::MatrixXd::Zero(m,m);
     //Q.coeffRef(m-1,m-1)=1;
     for(int i=0;i<m;++i) Q.coeffRef(i,i)=1.;
 

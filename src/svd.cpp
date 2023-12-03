@@ -6,7 +6,7 @@ std::tuple<Matrix, Vector, Matrix> SVD::svd_with_qr(Matrix A){      //non funzio
     Matrix U = eye(n),V(n,n);
     Vector s(n);
     QR_Decomposition obj_qr;
-    int nmax = 100;
+    int nmax = 20;
 
     std::cout<<B<<std::endl<<std::endl;;
     //QR algorithm to find eigenvalues of B
