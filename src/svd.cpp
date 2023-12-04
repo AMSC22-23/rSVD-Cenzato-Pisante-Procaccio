@@ -6,7 +6,7 @@ std::tuple<Matrix, Vector, Matrix> SVD::svd_with_qr(Matrix A){
     Matrix V = eye(n),U(m,m);
     Vector s(n);
     QR_Decomposition obj_qr;
-    int nmax = 20;
+    int nmax = 40;
 
     //QR algorithm to find eigenvalues of B (n x n)
     for(size_t i=0;i<nmax;i++){
@@ -16,8 +16,8 @@ std::tuple<Matrix, Vector, Matrix> SVD::svd_with_qr(Matrix A){
     }
 
     for(size_t i=0; i<n; i++){
-        s[i] = B(i,i);
-        U.col(i) = A * V.col(i) / B(i,i);
+        s[i] = sqrt(B(i,i));
+        U.col(i) = A * V.col(i) / s[i];
     }
 
     return std::make_tuple(U,s,V);
