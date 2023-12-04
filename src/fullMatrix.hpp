@@ -8,6 +8,9 @@
 #include <vector>
 #include <iostream>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunknown-pragmas"
+
 /*
 	 Enum for the storage of the ordering information of the matrix
  */
@@ -159,15 +162,21 @@ class FullMatrix{
 
 			if constexpr(ORDER==ORDERING::ROWMAJOR){
 				for(size_t i=0;i<A.rows();++i){
+					auto ofs=A.cols()*i;
+					Real sum=0.;
+					#pragma omp parallel for shared(ofs,x,A) reduction(+:sum)
 					for(size_t j=0;j<x.size();++j){
-						toReturn[i]+=A.m_entries[i*A.cols()+j]*x[j];
+						sum+=A.m_entries[ofs+j]*x[j];
 					}
+					toReturn[i]=sum;
 				}
 			}
 			else{
 				for(size_t j=0;j<A.cols();++j){
+					auto ofs=A.rows()*j;
+					#pragma omp parallel for shared(ofs,x,A,toReturn)
 					for(size_t i=0;i<A.rows();++i){
-						toReturn[i]+=A.m_entries[i+A.rows()*j]*x[j];
+						toReturn[i]+=A.m_entries[i+ofs]*x[i];
 					}
 				}
 			}
@@ -189,19 +198,28 @@ class FullMatrix{
 			toReturn.resize(A.rows(),B.cols());
 
 			if constexpr(ORDER==ORDERING::ROWMAJOR){
+				#pragma omp parallel for shared(A,B,toReturn)
 				for(size_t i=0;i<A.rows();++i){
 					for(size_t k=0;k<B.rows();++k){
+						auto ofs1=i*B.cols();
+						auto ofs2=i*A.cols();
+						auto ofs3=k*B.cols();
+						//#pragma omp parallel for shared(ofs1,ofs2,ofs3,k,A,B,toReturn)
 						for(size_t j=0;j<B.cols();++j){
-							toReturn.m_entries[i*B.cols()+j]+=A.m_entries[i*A.cols()+k]*B.m_entries[k*B.cols()+j];
+							toReturn.m_entries[ofs1+j]+=A.m_entries[ofs2+k]*B.m_entries[ofs3+j];
 						}
 					}
 				}
 			}
 			else{
+				#pragma omp parallel for shared(A,B,toReturn)
 				for(size_t j=0;j<B.cols();++j){
 					for(size_t k=0;k<A.cols();++k){
+						auto ofs1=A.rows()*k;
+						auto ofs2=B.rows()*j;
+						//#pragma omp parallel for shared(ofs1,ofs2,A,B,toReturn) 
 						for(size_t i=0;i<A.rows();++i){
-							toReturn.m_entries[i+B.rows()*j]+=A.m_entries[i+A.rows()*k]*B.m_entries[k+B.rows()*j];
+							toReturn.m_entries[i+ofs2]+=A.m_entries[i+ofs1]*B.m_entries[k+ofs2];
 						}
 					}
 				}
@@ -344,5 +362,7 @@ class FullMatrix{
 		 */
 		size_t m_cols;
 };
+
+#pragma GCC diagnostic pop
 
 #endif
