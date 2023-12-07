@@ -1,8 +1,5 @@
 #include "QR_Decomposition.hpp"
 
-using Matrix=Eigen::MatrixXd;
-using Vector=Eigen::VectorXd;
-
 
 std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve(Matrix A){
     
@@ -20,7 +17,6 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve(Matrix A){
     * Assembling the matrix Q by applying the Givens rotation at each 
     * iteration and applying each component of Q to R in order to make it triangular
     */
-    int count=1;
     for (int j = 0;j<n;j++){
         for(int i=m-1;i>j;i--){
 
@@ -83,16 +79,7 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve(Matrix A){
             }
         }
     }
-    for(int i=0;i<n-1;i++){
-        if(R(i,i)>0){
-            for(int j=i;j<n;j++){
-                R.coeffRef(i,j)=-R.coeffRef(i,j);
-            }
-            for(int j=0;j<m;j++){
-                Q.coeffRef(j,i)=-Q.coeffRef(j,i);
-            }
-        }
-    }
+
 
     return std::make_tuple(Q,R);
 }
@@ -199,5 +186,19 @@ std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve(Matrix A){
     }
 
     return std::make_tuple(Q,R);
-    }
+}
 
+void setQR_for_svd(Matrix Q, Matrix R){
+int m=Q.rows();
+int n=R.rows();
+    for(int i=0;i<n-1;i++){
+        if(R(i,i)>0){
+            for(int j=i;j<n;j++){
+                R.coeffRef(i,j)=-R.coeffRef(i,j);
+            }
+            for(int j=0;j<m;j++){
+                Q.coeffRef(j,i)=-Q.coeffRef(j,i);
+            }
+        }
+    }
+}

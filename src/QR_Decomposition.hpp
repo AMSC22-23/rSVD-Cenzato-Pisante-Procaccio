@@ -7,6 +7,7 @@
 
 
 using Matrix=Eigen::MatrixXd;
+using Vector=Eigen::VectorXd;
 
 class QR_Decomposition{
 public:
@@ -25,10 +26,19 @@ public:
     std::tuple<Matrix, Matrix> HouseHolder_solve(const Matrix A);
 
     /**
+     * Parallel method for setting R,Q for svd with QR
+    */
+    void setQR_for_svd(Matrix Q, Matrix R){};
+
+    /**
      * Parallel method for QR Decomposition
     */
     std::tuple<Matrix, Matrix> Givens_solve_parallel(const Matrix A);
 
+    /**
+     * Parallel method for setting R,Q for svd with QR
+    */
+    void setQR_for_svd_parallel(Matrix Q, Matrix R){};
     /**
      *I call the distructor
     */

@@ -62,45 +62,59 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve_parallel(Matrix A){
                 * In addition I use a temporal variable to avoid changing the matrix before the computation
                 * Since there is dependencies within the for loop, I use atomic add
             */
-            
             double tmp = 0.0;
-            #pragma omp simd
-            for (int k = 0; k < n; k++) {
-                tmp = c * R.coeffRef(i - 1, k) + s * R.coeffRef(i, k);
-                R.coeffRef(i, k) = -s * R.coeffRef(i - 1, k) + c * R.coeffRef(i, k);
-                R.coeffRef(i - 1, k) = tmp;
-            }
             
-            R.coeffRef(i, j) = 0;
-            #pragma omp simd
-            for (int k = 0; k < m; k++) {
-                tmp = Q.coeffRef(k, i - 1) * c + Q.coeffRef(k, i) * s;
-                Q.coeffRef(k, i) = Q.coeffRef(k, i - 1) * -s + Q.coeffRef(k, i) * c;
-                Q.coeffRef(k, i - 1) = tmp;
-            }
+                
+                #pragma omp sections 
+                {
+                    #pragma omp section
+                    {
+                        #pragma omp parallel for shared(R,c,s) num_threads(2)
+                        for (int k = 0; k < n; k++) {
+                            tmp = c * R.coeffRef(i - 1, k) + s * R.coeffRef(i, k);
+                            R.coeffRef(i, k) = -s * R.coeffRef(i - 1, k) + c * R.coeffRef(i, k);
+                            R.coeffRef(i - 1, k) = tmp;
+                        }
+                    }
+                
+                    
+                    #pragma omp section
+                    {
+                        #pragma omp parallel for shared(Q,c,s) num_threads(2)
+                        for (int k = 0; k < m; k++) {
+                            tmp = Q.coeffRef(k, i - 1) * c + Q.coeffRef(k, i) * s;
+                            Q.coeffRef(k, i) = Q.coeffRef(k, i - 1) * -s + Q.coeffRef(k, i) * c;
+                            Q.coeffRef(k, i - 1) = tmp;
+                        }
+                    }
+                    
+                }
+            R.coeffRef(i, j) = 0.;
         }
     }
-
-
     
-        for (int i = 0; i < n - 1; i++) {
-            if (R(i, i) > 0) {
-                #pragma omp simd
-                for (int j = i; j < n; j++) {
-                    R.coeffRef(i, j) = -R.coeffRef(i, j);
-                }
-                #pragma omp simd
-                for (int j = 0; j < m; j++) {
-                    Q.coeffRef(j, i) = -Q.coeffRef(j, i);
-                }
-            }
-        }
-        
     return std::make_tuple(Q,R);
 }
 
 
 
+void setQR_for_svd_parallel(Matrix Q, Matrix R){
+int m=Q.rows();
+int n=R.rows();
+    #pragma omp parallel for num_threads(2)
+    for (int i = 0; i < n - 1; i++) {
+        if (R.coeffRef(i, i) > 0) {
+            #pragma omp parallel for num_threads(2) shared(R)
+            for (int j = i; j < n; j++) {
+                R.coeffRef(i, j) *= -1;
+            }
+            #pragma omp parallel for num_threads(2) shared(Q)
+            for (int j = 0; j < m; j++) {
+                Q.coeffRef(j, i) *= -1;
+            }
+        }
+    }
 
+}
 
 

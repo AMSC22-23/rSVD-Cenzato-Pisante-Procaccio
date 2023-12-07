@@ -5,7 +5,8 @@
 
 
 int main(){
-
+size_t m=50;
+size_t n=30;
 
 
     // Assegnazione di valori agli elementi
@@ -17,11 +18,13 @@ int main(){
 2,3,4,3,
 1,2,3,4;
   */
+ /*
  Matrix A(4,4);
  A<<121.0991,   15.0583,    1.3624,   -0.3454,
    15.0583,   13.4599,   1.7818,  -0.6114,
     1.3624,    1.7818,   0.8663,   -0.3217,
    -0.3454,   -0.6114,   -0.3217,    0.5747;  
+   */
 /* 
 Matrix A(5,3);
 A<<0.8147, 0.0975, 0.1576,
@@ -45,6 +48,12 @@ Matrix A(3,3);
         1.e-12,-1.e-12,-1,2,-1,
         1.e-12,1.e-12,1.e-12,-1,2;
  */   
+Matrix A(m,n);
+for(size_t i=0;i<m;i++){
+    for (size_t j=0;j<n;j++){
+        A.coeffRef(i,j)=4+i-j;
+    }
+}
     QR_Decomposition QR_A;
 
     /**
@@ -56,16 +65,16 @@ Matrix A(3,3);
     auto end_serial = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double> duration_s = end_serial - start_serial;
-
+    /*
     std::cout<<"R_Serial="<<std::endl;
     std::cout<<R<<std::endl;
     std::cout<<"Q_Serial="<<std::endl;
     std::cout<<Q<<std::endl;
-    std::cout << "Time of execution: " << duration_s.count() << " secondi" << std::endl;
-
+    
 
     std::cout<<std::endl;
     std::cout<<"Parallel:"<<std::endl;
+    */
     /**
      * Parallel execution on OpenMP
     */
@@ -75,13 +84,16 @@ Matrix A(3,3);
     auto end_parallel = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double> duration_p = end_parallel - start_parallel;
-    
+    /*
     std::cout<<"R_parallel="<<std::endl;
     std::cout<<Rp<<std::endl;
     std::cout<<"Q_parallel="<<std::endl;
     std::cout<<Qp<<std::endl;
-    std::cout << "Time of execution: " << duration_p.count() << " s" << std::endl;
-
+    */
+    std::cout << "Time of execution serial: " << duration_s.count() << " secondi" << std::endl;
+    std::cout << "Time of execution parallel: " << duration_p.count() << " s" << std::endl;
+    double SpeedUp=duration_s.count()/duration_p.count();
+    std::cout << "Speed Up: "<<SpeedUp << std::endl;
 /* 
     auto [Qh,Rh]=QR_A.HouseHolder_solve(A);
     std::cout<<"R_Serial="<<std::endl;
