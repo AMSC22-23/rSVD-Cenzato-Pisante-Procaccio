@@ -115,9 +115,9 @@ std::tuple<Matrix, Matrix> QR_Decomposition::QR_parallel(Matrix A){
     #pragma omp parallel for num_threads(4) ordered
     for (int j = 0;j<n;j++){
         #pragma omp ordered
-        for(int i=m-1+2*omp_get_thread_num();i>j;i--){
+        for(int i=m-1+2*j;i>j;i--){
             if (i<m){
-                std::cout<<"thread "<<omp_get_thread_num()<<"inizia"<<std::endl;
+                std::cout<<"thread "<<j<<"inizia"<<std::endl;
             /**
                 * Givens rotation gets applied by calculating the values of:
                 * c: cosine of the angle of rotation
