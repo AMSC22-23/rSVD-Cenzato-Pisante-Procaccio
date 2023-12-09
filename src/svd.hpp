@@ -45,9 +45,10 @@ class SVD{
     /* Computes the pseudo-inverse of a matrix A (m x n) using SVD */
     Matrix pseudoinverse(const Matrix A){
         int m = A.rows(), n = A.cols();
+        int k = (m > n) ? n : m;
         auto[U,s,V]=svd_with_PM(A); 
         
-        for(size_t i=0; i<n; i++)
+        for(size_t i=0; i<k; i++)
             s[i] = 1 / s[i];
 
         return mult(V,s,U);
@@ -55,18 +56,23 @@ class SVD{
 
 
     /*Given an m × n matrix A, a target number k of singular vectors, and an exponent q 
-    (say q = 1 or q = 2), this procedure computes an approximate rank-2k factorization UΣV∗, 
+    (say q = 1 or q = 2), this procedure computes an approximate rank-k factorization UΣV∗, 
     where U and V are orthonormal, and Σ is nonnegative and diagonal.
         Stage A:
-        1. Generate an n × 2k Gaussian test matrix Ω.
-        2. Form Y=(AA*)^qAΩ by multiplying alternately with A and A*
+        1. Generate an n × k Gaussian test matrix Ω.
+        2. Form Y=(AA*)^q AΩ by multiplying alternately with A and A*
         3. Construct a matrix Q whose columns form an orthonormal basis for the range of Y.
         Stage B:
-        4. Form B = Q∗A
-        5. Compute an SVD of the small matrix: B = U_hat ΣV*
-        6. Set U = Q U_hat */
-    std::tuple<Matrix, Vector, Matrix> rsvd(Matrix A, int k);
-
+        4. Form B = Q∗ A
+        5. Compute an SVD of the small matrix: B = U_hat Σ V*
+        6. Set U = Q U_hat 
+    Inputs:
+        A = m x n matrix
+        r = target rank
+        p = oversampling parameter
+        q = power iteration */
+    std::tuple<Matrix, Vector, Matrix> rsvd(Matrix A, int r, int p, int q);  
+ 
 
     /* Computes the rank of the matrix A */
     int compute_rank(Matrix A);

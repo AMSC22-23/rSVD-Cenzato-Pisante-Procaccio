@@ -1,36 +1,12 @@
 #include "svd.hpp"
 
-std::tuple<Matrix, Vector, Matrix> SVD::svd_with_qr(Matrix A){   
-    int m = A.rows(), n = A.cols();
-    Matrix B = A.transpose() * A;
-    Matrix V = eye(n),U(m,m);
-    Vector s(n);
-    QR_Decomposition obj_qr;
-    int nmax = 40;
-
-    //QR algorithm to find eigenvalues of B (n x n)
-    for(size_t i=0;i<nmax;i++){
-        auto [Q,R] = obj_qr.Givens_solve(B);
-        B = R * Q;
-        V = V * Q;           
-    }
-
-    for(size_t i=0; i<n; i++){
-        s[i] = sqrt(B(i,i));
-        U.col(i) = A * V.col(i) / s[i];
-    }
-
-    return std::make_tuple(U,s,V);
-}
-
-
-
 std::tuple<Matrix, Vector, Matrix> SVD::svd_with_PM(Matrix A){
     int n=A.cols(), m=A.rows(), i=0;
-    Matrix B(n,n), U(m,n), V(n,n);
-    Vector u(m), v(n), s(n);
+    int k = (m > n) ? n : m;
+    Matrix B(n,n), U(m,k), V(n,k);
+    Vector u(m), v(n), s(k);
     double sigma=1.;
-    while((sigma > m_epsilon) && i<n){                                
+    while((sigma > m_epsilon) && i<k){                                
         B =  A.transpose() * A;
         v = PowerMethod(B);
         sigma = norm(A * v);
@@ -43,6 +19,56 @@ std::tuple<Matrix, Vector, Matrix> SVD::svd_with_PM(Matrix A){
         A = A - sigma * u * v.transpose(); 
         i++;
     }
+    return std::make_tuple(U,s,V);
+}
+
+
+std::tuple<Matrix, Vector, Matrix> SVD::rsvd(Matrix A, int r, int p, int q){  
+    int m=A.rows(), n=A.cols(), k = r + p;
+    Matrix Z(m,k) ,Omega = genmat(n,k);
+    QR_Decomposition QR;
+
+    Z = A * Omega;                     
+    for(size_t i=0; i<q; i++){
+        Z = A * (A.transpose() * Z);
+    } 
+    auto [Q,R] = QR.Givens_solve(Z);
+
+    auto Y = Q.transpose() * A;  
+
+    auto [U,s,V] = svd_with_PM(Y);
+    U = Q * U;
+
+    return std::make_tuple(U,s,V);
+}
+
+
+std::tuple<Matrix, Vector, Matrix> SVD::svd_with_qr(Matrix A){   
+    int m = A.rows(), n = A.cols();
+    Matrix B = A.transpose() * A, B_old = B;
+    Matrix V = eye(n),U(m,m);
+    Vector s(n), s_old(n);
+    QR_Decomposition obj_qr;
+    int nmax = 5 * n, i = 0;
+    double err = 1.;
+    for(size_t i=0; i<n; i++){            
+        s[i] = sqrt(B(i,i));
+    }
+
+    //QR algorithm to find eigenvalues of B (n x n)
+    while( err > m_epsilon && i < nmax){
+        auto [Q,R] = obj_qr.Givens_solve(B);
+        B = R * Q;
+        V = V * Q; 
+
+        err = norm(B_old-B);
+        i++;
+    }
+
+    for(size_t i=0; i<n; i++){
+        U.col(i) = A * V.col(i) / s[i];
+    }
+
     return std::make_tuple(U,s,V);
 }
 
@@ -70,19 +96,4 @@ int SVD::compute_rank(Matrix A) {       // costa O(n^3)
         }
     }
     return rank;
-}
-
-std::tuple<Matrix, Vector, Matrix> SVD::rsvd(Matrix A, int k){      //da vedere bene!
-    int m=A.rows(), n=A.cols();
-    Matrix U(m,m), V(n,n), Omega = genmat(n, 2*k), Y(m,2*k), B(m,n);
-    Vector s(n);
-    QR_Decomposition QR;
-
-    Y = (A * A.transpose()) * A * Omega;        
-    auto [Q,R]=QR.Givens_solve(Y);
-    B = Q * A;
-    std::tie(U,s,V) = svd_with_PM(B);
-    U = Q * U;
-
-    return std::make_tuple(U,s,V);
 }
