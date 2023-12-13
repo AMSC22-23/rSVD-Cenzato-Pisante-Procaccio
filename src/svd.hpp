@@ -7,6 +7,10 @@
 
 #include "QR_Decomposition.hpp"
 
+#include <fstream>
+#include <sstream> 
+#include <iomanip>
+
 using Vector = Eigen::VectorXd;
 using Matrix = Eigen::MatrixXd;
 
@@ -16,6 +20,32 @@ class SVD{
             epsilon : precision  */
         SVD(double epsilon) : 
         m_epsilon(epsilon) {}
+
+
+    void exportmatrix(Matrix A, std::string outputFileName){
+    // Write the matrix to the file
+    std::ofstream outputFile(outputFileName);
+    if (outputFile.is_open()) {
+        int rows = A.rows(), cols = A.cols();
+        // Write dimensions to the first row
+        outputFile << rows << " " << cols << std::endl;
+
+        // Write matrix data
+        for (int i = 0; i < rows; ++i) {
+            for (int j = 0; j < cols; ++j) {
+                outputFile << std::setw(8) << std::fixed << std::setprecision(4) << A(i,j) << " ";
+            }
+            outputFile << std::endl;
+        }
+        std::cout << "Computed matrix has been written to "<< outputFileName << std::endl;
+
+        // Close the file
+        outputFile.close();
+    } else {
+        std::cerr << "Error opening file for writing." << std::endl;
+    }
+
+}
 
 
     /* SVD using QR factorization :
@@ -55,8 +85,12 @@ class SVD{
     }
 
 
-    /*Given an m × n matrix A, a target number k of singular vectors, and an exponent q 
-    (say q = 1 or q = 2), this procedure computes an approximate rank-k factorization UΣV∗, 
+    /* Inputs:
+        A = m x n matrix
+        r = target rank
+        p = oversampling parameter
+        q = exponent of power iteration
+    This procedure computes an approximate rank-k factorization UΣV∗, 
     where U and V are orthonormal, and Σ is nonnegative and diagonal.
         Stage A:
         1. Generate an n × k Gaussian test matrix Ω.
@@ -65,17 +99,9 @@ class SVD{
         Stage B:
         4. Form B = Q∗ A
         5. Compute an SVD of the small matrix: B = U_hat Σ V*
-        6. Set U = Q U_hat 
-    Inputs:
-        A = m x n matrix
-        r = target rank
-        p = oversampling parameter
-        q = power iteration */
+        6. Set U = Q U_hat  */
     std::tuple<Matrix, Vector, Matrix> rsvd(Matrix A, int r, int p, int q);  
- 
 
-    /* Computes the rank of the matrix A */
-    int compute_rank(Matrix A);
 
     /* Multiplication to obtain A (m x n) from the svd,
         Input:
@@ -138,7 +164,7 @@ class SVD{
     }
 
 
-    /*Generates m x n Gaussian matrix M*/
+    /* Generates m x n Gaussian matrix M */
     Matrix genmat(const int m, const int n){
         Matrix M(m,n);
         std::random_device rd ;
@@ -152,13 +178,24 @@ class SVD{
     }
 
 
-    /* Returns the norm of a vector*/
+    /* Returns the L2 norm of a vector */
     double norm(const Vector v){
         double norm=0;
         for(int i=0;i<v.size();i++){
             norm += v[i] * v[i];
         }
-        return sqrt(norm);
+        return std::sqrt(norm);
+    }
+
+
+    /* Returns the L2 norm of a upper triangular matrix */
+    double normMat(const Matrix A){
+        double norm=0;
+        for(int i=0;i<A.rows();i++){
+            for(size_t j=i+1;j<A.cols();j++)
+                norm += A(i,j) * A(i,j);
+        }
+        return std::sqrt(norm);
     }
 
 

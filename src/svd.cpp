@@ -9,7 +9,7 @@ std::tuple<Matrix, Vector, Matrix> SVD::svd_with_PM(Matrix A){
     while((sigma > m_epsilon) && i<k){                                
         B =  A.transpose() * A;
         v = PowerMethod(B);
-        sigma = norm(A * v);
+        sigma = norm(A * v); 
         u = A * v / sigma;
 
         V.col(i) = v; 
@@ -45,55 +45,34 @@ std::tuple<Matrix, Vector, Matrix> SVD::rsvd(Matrix A, int r, int p, int q){
 
 std::tuple<Matrix, Vector, Matrix> SVD::svd_with_qr(Matrix A){   
     int m = A.rows(), n = A.cols();
-    Matrix B = A.transpose() * A, B_old = B;
-    Matrix V = eye(n),U(m,m);
-    Vector s(n), s_old(n);
+    int k = (m > n) ? n : m;
+    Matrix B = A.transpose() * A, R_err;
+    Matrix V = eye(n),U(m,m), I=eye(n);
+    Vector s(n),s_old(n);
     QR_Decomposition obj_qr;
     int nmax = 5 * n, i = 0;
-    double err = 1.;
-    for(size_t i=0; i<n; i++){            
-        s[i] = sqrt(B(i,i));
-    }
+    double err = 1., epsilon = 1e-3;
 
     //QR algorithm to find eigenvalues of B (n x n)
-    while( err > m_epsilon && i < nmax){
+    while( err > epsilon && i < 19){
         auto [Q,R] = obj_qr.Givens_solve(B);
+        obj_qr.setQR_for_svd(Q,R);
         B = R * Q;
-        V = V * Q; 
+        V = V * Q;
 
-        err = norm(B_old-B);
+        for(size_t i=0; i<n; i++){        
+            s[i] = sqrt(B(i,i));
+        }
+
+        err = (Q-I).norm()/(n*n);
         i++;
+        if(i==18) exportmatrix(R,"R.txt");
     }
+    std::cout<<i<<" , err = "<<err<<std::endl;
 
-    for(size_t i=0; i<n; i++){
+    for(size_t i=0; i<k; i++){ 
         U.col(i) = A * V.col(i) / s[i];
     }
 
     return std::make_tuple(U,s,V);
-}
-
-
-int SVD::compute_rank(Matrix A) {       // costa O(n^3)
-    int n=A.cols(), m=A.rows();
-    int rank = 0;
-    std::vector<bool> row_selected(n, false);
-    for (size_t i = 0; i < m; ++i) {
-        int j=0;
-        while((row_selected[j] || abs(A(j,i)) < m_epsilon) && j<n)
-            j++;
-
-        if (j != n) {
-            ++rank;
-            row_selected[j] = true;
-            for (int p = i + 1; p < m; ++p)
-                A(j,p) /= A(j,i);
-            for (int k = 0; k < n; ++k) {
-                if (k != j && abs(A(k,i)) > m_epsilon) {
-                    for (int p = i + 1; p < m; ++p)
-                        A(k,p) -= A(j,p) * A(k,i);
-                }
-            }
-        }
-    }
-    return rank;
 }
