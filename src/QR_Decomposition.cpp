@@ -75,7 +75,14 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve(Matrix A){
             for(int k=0;k<m;k++){
                 tmp=Q.coeffRef(k,i-1)*c+Q.coeffRef(k,i)*s;
                 Q.coeffRef(k,i)=Q.coeffRef(k,i-1)*-s+Q.coeffRef(k,i)*c; 
-                Q.coeffRef(k,i-1)=tmp;
+
+                /**
+                 * add control on Q
+                */
+                if(Q.coeffRef(k,i)<=1.e-18) Q.coeffRef(k,i-1)=0;
+                if(tmp<=1.e-18) Q.coeffRef(k,i-1)=0;
+                else Q.coeffRef(k,i-1)=tmp;
+                
             }
         }
     }
