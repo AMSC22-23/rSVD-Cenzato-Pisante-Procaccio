@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <iostream>
+#include <cmath>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunknown-pragmas"
@@ -311,8 +312,27 @@ class FullMatrix{
 			for(size_t i=0;i<m_entries.size();++i)
 				m_entries[i]*=k;
 		}
+
+		/*
+			Method for retrieving the Frobenius norm squared
+		*/
+		Real normSquared(){
+			Real norm=0.;
+			for(auto el: m_entries)
+				norm+=el*el;
+
+			return norm
+		}
+		/*
+			Method for retrieving the Frobenius norm
+		*/
+		Real norm(){
+			return std::sqrt(normSquared());
+		}
 		/*
 			 Method to return the transposed of a matrix
+			 TODO: you can return a wrapper class AdjointMatrix with a reference to the class A but
+			 that overloads the operator () in a COLMAJOR way (if matrix is saved as ROWMAJOR)
 		 */
 		FullMatrix transpose() const{
 			FullMatrix toReturn(m_cols,m_rows);
