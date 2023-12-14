@@ -321,7 +321,7 @@ class FullMatrix{
 			for(auto el: m_entries)
 				norm+=el*el;
 
-			return norm
+			return norm;
 		}
 		/*
 			Method for retrieving the Frobenius norm
