@@ -316,7 +316,7 @@ class FullMatrix{
 		/*
 			Method for retrieving the Frobenius norm squared
 		*/
-		Real normSquared(){
+		const Real normSquared() const {
 			Real norm=0.;
 			for(auto el: m_entries)
 				norm+=el*el;
@@ -326,7 +326,7 @@ class FullMatrix{
 		/*
 			Method for retrieving the Frobenius norm
 		*/
-		Real norm(){
+		const Real norm() const {
 			return std::sqrt(normSquared());
 		}
 		/*
@@ -366,7 +366,14 @@ class FullMatrix{
 				os<<std::endl;
 			}
 		}
-
+		/*
+			I can work on the assumption that the matrix is squared
+		*/
+		void setIdentity(){
+			resize(m_rows,m_cols);
+			for(size_t i=0;i<m_rows;++i)
+				this->operator()(i,i)=1.;
+		}
 	private:
 
 		/*
