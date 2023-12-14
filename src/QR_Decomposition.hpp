@@ -1,13 +1,15 @@
 #pragma once
 
 #include <iostream>
-#include <Eigen/Dense>
 #include <cmath>
 #include <omp.h>
+#include <tuple>
+
+#include "fullMatrix.hpp"
 
 
-using Matrix=Eigen::MatrixXd;
-using Vector=Eigen::VectorXd;
+using Matrix=FullMatrix<double,ORDERING::ROWMAJOR>;
+using Vector=FullMatrix<double,ORDERING::ROWMAJOR>;
 
 class QR_Decomposition{
 public:

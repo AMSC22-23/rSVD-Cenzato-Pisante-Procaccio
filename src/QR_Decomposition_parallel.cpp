@@ -1,9 +1,6 @@
 #include "QR_Decomposition.hpp"
 
 
-using Matrix=Eigen::MatrixXd;
-using Vector=Eigen::VectorXd;
-
 
 std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve_parallel(Matrix A){
     
@@ -34,8 +31,8 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve_parallel(Matrix A){
                 * below the diagonal to pull them to zero
             */
             
-            double a=R.coeffRef(i-1,j);
-            double b=R.coeffRef(i,j);
+            double a=R(i-1,j);
+            double b=R(i,j);
             double c,s;
         
             if (abs(a)>abs(b) ){
@@ -71,9 +68,9 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve_parallel(Matrix A){
                     {
                         #pragma omp parallel for shared(R,c,s) num_threads(2)
                         for (int k = 0; k < n; k++) {
-                            tmp = c * R.coeffRef(i - 1, k) + s * R.coeffRef(i, k);
-                            R.coeffRef(i, k) = -s * R.coeffRef(i - 1, k) + c * R.coeffRef(i, k);
-                            R.coeffRef(i - 1, k) = tmp;
+                            tmp = c * R(i - 1, k) + s * R(i, k);
+                            R(i, k) = -s * R(i - 1, k) + c * R(i, k);
+                            R(i - 1, k) = tmp;
                         }
                     }
                 
@@ -82,14 +79,14 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve_parallel(Matrix A){
                     {
                         #pragma omp parallel for shared(Q,c,s) num_threads(2)
                         for (int k = 0; k < m; k++) {
-                            tmp = Q.coeffRef(k, i - 1) * c + Q.coeffRef(k, i) * s;
-                            Q.coeffRef(k, i) = Q.coeffRef(k, i - 1) * -s + Q.coeffRef(k, i) * c;
-                            Q.coeffRef(k, i - 1) = tmp;
+                            tmp = Q(k, i - 1) * c + Q(k, i) * s;
+                            Q(k, i) = Q(k, i - 1) * -s + Q(k, i) * c;
+                            Q(k, i - 1) = tmp;
                         }
                     }
                     
                 }
-            R.coeffRef(i, j) = 0.;
+            R(i, j) = 0.;
         }
     }
     
@@ -112,9 +109,8 @@ std::tuple<Matrix, Matrix> QR_Decomposition::QR_parallel(Matrix A){
     * Assembling the matrix Q by applying the Givens rotation at each 
     * iteration and applying each component of Q to R in order to make it triangular
     */
-    #pragma omp parallel for num_threads(4) ordered
+    #pragma omp parallel for num_threads(4)
     for (int j = 0;j<n;j++){
-        #pragma omp ordered
         for(int i=m-1+2*j;i>j;i--){
             if (i<m){
                 std::cout<<"thread "<<j<<"inizia"<<std::endl;
@@ -127,8 +123,8 @@ std::tuple<Matrix, Matrix> QR_Decomposition::QR_parallel(Matrix A){
                 * below the diagonal to pull them to zero
             */
             
-            double a=R.coeffRef(i-1,j);
-            double b=R.coeffRef(i,j);
+            double a=R(i-1,j);
+            double b=R(i,j);
             double c,s;
         
             if (abs(a)>abs(b) ){
@@ -158,24 +154,24 @@ std::tuple<Matrix, Matrix> QR_Decomposition::QR_parallel(Matrix A){
             double tmp = 0.0;
             
                 
-                
+            #pragma omp critical    
             #pragma omp parallel for shared(R,c,s) num_threads(2)
             for (int k = j; k < n; k++) {
-                tmp = c * R.coeffRef(i - 1, k) + s * R.coeffRef(i, k);
-                R.coeffRef(i, k) = -s * R.coeffRef(i - 1, k) + c * R.coeffRef(i, k);
-                R.coeffRef(i - 1, k) = tmp;
+                tmp = c * R(i - 1, k) + s * R(i, k);
+                R(i, k) = -s * R(i - 1, k) + c * R(i, k);
+                R(i - 1, k) = tmp;
             }
         
     
-        
+            #pragma omp critical
             #pragma omp parallel for shared(Q,c,s) num_threads(2)
             for (int k = j; k < m; k++) {
-                tmp = Q.coeffRef(k, i -1) * c + Q.coeffRef(k, i) * s;
-                Q.coeffRef(k, i) = Q.coeffRef(k, i - 1) * -s + Q.coeffRef(k, i) * c;
-                Q.coeffRef(k, i-1) = tmp;
+                tmp = Q(k, i -1) * c + Q(k, i) * s;
+                Q(k, i) = Q(k, i - 1) * -s + Q(k, i) * c;
+                Q(k, i-1) = tmp;
             }
                     
-            R.coeffRef(i, j) = 0.;
+            R(i, j) = 0.;
         }
         }
     }
@@ -190,14 +186,14 @@ int m=Q.rows();
 int n=R.rows();
     #pragma omp parallel for num_threads(2)
     for (int i = 0; i < n - 1; i++) {
-        if (R.coeffRef(i, i) > 0) {
+        if (R(i, i) > 0) {
             #pragma omp parallel for num_threads(2) shared(R)
             for (int j = i; j < n; j++) {
-                R.coeffRef(i, j) *= -1;
+                R(i, j) *= -1;
             }
             #pragma omp parallel for num_threads(2) shared(Q)
             for (int j = 0; j < m; j++) {
-                Q.coeffRef(j, i) *= -1;
+                Q(j, i) *= -1;
             }
         }
     }
