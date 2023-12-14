@@ -96,19 +96,19 @@ class FullMatrix{
 		/*
 			 Another operator for accessing an element in read only operations
 		 */
-		const Real& coeffref(const size_t i, const size_t j) const{
+		const Real& coeffRef(const size_t i, const size_t j) const{
 			return this->operator()(i,j);
 		}
 		/*
 			 Another operator for accessing an element directly
 		 */
-		Real& coeffref(const size_t i) {
+		Real& coeffRef(const size_t i) {
 			return m_entries[i];
 		}
 		/*
 			 Another operator for accessing an element in read only operations
 		 */
-		const Real& coeffref(const size_t i) const{
+		const Real& coeffRef(const size_t i) const{
 			return m_entries[i];
 		}
 
