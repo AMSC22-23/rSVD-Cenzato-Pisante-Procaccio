@@ -11,6 +11,8 @@ FULLMATRIX_OUTS=$(FULLMATRIX_MAIN:.cpp=)
 ifdef parallel
 CXXFLAGS+=-fopenmp
 LDFLAGS+=-fopenmp
+else
+CXXFLAGS+=-Wno-unknown-pragmas
 endif
 
 #Compiler version

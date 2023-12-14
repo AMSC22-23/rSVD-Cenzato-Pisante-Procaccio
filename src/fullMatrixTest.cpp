@@ -310,7 +310,7 @@ int main(){
 	//Now change one row of the matrix with zeros
 	testMatrixCopy=testMatrix;
 	testVector.clear();
-	testVector.resize(new_m,0.);
+	testVector.resize(testMatrix.cols(),0.);
 	testMatrixCopy.row(0,testVector);
 
 	#ifdef VERBOSE
@@ -336,20 +336,22 @@ int main(){
 	std::cout<<correct<<std::endl;
 	correct=true;
 
-	//Now change one column of the matrix with zeros
+	//Now change one column of the matrix with zeros (using a matrix)
 	testMatrixCopy=testMatrix;
-	testVector.clear();
-	testVector.resize(new_n,0.);
-	testMatrixCopy.col(0,testVector);
+	testMatrixAdd.clear();
+	testMatrixAdd.resize(testMatrix.rows(),1);	
+	testMatrixCopy.col(0,testMatrixAdd);
 
 	#ifdef VERBOSE
 	std::cout<<std::endl;
+	std::cout<<"1D Matrix that changes the test:"<<std::endl;
+	testMatrixAdd.print(std::cout);
 	std::cout<<"Matrix with one column changed:"<<std::endl;
 	testMatrixCopy.print(std::cout);
 	std::cout<<std::endl;
 	#endif
 
-	std::cout<<"Test: Correctness of the modification of just one column: ";
+	std::cout<<"Test: Correctness of the modification of just one column using a matrix: ";
 	for(size_t i=0;i<testMatrixCopy.rows();++i){
 		for(size_t j=0;j<testMatrixCopy.cols();++j){
 			if(j==0){
@@ -365,6 +367,53 @@ int main(){
 	std::cout<<correct<<std::endl;
 	correct=true;
 
+	//Now test the column trim of the matrix
+	int toTrim=2;
+	testMatrixCopy=testMatrix;
+	testMatrixCopy.trimCols(toTrim);
+	
+	#ifdef VERBOSE
+	std::cout<<std::endl;
+	std::cout<<"Matrix with "<<toTrim<<" columns trimmed:"<<std::endl;
+	testMatrixCopy.print(std::cout);
+	std::cout<<std::endl;
+	#endif
+
+	std::cout<<"Test: Correctness of the trim of "<<toTrim<<" rows ";
+	if(testMatrixCopy.rows()!=testMatrix.rows()||testMatrixCopy.cols()!=testMatrix.cols()-toTrim)
+		correct=false;
+	for(size_t i=0;i<testMatrixCopy.rows();++i){
+		for(size_t j=0;j<testMatrixCopy.cols();++j){
+			if(testMatrixCopy(i,j)!=testMatrix(i,j))
+				correct=false;
+		}
+	}
+	std::cout<<correct<<std::endl;
+	correct=true;
+
+	//Now test the row trim of the matrix
+	testMatrixCopy=testMatrix;
+	testMatrixCopy.trimRows(toTrim);
+	
+	#ifdef VERBOSE
+	std::cout<<std::endl;
+	std::cout<<"Matrix with "<<toTrim<<" rows trimmed:"<<std::endl;
+	std::cout<<testMatrixCopy;
+	std::cout<<std::endl;
+	#endif
+
+	std::cout<<"Test: Correctness of the trim of "<<toTrim<<" rows: ";
+	if(testMatrixCopy.rows()!=testMatrix.rows()-toTrim||testMatrixCopy.cols()!=testMatrix.cols())
+		correct=false;
+	for(size_t i=0;i<testMatrixCopy.rows();++i){
+		for(size_t j=0;j<testMatrixCopy.cols();++j){
+			if(testMatrixCopy(i,j)!=testMatrix(i,j))
+				correct=false;
+		}
+	}
+	std::cout<<correct<<std::endl;
+	correct=true;
+	
 	return 0;
 }
 
