@@ -75,13 +75,7 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve(Matrix A){
             for(int k=0;k<m;k++){
                 tmp=Q(k,i-1)*c+Q(k,i)*s;
                 Q(k,i)=Q(k,i-1)*-s+Q(k,i)*c; 
-
-                /**
-                 * add control on Q
-                */
-                if(Q(k,i)<=1.e-18) Q(k,i-1)=0;
-                if(tmp<=1.e-18) Q(k,i-1)=0;
-                else Q(k,i-1)=tmp;
+                Q(k,i-1)=tmp;
                 
             }
         }
