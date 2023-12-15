@@ -1,18 +1,14 @@
 #ifndef SVD_HPP
 #define SVD_HPP
 
-#include <Eigen/Dense>
-#include <iostream>
 #include <random>
 
+#include "utils.hpp"
 #include "QR_Decomposition.hpp"
 
 #include <fstream>
 #include <sstream> 
 #include <iomanip>
-
-using Vector = Eigen::VectorXd;
-using Matrix = Eigen::MatrixXd;
 
 class SVD{
     public:
@@ -22,45 +18,33 @@ class SVD{
         m_epsilon(epsilon) {}
 
 
-    void exportmatrix(Matrix A, std::string outputFileName){
-    // Write the matrix to the file
-    std::ofstream outputFile(outputFileName);
-    if (outputFile.is_open()) {
-        int rows = A.rows(), cols = A.cols();
-        // Write dimensions to the first row
-        outputFile << rows << " " << cols << std::endl;
+    void exportmatrix(const Matrix& A, std::string outputFileName){
+        // Write the matrix to the file
+        std::ofstream outputFile(outputFileName);
+        if (outputFile.is_open()) {
+            int rows = A.rows(), cols = A.cols();
+            // Write dimensions to the first row
+            outputFile << rows << " " << cols << std::endl;
 
-        // Write matrix data
-        for (int i = 0; i < rows; ++i) {
-            for (int j = 0; j < cols; ++j) {
-                outputFile << std::setw(8) << std::fixed << std::setprecision(4) << A(i,j) << " ";
+            // Write matrix data
+            for (int i = 0; i < rows; ++i) {
+                for (int j = 0; j < cols; ++j) {
+                    outputFile << std::setw(8) << std::fixed << std::setprecision(4) << A(i,j) << " ";
+                }
+                outputFile << std::endl;
             }
-            outputFile << std::endl;
-        }
-        std::cout << "Computed matrix has been written to "<< outputFileName << std::endl;
+            std::cout << "Computed matrix has been written to "<< outputFileName << std::endl;
 
-        // Close the file
-        outputFile.close();
-    } else {
-        std::cerr << "Error opening file for writing." << std::endl;
+            // Close the file
+            outputFile.close();
+        } else {
+            std::cerr << "Error opening file for writing." << std::endl;
+        }
+
     }
 
-}
 
-
-    /* SVD using QR factorization :
-        Input:
-            A (m x n) : matrix
-        Outputs:
-            U (m x m) : matrix whose coloumns are left singular vectors of A 
-                        [eigenvectors of A*At]
-            s (n)     : vector the containing singular values of A
-            V (n x n) : matrix whose coloumns are right singular vectors of A 
-                        [eigenvectors of At*A] */
-    std::tuple<Matrix, Vector, Matrix> svd_with_qr(Matrix A);
-
-
-    /* Reduced SVD using the Power Method :
+    /* It computes the reduced SVD using the Power Method :
         Input:
             A (m x n) : matrix
         Outputs:
@@ -78,29 +62,33 @@ class SVD{
         int k = (m > n) ? n : m;
         auto[U,s,V]=svd_with_PM(A); 
         
-        for(size_t i=0; i<k; i++)
-            s[i] = 1 / s[i];
+        for(int i=0; i<k; i++)
+            s(i,1) = 1 / s(i,1);
 
         return mult(V,s,U);
     }
 
 
-    /* Inputs:
+    /* This procedure computes an approximate rank-k factorization UΣV∗, 
+    where U and V are orthonormal, and Σ is nonnegative and diagonal.
+    Inputs:
         A = m x n matrix
         r = target rank
         p = oversampling parameter
-        q = exponent of power iteration
-    This procedure computes an approximate rank-k factorization UΣV∗, 
-    where U and V are orthonormal, and Σ is nonnegative and diagonal.
-        Stage A:
-        1. Generate an n × k Gaussian test matrix Ω.
-        2. Form Y=(AA*)^q AΩ by multiplying alternately with A and A*
-        3. Construct a matrix Q whose columns form an orthonormal basis for the range of Y.
-        Stage B:
-        4. Form B = Q∗ A
-        5. Compute an SVD of the small matrix: B = U_hat Σ V*
-        6. Set U = Q U_hat  */
+        q = exponent of power iteration */
     std::tuple<Matrix, Vector, Matrix> rsvd(Matrix A, int r, int p, int q);  
+
+
+    /* SVD using QR algorithm :
+        Input:
+            A (m x n) : matrix
+        Outputs:
+            U (m x m) : matrix whose coloumns are left singular vectors of A 
+                        [eigenvectors of A*At]
+            s (n)     : vector the containing singular values of A
+            V (n x n) : matrix whose coloumns are right singular vectors of A 
+                        [eigenvectors of At*A] */
+    std::tuple<Matrix, Vector, Matrix> svd_with_qr(Matrix A);
 
 
     /* Multiplication to obtain A (m x n) from the svd,
@@ -110,15 +98,19 @@ class SVD{
             V = matrix (n x n) 
         [Also used to calculate the inverse of A (n x m)]*/
     Matrix mult(Matrix U, Vector s, Matrix V){
-        int m = U.rows(), n = U.cols();
-        if (m == n) n = V.rows();       // to compute the inverse
-        int k = (m > n) ? n : m;
+        int m = U.rows(), n = V.rows(), k = s.rows();
+        //if (m == n) n = V.rows();       // to compute the inverse
+        //int k = (m > n) ? n : m;
         Matrix A = Matrix::Zero(m,n);
  
-        for(size_t r=0; r<m; r++)
-            for(size_t c=0; c<n; c++)
-                for(size_t i=0; i<k; i++)
+        for(int r=0; r<m; r++)
+            for(int c=0; c<n; c++)
+                for(int i=0; i<k; i++)
+                    #ifdef EIGEN
                     A(r,c) += s[i] * U(r,i) * V(c,i);
+                    #else
+                    A(r,c) += s(i,1) * U(r,i) * V(c,i);
+                    #endif
         return A;
     }
 
@@ -136,37 +128,24 @@ class SVD{
             v (n) : x converges to the left singular vector of A
             [x is a vector generated randomically with normal distribution]  */
     Vector PowerMethod(const Matrix B){
-        Vector x = genvec(B.cols());        //initial guess
-        Vector xold(x.size());
+        Vector x = genmat(B.cols(),1);        //initial guess
+        Vector xold(x.rows());
         double err = 1.;
-        x /= norm(x);
+        x = x * (1 / x.norm());
         while( err > m_epsilon ){
-            xold=x;
+            xold = x;
             x = B * x;
-            x = x / norm(x);
-            err = norm(xold-x);
+            x = x * (1 / x.norm());
+            err = (xold-x).norm();
         }
         return x;
-    }
-
-
-    /* Generates random vector of n elem with normal distribution */
-    Vector genvec(const int n){
-        Vector v(n);
-        //std::default_random_engine gen;
-        std::random_device rd ;
-        std::knuth_b reng{rd ()};
-        std::normal_distribution<> dice(0.,1.);
-        for(int i=0;i<n;i++){
-            v[i] = dice(reng);
-        }
-        return v;
     }
 
 
     /* Generates m x n Gaussian matrix M */
     Matrix genmat(const int m, const int n){
         Matrix M(m,n);
+        //std::default_random_engine gen;
         std::random_device rd ;
         std::knuth_b reng{rd ()};
         std::normal_distribution<> dice(0.,1.);
@@ -175,37 +154,6 @@ class SVD{
                 M(i,j) = dice(reng);
         }
         return M;
-    }
-
-
-    /* Returns the L2 norm of a vector */
-    double norm(const Vector v){
-        double norm=0;
-        for(int i=0;i<v.size();i++){
-            norm += v[i] * v[i];
-        }
-        return std::sqrt(norm);
-    }
-
-
-    /* Returns the L2 norm of a upper triangular matrix */
-    double normMat(const Matrix A){
-        double norm=0;
-        for(int i=0;i<A.rows();i++){
-            for(size_t j=i+1;j<A.cols();j++)
-                norm += A(i,j) * A(i,j);
-        }
-        return std::sqrt(norm);
-    }
-
-
-    /* Returns an identity matrix (n x n) */
-    Matrix eye(const int n){
-        Matrix A=Matrix::Zero(n,n);
-        for(int i=0; i<n; i++){
-            A(i,i)=1;
-        }
-        return A;
     }
 
     const double m_epsilon;

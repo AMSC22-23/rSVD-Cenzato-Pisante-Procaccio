@@ -42,12 +42,16 @@ class FullMatrix{
 		/*
 			 Constructor of a n x m matrix with a value initVal
 		 */
-		FullMatrix(const size_t n=1,const size_t m=1,const Real initVal=0) : m_rows(n), m_cols(m) {
+		FullMatrix(const size_t n,const size_t m,const Real initVal=0) : m_rows(n), m_cols(m) {
 			m_entries.reserve(n*m);
 			for(size_t i=0;i<n*m;++i){
 				m_entries.emplace_back(initVal);
 			}
 		}
+		FullMatrix(const size_t n): FullMatrix(n,1)
+		{}
+
+		FullMatrix() =default;
 
 		/*
 			 Override of the operator [] so that the element at i,j 
