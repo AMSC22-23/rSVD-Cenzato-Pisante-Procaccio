@@ -1,15 +1,7 @@
 #pragma once
 
-#include <iostream>
-#include <cmath>
-#include <omp.h>
-#include <tuple>
+#include "utils.hpp"
 
-#include "fullMatrix.hpp"
-
-
-using Matrix=FullMatrix<double,ORDERING::ROWMAJOR>;
-using Vector=FullMatrix<double,ORDERING::ROWMAJOR>;
 
 class QR_Decomposition{
 public:
@@ -36,6 +28,7 @@ public:
      * Parallel method for QR Decomposition
     */
     std::tuple<Matrix, Matrix> Givens_solve_parallel(const Matrix A);
+    std::tuple<Matrix, Matrix> HouseHolder_solve_parallel(const Matrix A);
     std::tuple<Matrix, Matrix> QR_parallel(const Matrix A);
 
     /**

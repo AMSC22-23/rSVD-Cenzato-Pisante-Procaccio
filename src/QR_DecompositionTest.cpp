@@ -1,12 +1,9 @@
-#include <iostream>
-#include <chrono>
-#include "fullMatrix.hpp"
 #include "QR_Decomposition.hpp"
 
 
 int main(){
-size_t m=4;
-size_t n=4;
+size_t m=60;
+size_t n=60;
 
 
     // Assegnazione di valori agli elementi
@@ -62,7 +59,7 @@ for(size_t i=0;i<m;i++){
     */
     std::cout<<"Serial:"<<std::endl;
     auto start_serial = std::chrono::high_resolution_clock::now();
-    auto [Q,R]=QR_A.Givens_solve(A);
+    auto [Q,R]=QR_A.HouseHolder_solve(A);
     auto end_serial = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double> duration_s = end_serial - start_serial;
@@ -77,20 +74,20 @@ for(size_t i=0;i<m;i++){
     */
    
     auto start_parallel = std::chrono::high_resolution_clock::now();
-    auto [Qp,Rp]=QR_A.QR_parallel(A);
+    auto [Qp,Rp]=QR_A.HouseHolder_solve_parallel(A);
     auto end_parallel = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double> duration_p = end_parallel - start_parallel;
        
-    std::cout<<"R_Serial="<<std::endl;
+    /*std::cout<<"R_Serial="<<std::endl;
     R.print(std::cout);
     std::cout<<"Q_Serial="<<std::endl;
-    Q.print(std::cout);;
+    Q.print(std::cout);
 
     std::cout<<"R_Serial="<<std::endl;
     Rp.print(std::cout);
     std::cout<<"Q_Serial="<<std::endl;
-    Qp.print(std::cout);
+    Qp.print(std::cout);*/
     
     std::cout << "Time of execution serial: " << duration_s.count() << " secondi" << std::endl;
     std::cout << "Time of execution parallel: " << duration_p.count() << " s" << std::endl;

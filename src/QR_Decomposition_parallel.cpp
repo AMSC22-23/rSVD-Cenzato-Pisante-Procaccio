@@ -201,3 +201,96 @@ int n=R.rows();
 }
 
 
+std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve_parallel(Matrix A){
+
+    int m=A.rows();
+    int n=A.cols();
+
+    /**
+        * Initialize v,u
+    */
+        Vector u(m),v(m);
+
+    /**
+        * Initialize matrix Q (size m x m), matrix R(m x n) and rotation matrix P(m x m)
+    */
+    Matrix I(m,m);
+    I.setIdentity();
+
+    Matrix Q=I;
+    Matrix P=I;
+    Matrix R=A;
+
+    /**
+        * Starting the computation of Q,R
+    */
+    double mag, alpha;
+
+    #pragma omp parallel for private(u, v, mag, alpha) shared(Q, R) num_threads(8)
+            for(int j=0;j<n;j++){
+                /**
+                    * Initialize u,v to zero at each iteration-i
+                */
+
+
+                u=Vector(m,1);
+                v=Vector(m,1);
+
+                /**
+                * evaluating each component of the matrix R
+                */
+                mag=0.0;
+
+                for(int i=j;i<m;i++){
+                    #ifdef EIGEN
+                        u(i)=R(i,j);
+                        mag+=u(i)*u(i);
+                    #else
+                        u(i,1)=R(i,j);
+                        mag+=u(i,1)*u(i,1);
+                    #endif
+                }
+                mag=sqrt(mag);
+                #ifdef EIGEN
+                    alpha = (u(j) < 0) ? mag : -mag ;
+                #else
+                    alpha = (u(j,1) < 0) ? mag : -mag ;
+                #endif
+
+                mag=0.0;
+
+                for(int i=j;i<m;i++){
+                    #ifdef EIGEN
+                        v(i)= (j == i) ? (u(i) + alpha) : u(i);
+                        mag+=v(i)*v(i);
+                    #else
+                        v(i,1)= (j == i) ? (u(i,1) + alpha) : u(i,1);
+                        mag+=v(i,1)*v(i,1);
+                    #endif
+                }
+                v=(1/v.norm())*v;
+                mag=sqrt(mag);
+                
+            /**
+                * Computing P at the j-th iterate and applying the rotation to R,Q
+            */
+                P=I-2.0*v*v.transpose();
+
+                #pragma omp critical
+                {
+                R=P*R;
+                Q=Q*P;
+                }
+
+                /**
+                 * Force j-th col of R to zero
+                */
+                for(int i=j+1; i<n; i++){
+                    R(i,j)=0;
+                }
+            }
+    
+        
+    return std::make_tuple(Q,R);
+}
+
