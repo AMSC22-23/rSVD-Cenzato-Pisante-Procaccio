@@ -2,8 +2,8 @@
 
 
 int main(){
-size_t m=60;
-size_t n=60;
+size_t m=4;
+size_t n=4;
 
 
     // Assegnazione di valori agli elementi
@@ -47,15 +47,41 @@ Matrix A(3,3);
  */   
 Matrix A(m,n);
 for(size_t i=0;i<m;i++){
-    for (size_t j=0;j<n;j++){
-        A.coeffRef(i,j)=4+i-j;
+    A(i,i)=4;
+    for (size_t j=0;j<i;j++){
+        A(i,j)=A(i,i)-i+j;
+    }
+    for (size_t j=i+1;j<n;j++){
+        A(i,j)=A(i,i)+i-j;
     }
 }
+std::cout<<A<<std::endl;
 
     QR_Decomposition QR_A;
+    /**
+     * Serial execution with Givens
+    */
+    std::cout<<"Serial:"<<std::endl;
+    auto start_givens = std::chrono::high_resolution_clock::now();
+    auto [Qg,Rg]=QR_A.Givens_solve(A);
+    auto end_givens = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double> duration_g = end_givens  - start_givens;
+    std::cout<<"R Givens="<<std::endl;
+    #ifdef EIGEN
+        std::cout<<Rg<<std::endl;
+    #else
+        Rg.print(std::cout);
+    #endif
+    std::cout<<"Q Givens="<<std::endl;
+    #ifdef EIGEN
+        std::cout<<Qg<<std::endl;
+    #else
+        Qg.print(std::cout);
+    #endif
 
     /**
-     * Serial execution on OpenMP
+     * Serial execution with HouseHolder
     */
     std::cout<<"Serial:"<<std::endl;
     auto start_serial = std::chrono::high_resolution_clock::now();
@@ -63,6 +89,18 @@ for(size_t i=0;i<m;i++){
     auto end_serial = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double> duration_s = end_serial - start_serial;
+    std::cout<<"R_Serial="<<std::endl;
+    #ifdef EIGEN
+        std::cout<<R<<std::endl;
+    #else
+        R.print(std::cout);
+    #endif
+    std::cout<<"Q_Serial="<<std::endl;
+    #ifdef EIGEN
+        std::cout<<Q<<std::endl;
+    #else
+        Q.print(std::cout);
+    #endif
 
     
 
@@ -79,16 +117,21 @@ for(size_t i=0;i<m;i++){
 
     std::chrono::duration<double> duration_p = end_parallel - start_parallel;
        
-    /*std::cout<<"R_Serial="<<std::endl;
-    R.print(std::cout);
-    std::cout<<"Q_Serial="<<std::endl;
-    Q.print(std::cout);
-
-    std::cout<<"R_Serial="<<std::endl;
-    Rp.print(std::cout);
-    std::cout<<"Q_Serial="<<std::endl;
-    Qp.print(std::cout);*/
     
+    std::cout<<"R_parallel="<<std::endl;
+    #ifdef EIGEN
+        std::cout<<Rp<<std::endl;
+    #else
+        Rp.print(std::cout);
+    #endif
+    std::cout<<"Q_parallel="<<std::endl;
+    #ifdef EIGEN
+        std::cout<<Qp<<std::endl;
+    #else
+        Qp.print(std::cout);
+    #endif
+    
+    std::cout << "Time of execution serial givens: " << duration_g.count() << " secondi" << std::endl;
     std::cout << "Time of execution serial: " << duration_s.count() << " secondi" << std::endl;
     std::cout << "Time of execution parallel: " << duration_p.count() << " s" << std::endl;
     double SpeedUp=duration_s.count()/duration_p.count();

@@ -226,21 +226,20 @@ std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve_parallel(Matrix A
     */
     double mag, alpha;
 
-    #pragma omp parallel for private(u, v, mag, alpha) shared(Q, R) num_threads(8)
             for(int j=0;j<n;j++){
                 /**
                     * Initialize u,v to zero at each iteration-i
                 */
 
 
-                u=Vector(m,1);
-                v=Vector(m,1);
+                u=Vector(m);
+                v=Vector(m);
 
                 /**
                 * evaluating each component of the matrix R
                 */
                 mag=0.0;
-
+                #pragma omp for
                 for(int i=j;i<m;i++){
                     #ifdef EIGEN
                         u(i)=R(i,j);
@@ -258,7 +257,7 @@ std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve_parallel(Matrix A
                 #endif
 
                 mag=0.0;
-
+                #pragma omp for
                 for(int i=j;i<m;i++){
                     #ifdef EIGEN
                         v(i)= (j == i) ? (u(i) + alpha) : u(i);
@@ -276,19 +275,32 @@ std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve_parallel(Matrix A
             */
                 P=I-2.0*v*v.transpose();
 
-                #pragma omp critical
+                #pragma omp sections
                 {
-                R=P*R;
-                Q=Q*P;
+                    #pragma omp section 
+                    {
+                        R=P*R;
+                        /**
+                         * Force j-th col of R to zero
+                        */
+                        for(int i=j+1; i<n; i++){
+                            R(i,j)=0;
+                        }
+                    }
+                    #pragma omp section
+                    {
+                        Q=Q*P;
+                    }
                 }
 
-                /**
-                 * Force j-th col of R to zero
-                */
+                
+            }
+            #pragma omp for collapse(2)
+            for(int j=0;j<m;j++){
                 for(int i=j+1; i<n; i++){
                     R(i,j)=0;
                 }
-            }
+        }
     
         
     return std::make_tuple(Q,R);

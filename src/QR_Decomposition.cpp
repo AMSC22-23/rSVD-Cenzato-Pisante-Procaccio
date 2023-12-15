@@ -170,11 +170,12 @@ std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve(Matrix A){
         /**
          * Force j-th col of R to zero
         */
-        for(int i=j+1; i<n; i++){
-            R(i,j)=0;
         }
+        for(int j=0;j<m;j++){
+            for(int i=j+1; i<n; i++){
+                R(i,j)=0;
+            }
         }
-
     return std::make_tuple(Q,R);
 }
 
