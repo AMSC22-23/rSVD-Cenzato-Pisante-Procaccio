@@ -9,6 +9,7 @@
 # Python imports
 from numpy import zeros
 from numpy import shape
+from numpy import matmul
 import numpy.linalg as linalg
 import sys
 
@@ -68,6 +69,9 @@ Q,R=linalg.qr(a,'reduced') # Can be also 'complete'
 # Split the filename to add the extensions
 ext=".txt"
 filename=filename.split(ext)
+
+#print("This is the matrix after Q*R")
+#print(matmul(Q,R))
 
 # Print the results to a file
 print_matrix_to_file(filename[0]+"_U"+ext,U)
