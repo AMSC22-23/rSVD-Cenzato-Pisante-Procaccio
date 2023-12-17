@@ -123,6 +123,7 @@ class FullMatrix{
 		friend FullMatrix operator*(const FullMatrix& A, const Real k){
 			FullMatrix toReturn(A.rows(),A.cols());
 
+#pragma omp parallel for shared(A)
 			for(size_t i=0;i<A.m_entries.size();++i)
 				toReturn.m_entries[i]=A.m_entries[i]*k;
 
@@ -144,6 +145,7 @@ class FullMatrix{
 
 			toReturn.resize(A.rows(),A.cols());
 
+#pragma omp parallel for shared(A)
 			for(size_t i=0;i<A.m_entries.size();++i)
 				toReturn.m_entries[i]=A.m_entries[i]+B.m_entries[i];
 
@@ -159,6 +161,7 @@ class FullMatrix{
 
 			toReturn.resize(A.rows(),A.cols());
 
+#pragma omp parallel for shared(A)
 			for(size_t i=0;i<A.m_entries.size();++i)
 				toReturn.m_entries[i]=A.m_entries[i]-B.m_entries[i];
 
@@ -297,7 +300,7 @@ Hyphothesis: row<m_rows && toInsert.size()<=m_cols
 		}
 		/*
 			 Add a vector to a specified column.
-Hyphothesis: col<m_cols && toInsert.size()<=m_rows
+       Hyphothesis: col<m_cols && toInsert.size()<=m_rows
 		 */
 		void col(const size_t _col, const std::vector<Real>& toInsert){
 			if(_col>=m_cols || toInsert.size()>m_rows)
