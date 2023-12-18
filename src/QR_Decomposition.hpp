@@ -29,7 +29,6 @@ public:
     */
     std::tuple<Matrix, Matrix> Givens_solve_parallel(const Matrix A);
     std::tuple<Matrix, Matrix> HouseHolder_solve_parallel(const Matrix A);
-    std::tuple<Matrix, Matrix> QR_parallel(const Matrix A);
 
     /**
      * Parallel method for setting R,Q for svd with QR
