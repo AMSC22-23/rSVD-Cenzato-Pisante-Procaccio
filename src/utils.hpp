@@ -10,7 +10,8 @@
 #include <fstream>
 #include <sstream> 
 #include <iomanip>
-
+//@note use at least namespaces to avoid polluting the global namespace with 
+//      the names defined in the headers
 #ifdef EIGEN
 #include <Eigen/Dense>
 using Matrix=Eigen::MatrixXd;

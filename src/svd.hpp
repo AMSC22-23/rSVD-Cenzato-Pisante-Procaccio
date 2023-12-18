@@ -16,8 +16,10 @@ class SVD{
             epsilon : precision  */
         SVD(double epsilon) : 
         m_epsilon(epsilon) {}
-
-
+//@note This class is not default constructible. It is better to have defautl constructible classes.
+//      Here it is sufficient to give a default value to epsilon in the constructor
+//      explicit SVD(double epsilon=1.e-8)
+//      It is also better make the constructor explicit to avoid implicit conversions.
     void exportmatrix(const Matrix& A, std::string outputFileName){
         // Write the matrix to the file
         std::ofstream outputFile(outputFileName);
@@ -102,7 +104,7 @@ class SVD{
         //if (m == n) n = V.rows();       // to compute the inverse
         //int k = (m > n) ? n : m;
         Matrix A = Matrix::Zero(m,n);
- 
+        //!note with the Eigen you can do A = U * s.asDiagonal() * V.transpose();
         for(int r=0; r<m; r++)
             for(int c=0; c<n; c++)
                 for(int i=0; i<k; i++)
@@ -131,6 +133,8 @@ class SVD{
         Vector x = genmat(B.cols(),1);        //initial guess
         Vector xold(x.rows());
         double err = 1.;
+        //@note why not implement the *= operator and do x *= 1 / x.norm() ?
+        //      with Eigen it is already possible.
         x = x * (1 / x.norm());
         while( err > m_epsilon ){
             xold = x;

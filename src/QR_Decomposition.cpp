@@ -32,12 +32,13 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve(Matrix A){
             double a=R(i-1,j);
             double b=R(i,j);
             double c,s;
-        
+        //@note Ane error is present in the following lines, the correct version is the commented one
+        // if (std::abs(a)>std::abs(b) ){
             if (abs(a)>abs(b) ){
                 if(a!=0.0){
                     int segno = std::signbit(a) ? -1 : 1;
                     c = segno / sqrt(1+(b/a)*(b/a));
-                    s  = abs(c/a)*b;
+                    s  = abs(c/a)*b;//@note also here!
                     } else{
                         c=0.0;
                         s=(a >= 0.0 ? 1.0 : -1.0);
@@ -45,7 +46,7 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve(Matrix A){
                 }else if (b!=0.0)  {
                     int segno = (std::signbit(b) ? -1 : 1);
                     s = segno / sqrt(1+(a/b)*(a/b));
-                    c=abs(s/b)*a;
+                    c=abs(s/b)*a;//@note also here!
                     } else{
                         s=0.0;
                         c=(b >= 0.0 ? 1.0 : -1.0);

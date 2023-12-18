@@ -1,4 +1,4 @@
-#pragma once
+#pragma once //@note pragma once is nice but not portable to all compilers since is not C++ standard.
 
 #include "utils.hpp"
 

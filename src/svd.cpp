@@ -119,7 +119,7 @@ std::tuple<Matrix, Vector, Matrix> SVD::svd_with_qr(Matrix A){
     std::cout<<cont<<" , err = "<<err<<std::endl;
 
     for(int i=0; i<min; i++){        
-        s(i,1) = sqrt(abs(S(i,i)));
+        s(i,1) = sqrt(abs(S(i,i)));//@note again! use std::abs
     }
 
     /*for(size_t i=0; i<k; i++){ 

@@ -412,7 +412,7 @@ int main(){
 		}
 	}
 	std::cout<<correct<<std::endl;
-	correct=true;
+	correct=true; //@note correct is not used anymore, so whay chenge the value?
 	
 	return 0;
 }
