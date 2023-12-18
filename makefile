@@ -1,5 +1,5 @@
 #My flags
-OPTIMIZATION=-O2 -march=native
+OPTIMIZATION=-O3 -march=native
 WARNINGS= -Wall -pedantic 
 EIGEN=${mkEigenInc}
 BUILD=./build
@@ -15,7 +15,7 @@ SVD_TEST=svd_test.cpp svd.cpp QR_Decomposition.cpp
 
 ifdef parallel
 CXXFLAGS+=-fopenmp
-LDFLAGS+=-fopenmp
+#LDFLAGS+=-fopenmp
 else
 CXXFLAGS+=-Wno-unknown-pragmas
 endif
@@ -38,24 +38,22 @@ LDFLAGS+= $(OPTIMIZATION)
 VPATH=./src
 
 #Make directives that have no dependencies
-.PHONY= all optimized help clean distclean
+.PHONY= all help clean distclean
 
 help:
 	@echo "All compilation commands: "
 	@echo "  all         (default)"
 	@echo "  fullMatrix           "
+	@echo "  qr                   "
+	@echo "  svd                  "
 	@echo "  clean                "
 	@echo "  distclean            "
 
 all:
-	g++  src/main.cpp -o build/main $(CXXFLAGS) $(WARNINGS) $(CPPFLAGS)
-	$(MAKE) clean
-
-optimized:
-	$(MAKE) CXXFLAGS="$(OPTIMIZATION)"
-
-eigen:
-	$(MAKE) CPPFLAGS="$(EIGEN)"
+	mkdir -p $(BUILD)
+	$(MAKE) qr
+	$(MAKE) svd
+	$(MAKE) fullMatrix
 
 clean: 
 	$(RM) $(BUILD)/*.o
@@ -66,14 +64,17 @@ distclean:
 #I have three sections -> fullMatrix, svd, qr
 
 fullMatrix: $(FULLMATRIX_TEST)
-	$(CXX) $^ -o $(BUILD)/$@ $(LDFLAGS) $(CPPFLAGS) $(CXXFLAGS)
+	mkdir -p $(BUILD)
+	$(CXX) $^ -o $(BUILD)/$@ $(LDFLAGS) $(CPPFLAGS) $(CXXFLAGS) -DBYROWS
 	$(MAKE) clean
 
 qr: $(QR_TEST)
+	mkdir -p $(BUILD)
 	$(CXX) $^ -o $(BUILD)/$@ $(LDFLAGS) $(CPPFLAGS) $(CXXFLAGS) 
 	$(MAKE) clean
 
 svd: $(SVD_TEST)
+	mkdir -p $(BUILD)
 	$(CXX) $^ -o $(BUILD)/$@ $(LDFLAGS) $(CPPFLAGS) $(CXXFLAGS) 
 	$(MAKE) clean
 
