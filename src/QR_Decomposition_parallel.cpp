@@ -6,13 +6,11 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve_parallel(Matrix A){
     
     int m=A.rows();
     int n=A.cols();
-
     /**
      * Set Q back to the identity, set R equal to A
     */
     Q.resize(m, m);
     Q.setIdentity();
-
     R=A;
     /**
     * Assembling the matrix Q by applying the Givens rotation at each 
@@ -21,7 +19,6 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve_parallel(Matrix A){
     
     for (int j = 0;j<n;j++){
         for(int i=m-1;i>j;i--){
-
             /**
                 * Givens rotation gets applied by calculating the values of:
                 * c: cosine of the angle of rotation
@@ -31,15 +28,15 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve_parallel(Matrix A){
                 * below the diagonal to pull them to zero
             */
             
-            double a=R(i-1,j);
-            double b=R(i,j);
+            double a=R.coeffRef(i-1,j);
+            double b=R.coeffRef(i,j);
             double c,s;
         
-            if (abs(a)>abs(b) ){
+            if (std::abs(a)>std::abs(b) ){
                 if(a!=0.0){
                     int segno = std::signbit(a) ? -1 : 1;
                     c = segno / sqrt(1+(b/a)*(b/a));
-                    s  = abs(c/a)*b;
+                    s  = std::abs(c/a)*b;
                     } else{
                         c=0.0;
                         s=(a >= 0.0 ? 1.0 : -1.0);
@@ -47,12 +44,11 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve_parallel(Matrix A){
                 }else if (b!=0.0)  {
                     int segno = (std::signbit(b) ? -1 : 1);
                     s = segno / sqrt(1+(a/b)*(a/b));
-                    c=abs(s/b)*a;
+                    c=std::abs(s/b)*a;
                     } else{
                         s=0.0;
                         c=(b >= 0.0 ? 1.0 : -1.0);
                 }
-
         
             /**
                 * Instead of creating the Givens matrix, I do directly the computation on Q and R
@@ -61,33 +57,34 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve_parallel(Matrix A){
             */
             double tmp = 0.0;
             
-                
+            
                 #pragma omp sections 
                 {
                     #pragma omp section
                     {
-                        #pragma omp parallel for shared(R,c,s) num_threads(2)
+                        #pragma omp parallel for num_threads(2) private(tmp)
                         for (int k = 0; k < n; k++) {
-                            tmp = c * R(i - 1, k) + s * R(i, k);
-                            R(i, k) = -s * R(i - 1, k) + c * R(i, k);
-                            R(i - 1, k) = tmp;
+                            tmp = c * R.coeffRef(i - 1, k) + s * R.coeffRef(i, k);
+                            R.coeffRef(i, k) = -s * R.coeffRef(i - 1, k) + c * R.coeffRef(i, k);
+                            R.coeffRef(i - 1, k) = tmp;
                         }
                     }
                 
                     
                     #pragma omp section
                     {
-                        #pragma omp parallel for shared(Q,c,s) num_threads(2)
+                        #pragma omp parallel for num_threads(2) private(tmp)
                         for (int k = 0; k < m; k++) {
-                            tmp = Q(k, i - 1) * c + Q(k, i) * s;
-                            Q(k, i) = Q(k, i - 1) * -s + Q(k, i) * c;
-                            Q(k, i - 1) = tmp;
+                            tmp = Q.coeffRef(k, i - 1) * c + Q.coeffRef(k, i) * s;
+                            Q.coeffRef(k, i) = Q.coeffRef(k, i - 1) * -s + Q.coeffRef(k, i) * c;
+                            Q.coeffRef(k, i - 1) = tmp;
                         }
                     }
                     
                 }
-            R(i, j) = 0.;
+            R.coeffRef(i, j) = 0.;
         }
+    
     }
     
     return std::make_tuple(Q,R);
@@ -127,11 +124,11 @@ std::tuple<Matrix, Matrix> QR_Decomposition::QR_parallel(Matrix A){
             double b=R(i,j);
             double c,s;
         
-            if (abs(a)>abs(b) ){
+            if (std::abs(a)>std::abs(b) ){
                 if(a!=0.0){
                     int segno = std::signbit(a) ? -1 : 1;
                     c = segno / sqrt(1+(b/a)*(b/a));
-                    s  = abs(c/a)*b;
+                    s  = std::abs(c/a)*b;
                     } else{
                         c=0.0;
                         s=(a >= 0.0 ? 1.0 : -1.0);
@@ -139,7 +136,7 @@ std::tuple<Matrix, Matrix> QR_Decomposition::QR_parallel(Matrix A){
                 }else if (b!=0.0)  {
                     int segno = (std::signbit(b) ? -1 : 1);
                     s = segno / sqrt(1+(a/b)*(a/b));
-                    c=abs(s/b)*a;
+                    c=std::abs(s/b)*a;
                     } else{
                         s=0.0;
                         c=(b >= 0.0 ? 1.0 : -1.0);
@@ -225,84 +222,89 @@ std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve_parallel(Matrix A
         * Starting the computation of Q,R
     */
     double mag, alpha;
+    /**
+            * Initialize u,v to zero at each iteration-i
+        */
+        u=Vector(m);
+        v=Vector(m);
 
-            for(int j=0;j<n;j++){
-                /**
-                    * Initialize u,v to zero at each iteration-i
-                */
+    for(int j=0;j<n;j++){
 
-
-                u=Vector(m);
-                v=Vector(m);
-
-                /**
-                * evaluating each component of the matrix R
-                */
-                mag=0.0;
-                #pragma omp for
-                for(int i=j;i<m;i++){
-                    #ifdef EIGEN
-                        u(i)=R(i,j);
-                        mag+=u(i)*u(i);
-                    #else
-                        u(i,1)=R(i,j);
-                        mag+=u(i,1)*u(i,1);
-                    #endif
-                }
-                mag=sqrt(mag);
-                #ifdef EIGEN
-                    alpha = (u(j) < 0) ? mag : -mag ;
-                #else
-                    alpha = (u(j,1) < 0) ? mag : -mag ;
-                #endif
-
-                mag=0.0;
-                #pragma omp for
-                for(int i=j;i<m;i++){
-                    #ifdef EIGEN
-                        v(i)= (j == i) ? (u(i) + alpha) : u(i);
-                        mag+=v(i)*v(i);
-                    #else
-                        v(i,1)= (j == i) ? (u(i,1) + alpha) : u(i,1);
-                        mag+=v(i,1)*v(i,1);
-                    #endif
-                }
-                v=(1/v.norm())*v;
-                mag=sqrt(mag);
-                
-            /**
-                * Computing P at the j-th iterate and applying the rotation to R,Q
-            */
-                P=I-2.0*v*v.transpose();
-
-                #pragma omp sections
-                {
-                    #pragma omp section 
-                    {
-                        R=P*R;
-                        /**
-                         * Force j-th col of R to zero
-                        */
-                        for(int i=j+1; i<n; i++){
-                            R(i,j)=0;
-                        }
-                    }
-                    #pragma omp section
-                    {
-                        Q=Q*P;
-                    }
-                }
-
-                
-            }
-            #pragma omp for collapse(2)
-            for(int j=0;j<m;j++){
-                for(int i=j+1; i<n; i++){
-                    R(i,j)=0;
-                }
+        #ifdef EIGEN
+            u.setZero();
+            v.setZero();
+        #else
+            u=Vector(m);
+            v=Vector(m);
+        #endif
+    
+        /**
+        * evaluating each component of the matrix R
+        */
+        mag=0.0;
+        #pragma parallel for reduction(+: mag)
+        for(int i=j;i<m;i++){
+            #ifdef EIGEN
+                u(i)=R(i,j);
+                mag+=u(i)*u(i);
+            #else
+                u(i,1)=R(i,j);
+                mag+=u(i,1)*u(i,1);
+            #endif
         }
+        mag=sqrt(mag);
+        #ifdef EIGEN
+            alpha = (u(j) < 0) ? mag : -mag ;
+        #else
+            alpha = (u(j,1) < 0) ? mag : -mag ;
+        #endif
+
+        mag=0.0;
+        #pragma parallel for reduction(+: mag) private(u)
+        for(int i=j;i<m;i++){
+            #ifdef EIGEN
+                v(i)= (j == i) ? (u(i) + alpha) : u(i);
+                mag+=v(i)*v(i);
+            #else
+                v(i,1)= (j == i) ? (u(i,1) + alpha) : u(i,1);
+                mag+=v(i,1)*v(i,1);
+            #endif
+        }
+        mag=sqrt(mag);
+        if (mag < 0.0000000001) continue;
+
+		for (int i = j; i < m; i++) v(i) /= mag;
+        
+    /**
+        * Computing P at the j-th iterate and applying the rotation to R,Q
+    */
+        P=I-2.0*v*v.transpose();
+
+        #pragma omp sections
+        {
+            #pragma omp section 
+            {   
+                #pragma omp critical
+                R=P*R;
+            }
+            #pragma omp section
+            {   
+                #pragma omp critical
+                Q=Q*P;
+            }
+        }
+
+            
+    }
+    #pragma omp for collapse(2)
+    for(int j=0;j<m;j++){
+        for(int i=j+1; i<n; i++){
+            R(i,j)=0.;
+        }
+    }
     
         
     return std::make_tuple(Q,R);
 }
+
 

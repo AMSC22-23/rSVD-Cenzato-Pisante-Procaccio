@@ -33,11 +33,11 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve(Matrix A){
             double b=R(i,j);
             double c,s;
         
-            if (abs(a)>abs(b) ){
+            if (std::abs(a)>std::abs(b) ){
                 if(a!=0.0){
                     int segno = std::signbit(a) ? -1 : 1;
                     c = segno / sqrt(1+(b/a)*(b/a));
-                    s  = abs(c/a)*b;
+                    s  = std::abs(c/a)*b;
                     } else{
                         c=0.0;
                         s=(a >= 0.0 ? 1.0 : -1.0);
@@ -45,7 +45,7 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve(Matrix A){
                 }else if (b!=0.0)  {
                     int segno = (std::signbit(b) ? -1 : 1);
                     s = segno / sqrt(1+(a/b)*(a/b));
-                    c=abs(s/b)*a;
+                    c=std::abs(s/b)*a;
                     } else{
                         s=0.0;
                         c=(b >= 0.0 ? 1.0 : -1.0);
@@ -63,9 +63,9 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve(Matrix A){
                 R(i-1,k)=tmp;
             }
             
-                /**
-                    * Forcing rotated component to zero to avoid floating point approximations
-                */
+            /**
+                * Forcing rotated component to zero to avoid floating point approximations
+            */
             
             R(i,j)=0;
             
@@ -115,20 +115,31 @@ std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve(Matrix A){
     */
     double mag=0.0;
     double alpha=0.0;
+    /**
+        * Initialize u,v to zero at each iteration-i
+    */
+    u=Vector(m);
+    v=Vector(m);
+    
     for(int j=0;j<n;j++){
-        /**
-            * Initialize u,v to zero at each iteration-i
-        */
+        
 
-
-        u=Vector(m,1);
-        v=Vector(m,1);
+        #ifdef EIGEN
+            u.setZero();
+            v.setZero();
+        #else
+            u=Vector(m);
+            v=Vector(m);
+        #endif
 
         /**
         * evaluating each component of the matrix R
         */
         mag=0.0;
         for(int i=j;i<m;i++){
+            /**
+             * Computation of u
+            */
             #ifdef EIGEN
                 u(i)=R(i,j);
                 mag+=u(i)*u(i);
@@ -136,6 +147,8 @@ std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve(Matrix A){
                 u(i,1)=R(i,j);
                 mag+=u(i,1)*u(i,1);
             #endif
+
+            
         }
         mag=sqrt(mag);
         #ifdef EIGEN
@@ -147,6 +160,9 @@ std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve(Matrix A){
         mag=0.0;
 
         for(int i=j;i<m;i++){
+            /**
+             * Computation ov v
+            */
             #ifdef EIGEN
                 v(i)= (j == i) ? (u(i) + alpha) : u(i);
                 mag+=v(i)*v(i);
@@ -155,10 +171,12 @@ std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve(Matrix A){
                 mag+=v(i,1)*v(i,1);
             #endif
         }
-        v=(1/v.norm())*v;
+
         mag=sqrt(mag);
 
         if (mag < 0.0000000001) continue;
+
+        for (int i = j; i < m; i++) v(i) /= mag;
         
     /**
         * Computing P at the j-th iterate and applying the rotation to R,Q

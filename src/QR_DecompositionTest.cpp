@@ -2,8 +2,8 @@
 
 
 int main(){
-size_t m=4;
-size_t n=4;
+size_t m=60;
+size_t n=60;
 
 
 
