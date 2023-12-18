@@ -115,6 +115,17 @@ int main(int argc, char**argv){
 	std::cout<<"Completed"<<std::endl;
 	const auto dt=std::chrono::duration_cast<std::chrono::microseconds>(t1-t0).count();
 
+	#ifdef _OPENMP
+	std::cout<<std::endl;
+	std::cout<<"  Multiplicating the two matrices with just one thread... ";
+	omp_set_num_threads(1);
+	const auto t0p=std::chrono::high_resolution_clock::now();
+	auto retp=mat1*mat2;
+	const auto t1p=std::chrono::high_resolution_clock::now();
+	std::cout<<"Completed"<<std::endl;
+	const auto dtp=std::chrono::duration_cast<std::chrono::microseconds>(t1p-t0p).count();
+	#endif
+
 	#ifdef EIGEN
 	std::cout<<"  Multiplicating the two Eigen matrices... ";
 	const auto t0e=std::chrono::high_resolution_clock::now();
@@ -129,12 +140,17 @@ int main(int argc, char**argv){
 	std::cout<<"-----------------------------------------------------------"<<std::endl;
 	std::cout<<std::endl;
 
-	std::cout<<"  Elapsed time      :\t"<< dt<<"\t[mus]"<<std::endl;
+	std::cout<<"  Elapsed time         :\t"<< dt<<"\t[mus]"<<std::endl;
 	
+	#ifdef _OPENMP
+	std::cout<<"  Elapsed time 1 thread:\t"<<dtp<<"\t[mus]"<<std::endl;
+	std::cout<<"      Ratio OpenMP/Mine:\t"<<((double)dtp/dt)<<std::endl;
+	#endif
+
 	#ifdef EIGEN
-	std::cout<<"  Elapsed time Eigen:\t"<<dte<<"\t[mus]"<<std::endl;
+	std::cout<<"  Elapsed time Eigen   :\t"<<dte<<"\t[mus]"<<std::endl;
 	std::cout<<std::endl;
-	std::cout<<"    Ratio Eigen/Mine:\t"<<((double)dt/dte)<<std::endl;
+	std::cout<<"    Ratio Eigen/Mine   :\t"<<((double)dt/dte)<<std::endl;
 	std::cout<<std::endl;
 	std::cout<<"  Difference between results:\t"<<checkMatrixDiff(ret,rete)<<std::endl;
 	#endif
