@@ -1,20 +1,14 @@
 #ifndef SVD_HPP
 #define SVD_HPP
 
-#include <random>
-
 #include "utils.hpp"
 #include "QR_Decomposition.hpp"
-
-#include <fstream>
-#include <sstream> 
-#include <iomanip>
 
 class SVD{
     public:
     /* Constructor : 
             epsilon : precision  */
-        SVD(double epsilon) : 
+        SVD(const double epsilon = 1e-10) : 
         m_epsilon(epsilon) {}
 
 
@@ -55,17 +49,21 @@ class SVD{
                         [eigenvectors of At*A] */
     std::tuple<Matrix, Vector, Matrix> svd_with_PM(Matrix A);
 
+    std::tuple<Matrix, Vector, Matrix> svd_with_PM2(Matrix A);
+
 
     /* Computes the pseudo-inverse of a matrix A (m x n) using SVD */
     Matrix pseudoinverse(const Matrix A){
-        int m = A.rows(), n = A.cols();
-        int k = (m > n) ? n : m;
-        auto[U,s,V]=svd_with_PM(A); 
-        
-        for(int i=0; i<k; i++)
-            s(i,1) = 1 / s(i,1);
+        auto[U,s,V]=svd_with_PM(A);        
+        for(int i=0; i<s.rows(); i++){
+            #ifdef EIGEN
+            s[i] = 1 / s[i];
+            #else
+            s(i,0) = 1 / s(i,0);         
+            #endif
+        }
 
-        return mult(V,s,U);
+        return mult_parallel(V,s,U);
     }
 
 
@@ -76,7 +74,7 @@ class SVD{
         r = target rank
         p = oversampling parameter
         q = exponent of power iteration */
-    std::tuple<Matrix, Vector, Matrix> rsvd(Matrix A, int r, int p, int q);  
+    std::tuple<Matrix, Vector, Matrix> rsvd(Matrix A, int r, int p, int q); 
 
 
     /* SVD using QR algorithm :
@@ -88,31 +86,36 @@ class SVD{
             s (n)     : vector the containing singular values of A
             V (n x n) : matrix whose coloumns are right singular vectors of A 
                         [eigenvectors of At*A] */
-    std::tuple<Matrix, Vector, Matrix> svd_with_qr(Matrix A);
+    std::tuple<Matrix, Vector, Matrix> svd_with_qr(const Matrix &A);
 
 
     /* Multiplication to obtain A (m x n) from the svd,
         Input:
-            U = matrix (m x n) -- va bene anche per U (m x m)
-            s = vector (n)
-            V = matrix (n x n) 
-        [Also used to calculate the inverse of A (n x m)]*/
+            U = matrix (m x min) 
+            s = vector (min)
+            V = matrix (n x min) */
     Matrix mult(Matrix U, Vector s, Matrix V){
         int m = U.rows(), n = V.rows(), k = s.rows();
-        //if (m == n) n = V.rows();       // to compute the inverse
-        //int k = (m > n) ? n : m;
-        Matrix A = Matrix::Zero(m,n);
+        Matrix A = Matrix::Zero(m, n);
  
         for(int r=0; r<m; r++)
             for(int c=0; c<n; c++)
-                for(int i=0; i<k; i++)
+                for(int i=0; i<k; i++){
                     #ifdef EIGEN
                     A(r,c) += s[i] * U(r,i) * V(c,i);
                     #else
-                    A(r,c) += s(i,1) * U(r,i) * V(c,i);
+                    A(r,c) += s(i,0) * U(r,i) * V(c,i);
                     #endif
+                }
         return A;
     }
+
+    /* Multiplication in parallel to obtain A (m x n) from the svd,
+        Input:
+            U = matrix (m x min) 
+            s = vector (min)
+            V = matrix (n x min) */
+    Matrix mult_parallel(Matrix U, Vector s, Matrix V);
 
 
     /* Destructor */
@@ -138,11 +141,27 @@ class SVD{
             x = x * (1 / x.norm());
             err = (xold-x).norm();
         }
-        return x;
+        return x; 
+    }
+
+    std::tuple <Vector, Vector> PowerMethod2 (const Matrix A){
+        Vector u(A.rows()), v = genmat(A.cols(),1), v_old(A.cols());
+        double err = 1.;
+        v = v * (1 / v.norm());
+
+        while ( err > m_epsilon ){
+            v_old = v;
+            u = A * v;
+            u = u * (1/u.norm());
+            v = A.transpose() * u;
+            v = v * (1 / v.norm());
+            err = (v_old-v).norm();
+        }
+        return std::make_tuple(u,v);
     }
 
 
-    /* Generates m x n Gaussian matrix M */
+    /* Generates m x n Gaussian matrix */
     Matrix genmat(const int m, const int n){
         Matrix M(m,n);
         //std::default_random_engine gen;

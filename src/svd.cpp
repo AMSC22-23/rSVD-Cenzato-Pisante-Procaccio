@@ -1,130 +1,155 @@
 #include "svd.hpp"
 
-std::tuple<Matrix, Vector, Matrix> SVD::svd_with_PM(Matrix A){
-    int n=A.cols(), m=A.rows(), i=0;
+std::tuple<Matrix, Vector, Matrix> SVD::svd_with_PM(Matrix A)
+{
+    int n = A.cols(), m = A.rows(), i = 0;
     int k = (m > n) ? n : m;
-    Matrix B(n,n), U(m,k), V(n,k);
+    Matrix B(n, n), U(m, k), V(n, k);
     Vector u(m), v(n), s(k);
-    double sigma=1.;
-    
-    while((sigma > m_epsilon) && i<k){                                
-        B =  A.transpose() * A;
+    double sigma = 1.;
+
+    while ((sigma > m_epsilon) && i < k)
+    {
+        B = A.transpose() * A;
         v = PowerMethod(B);
         sigma = (A * v).norm();
-        u = A * v * (1/sigma);
+        u = A * v * (1 / sigma);
 
-        #ifdef EIGEN
-        V.col(i)=v;
-        U.col(i)=u;
-        s[i]=sigma;
-        #else
-        V.col(i,v); 
-        U.col(i,u);           
-        s(i,1)=sigma;
-        #endif
+#ifdef EIGEN
+        V.col(i) = v;
+        U.col(i) = u;
+        s[i] = sigma;
+#else
+        V.col(i, v);
+        U.col(i, u);
+        s(i, 0) = sigma;
+#endif
 
-        A = A - (sigma * u * v.transpose()); 
+        A = A - (sigma * u * v.transpose());
         i++;
     }
-    return std::make_tuple(U,s,V);
+    return std::make_tuple(U, s, V);
 }
 
+std::tuple<Matrix, Vector, Matrix> SVD::svd_with_PM2(Matrix A)
+{
+    int n = A.cols(), m = A.rows(), i = 0;
+    int k = (m > n) ? n : m;
+    Matrix U(m, k), V(n, k);
+    Vector s = Vector::Zero(k, 1);
+    double sigma = 1.;
 
-std::tuple<Matrix, Vector, Matrix> SVD::rsvd(Matrix A, int r, int p, int q){  
-    int m=A.rows(), n=A.cols(), k = r + p;
-    Matrix Z(m,k) , P = genmat(n,k), Y(k,n);
+    while ((sigma > m_epsilon) && i < k)
+    {
+        auto [u, v] = PowerMethod2(A);
+
+#ifdef EIGEN
+        s[i] = (A * v).norm();
+        V.col(i) = v;
+        U.col(i) = u;
+        A = A - (s[i] * u * v.transpose());
+#else
+        s(i, 0) = (A * v).norm();
+        V.col(i, v);
+        U.col(i, u);
+        A = A - (s(i, 0) * u * v.transpose());
+#endif
+
+        i++;
+    }
+    return std::make_tuple(U, s, V);
+}
+
+std::tuple<Matrix, Vector, Matrix> SVD::rsvd(Matrix A, int r, int p, int q)
+{
+    int m = A.rows(), n = A.cols(), k = r + p;
+    Matrix Z(m, k), P = genmat(n, k), Y(k, n), U(m, k);
     QR_Decomposition QR;
-    exportmatrix(P,"P.txt");
 
-    Z = A * P;                             // m x k                 
-    for(int i=0; i<q; i++){
+    Z = A * P; // m x k
+    for (int i = 0; i < q; i++)
+    {
         Z = A * (A.transpose() * Z);
-    } 
-    exportmatrix(Z,"Z.txt"); 
+    }
 
-    auto [Q,R] = QR.Givens_solve(Z);
-    QR.setQR_for_svd(Q,R);
-    exportmatrix(Q,"Q_before.txt");
-    exportmatrix(R,"R.txt");
-    #ifdef EIGEN
-    Q.topLeftCorner(m,k);
-    #else
-    Q.trimCols(m-k);                       // m x k
-    #endif
-    
-    exportmatrix(Q,"Q.txt");
-    
-    Y = Q.transpose() * A;                // k x n
+    auto [Q, R] = QR.Givens_solve_parallel(Z);
+    QR.setQR_for_svd_parallel(Q, R);
 
-    auto [Uy,s,V] = svd_with_PM(Y);
-    auto U = Q * Uy;
+#ifdef EIGEN
+    Q = Q.topLeftCorner(m, k);
+#else
+    Q.trimCols(m - k); // m x k
+#endif
 
-    return std::make_tuple(U,s,V);
+    Y = Q.transpose() * A; // k x n
+
+    auto [Uy, s, V] = svd_with_PM(Y);
+    U = Q * Uy;
+
+    return std::make_tuple(U, s, V);
 }
 
-
-std::tuple<Matrix, Vector, Matrix> SVD::svd_with_qr(Matrix A){   
+std::tuple<Matrix, Vector, Matrix> SVD::svd_with_qr(const Matrix &A)
+{
     int m = A.rows(), n = A.cols();
     int min = (m > n) ? n : m;
-    //Matrix B = A.transpose() * A;
-    Matrix V(n,n), U(m,m), S = A.transpose(), Q;
-    Vector s(n),s_old(n);
+    Matrix V(n, min), U(m, min), S;
+    Vector s(min);
     QR_Decomposition obj_qr;
-    int nmax = 5 * n, cont = 0;
-    double err = 1., epsilon = 1e-10;
+    int nmax = 40, i = 0;
+    double err = 1., epsilon = 1e-6;
 
-    int flag=0;
-
+    // block SVD algorithm
     V.setIdentity();
-    U.setIdentity();
-    //QR algorithm to find eigenvalues of A (m x n)
-    while( cont < nmax && flag==0 ){
-        std::tie(Q,S) = obj_qr.Givens_solve(S.transpose());
-        obj_qr.setQR_for_svd(Q,S);
-        U = U * Q;
-        std::tie(Q,S) = obj_qr.Givens_solve(S.transpose());
-        obj_qr.setQR_for_svd(Q,S);
-        V = V * Q;
+    while (err > epsilon && i < nmax)
+    {
+        auto [Q, R] = obj_qr.Givens_solve_parallel(A * V);
+        U = Q.topLeftCorner(m, min);
 
-        /*s_old = s;
-        for(size_t i=0; i<n; i++){        
-            s[i] = sqrt(A(i,i));
-        }*/
-        //err = (s_old-s).norm()/n;
+        auto [Q2, R2] = obj_qr.Givens_solve_parallel(A.transpose() * U);
+        V = Q2.topLeftCorner(n, min);
 
-        flag = 1;
-        int k=0;
-        while(k<n && flag==1){
-            int j=k+1;
-            while(flag ==1 && j<n){
-                if(k<n-1 && S(k,j) > epsilon) {
-                    flag = 0;
-                    break;
-                }
-                j++;
-            }
-            j=k-1;
-            while(flag ==1 && j<n){
-                if(k>0 && S(k,j) > epsilon)  {
-                    flag = 0;
-                    break;
-                }
-                j++;
-            }
-            k++;
+#pragma omp simd
+        for (int i = 0; i < min; i++)
+        {
+#ifdef EIGEN
+            s[i] = std::sqrt(std::abs(R2(i, i)));
+#else
+            s(i, 0) = std::sqrt(std::abs(R2(i, i)));
+#endif
         }
 
-        cont++;
-    }
-    std::cout<<cont<<" , err = "<<err<<std::endl;
-
-    for(int i=0; i<min; i++){        
-        s(i,1) = sqrt(abs(S(i,i)));
+        err = (A - mult_parallel(U, s, V)).norm();
+        if (i < 4)
+            std::cout << i << " - " << err << std::endl;
+        i++;
     }
 
-    /*for(size_t i=0; i<k; i++){ 
-        U.col(i) = A * V.col(i) / s[i];
-    }*/
+    return std::make_tuple(U, s, V);
+}
 
-    return std::make_tuple(U,s,V);
+Matrix SVD::mult_parallel(Matrix U, Vector s, Matrix V)
+{
+    int m = U.rows(), n = V.rows(), k = s.rows();
+    Matrix A = Matrix::Zero(m, n);
+
+#pragma omp parallel for collapse(2) shared(A, s, U, V)
+    for (int r = 0; r < m; r++)
+    {
+        for (int c = 0; c < n; c++)
+        {
+            double temp = 0.0;
+#pragma omp parallel for reduction(+ : temp)
+            for (int i = 0; i < k; i++)
+            {
+#ifdef EIGEN
+                temp += s[i] * U(r, i) * V(c, i);
+#else
+                temp += s(i, 0) * U(r, i) * V(c, i);
+#endif
+            }
+            A(r, c) = temp;
+        }
+    }
+    return A;
 }

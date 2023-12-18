@@ -1,10 +1,11 @@
 #include "svd.hpp"
 
-//g++ -I${mkEigenInc} svd_test.cpp svd.cpp QR_Decomposition.cpp -o prova
+// g++ -I${mkEigenInc} svd_test.cpp svd.cpp QR_Decomposition_parallel.cpp -o prova -Wall -DEIGEN
+// or to test with our matrix class
+// g++ svd_test.cpp svd.cpp QR_Decomposition_parallel.cpp -o prova -Wall
 
-#include <fstream>
-#include <sstream> 
-#include <iomanip>
+// In parallel:
+// g++ svd_test.cpp svd.cpp QR_Decomposition_parallel.cpp -o prova -Wall -fopenmp
 
 void exportmatrix(Matrix A, std::string outputFileName){
     // Write the matrix to the file
@@ -32,7 +33,7 @@ void exportmatrix(Matrix A, std::string outputFileName){
 }
 
 int main(){
-    std::ifstream file("test_matrices/matrix4.txt");           //file with dim and then matrix
+    std::ifstream file("test_matrices/matrix3.txt");           //file with dim and then matrix
     if (!file.is_open()) {
         std::cerr << "Error opening file." << std::endl;
         return 1;
@@ -50,41 +51,110 @@ int main(){
     }
     // Close the file
     file.close();
+        
+    SVD obj;
+    
+    
+    std::cout<<"\nSVD with Power Method:\n";
 
-    double m_eps=1e-13;        
-    SVD obj(m_eps);
-    
-    
+    // 1-st algorithm using B = At * A
+    auto start = std::chrono::high_resolution_clock::now();
     auto [U_pm,s_pm,V_pm] = obj.svd_with_PM(A);
-    std::cout<<"\nReduced SVD with Power Method:\n";
-    std::cout<<"Norm of A - U * S * Vt = "<<(A-obj.mult(U_pm,s_pm,V_pm)).norm()<<std::endl;
-    exportmatrix(U_pm,"U_pm.txt");
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duration_pm = end  - start;
+
+    // 2-nd algorithm using A
+    start = std::chrono::high_resolution_clock::now();
+    auto [U_pm2,s_pm2,V_pm2] = obj.svd_with_PM2(A);
+    end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duration_pm2 = end  - start;
+
+    std::cout<<"Time of execution power method 1 algorithm: "<< duration_pm.count() << " s" << std::endl;
+    std::cout<<"Time of execution power method 2 algorithm: "<< duration_pm2.count() << " s" << std::endl;
+    std::cout<<"pm1 : || A - U * S * Vt || = "<<(A-obj.mult_parallel(U_pm,s_pm,V_pm)).norm()<<std::endl;
+    std::cout<<"pm2 : || A - U * S * Vt || = "<<(A-obj.mult_parallel(U_pm2,s_pm2,V_pm2)).norm()<<std::endl;
+    std::cout<<"Difference eigenvalues = "<<(s_pm2-s_pm).norm()<<std::endl;
+    /*exportmatrix(U_pm,"U_pm.txt");
     exportmatrix(s_pm.transpose(),"s_pm.txt");
-    exportmatrix(V_pm.transpose(),"Vt_pm.txt");
+    exportmatrix(V_pm.transpose(),"Vt_pm.txt");*/
 
-    /*std::cout<<"\nPseudo-inverse :\n";
-    std::cout<<obj.pseudoinverse(A)<<std::endl;*/
+/* SVD with Power Method:
+Time of execution power method 1 algorithm: 1.83834 s
+Time of execution power method 2 algorithm: 3.02369 s
+pm1 : || A - U * S * Vt || = 1.58773e-12
+pm2 : || A - U * S * Vt || = 1.72143e-12
+Difference eigenvalues = 5.92867e-13 */
 
-    /*auto [U_qr,s_qr,V_qr] = obj.svd_with_qr(A);
+
+    //Test for svd multiplication in parallel
+    /*auto start_pm = std::chrono::high_resolution_clock::now();
+    std::cout<<"|| A - U * S * Vt || = "<<(A-obj.mult(U_pm,s_pm,V_pm)).norm()<<std::endl;
+    auto end_pm = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duration_pm = end_pm  - start_pm;
+    std::cout<<"Time of execution serial: "<< duration_pm.count() << " s" << std::endl;
+
+    start_pm = std::chrono::high_resolution_clock::now();
+    std::cout<<"|| A - U * S * Vt || = "<<(A-obj.mult_parallel(U_pm,s_pm,V_pm)).norm()<<std::endl;
+    end_pm = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duration_pmp = end_pm  - start_pm;
+    std::cout<<"Time of execution parallel: "<< duration_pmp.count() << " s" << std::endl;
+    double SpeedUp = duration_pm.count()/duration_pmp.count();
+    std::cout << "Speed Up: "<< SpeedUp << std::endl;*/
+
+/*Test with Eigen
+Reduced SVD with Power Method:
+|| A - U * S * Vt || = 1.60171e-12
+Time of execution serial: 0.0645291 s
+|| A - U * S * Vt || = 1.60171e-12
+Time of execution parallel: 0.0066921 s
+Speed Up: 9.64258*/
+
+
+    std::cout<<"\nPseudo-inverse :\n";
+    start = std::chrono::high_resolution_clock::now();
+    auto A_inv = obj.pseudoinverse(A);
+    end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duration = end  - start;
+    std::cout<<"Time of execution to compute the pseudo-inverse: "<< duration.count() << " s" << std::endl;
+    exportmatrix(obj.pseudoinverse(A),"inv.txt");
+
+     
+    /*auto start_qr = std::chrono::high_resolution_clock::now();
+    auto [U_qr,s_qr,V_qr] = obj.svd_with_qr(A);
+    auto end_qr = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duration_qr = end_qr  - start_qr;
     std::cout<<"\nSVD with QR :\n";
+    std::cout<<"Time of execution QR algorithm: "<< duration_qr.count() << " s" << std::endl;
     std::cout<<"Norm of A - U * S * Vt = "<<(A-obj.mult(U_qr,s_qr,V_qr)).norm()<<std::endl;
     exportmatrix(U_qr,"U_qr.txt"); 
     exportmatrix(s_qr.transpose(),"s_qr.txt");
     exportmatrix(V_qr.transpose(),"Vt_qr.txt");*/
     
 
-    /*int r=40, p=5, q=1;
+    int r=20, p=5, q=1;
+    start = std::chrono::high_resolution_clock::now();
     auto [U_rsvd,s_rsvd,V_rsvd] = obj.rsvd(A,r,p,q);
+    end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duration_rsvd = end  - start;
     std::cout<<"\nrSVD :\n";
-    std::cout<<"Norm of A - U * S * Vt = "<<(A-obj.mult(U_rsvd,s_rsvd,V_rsvd)).norm()<<std::endl;
-    exportmatrix(U_rsvd,"U_rsvd.txt");
+    std::cout<<"Time of execution rSVD algorithm: "<< duration_rsvd.count() << " s" << std::endl;
+    std::cout<<"Norm of A - U * S * Vt = "<<(A-obj.mult_parallel(U_rsvd,s_rsvd,V_rsvd)).norm()<<std::endl;
+
+    double SpeedUp = duration_pm.count()/duration_rsvd.count();
+    std::cout << "Speed Up randomized: "<< SpeedUp << std::endl;
+
+    /*exportmatrix(U_rsvd,"U_rsvd.txt");
     exportmatrix(s_rsvd.transpose(),"s_rsvd.txt");
     exportmatrix(V_rsvd.transpose(),"Vt_rsvd.txt");*/
 
-    /*std::cout<<"\nComparison between power method and rSVD :\n";
-    std::cout<<"Norm of difference U = "<<(U_pm-U_rsvd).norm()<<std::endl;
-    std::cout<<"Norm of difference s = "<<(s_pm-s_rsvd).norm()<<std::endl;
-    std::cout<<"Norm of difference V = "<<(V_pm-V_rsvd).norm()<<std::endl;*/
+/* SVD / rSVD
+SVD with Power Method:
+Time of execution power method algorithm: 1.88037 s
+|| A - U * S * Vt || = 1.58493e-12
+rSVD :
+Time of execution rSVD algorithm: 0.704142 s
+Norm of A - U * S * Vt = 1050
+Speed Up randomized: 2.67045*/
 
     /*std::cout<<"\nComparison between power method and qr algorithm :\n";
     std::cout<<"Norm of difference U = "<<(U_pm-U_qr).norm()<<std::endl;
