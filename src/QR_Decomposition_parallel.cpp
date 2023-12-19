@@ -151,7 +151,7 @@ std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve_parallel(Matrix A
     u = Vector(m);
     v = Vector(m);
 
-    for (int j = 0; j < n; j++)
+    for (int j = 0; j < std::min(m,n); j++)
     {
 
 #ifdef EIGEN
