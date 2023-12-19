@@ -35,7 +35,7 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve_parallel(Matrix A){
             if (std::abs(a)>std::abs(b) ){
                 if(a!=0.0){
                     int segno = std::signbit(a) ? -1 : 1;
-                    c = segno / sqrt(1+(b/a)*(b/a));
+                    c = segno / std::sqrt(1+(b/a)*(b/a));
                     s  = std::abs(c/a)*b;
                     } else{
                         c=0.0;
@@ -43,7 +43,7 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve_parallel(Matrix A){
                     }
                 }else if (b!=0.0)  {
                     int segno = (std::signbit(b) ? -1 : 1);
-                    s = segno / sqrt(1+(a/b)*(a/b));
+                    s = segno / std::sqrt(1+(a/b)*(a/b));
                     c=std::abs(s/b)*a;
                     } else{
                         s=0.0;
@@ -155,7 +155,7 @@ std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve_parallel(Matrix A
         * evaluating each component of the matrix R
         */
         mag=0.0;
-        #pragma parallel for reduction(+: mag) num_threads(4)
+        #pragma omp parallel for reduction(+: mag) num_threads(4)
         for(int i=j;i<m;i++){
             #ifdef EIGEN
                 u(i)=R(i,j);
@@ -165,7 +165,7 @@ std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve_parallel(Matrix A
                 mag+=u(i,0)*u(i,0);
             #endif
         }
-        mag=sqrt(mag);
+        mag=std::sqrt(mag);
         #ifdef EIGEN
             alpha = (u(j) < 0) ? mag : -mag ;
         #else
@@ -173,7 +173,7 @@ std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve_parallel(Matrix A
         #endif
 
         mag=0.0;
-        #pragma parallel for reduction(+: mag) private(u) num_threads(4)
+        #pragma omp parallel for reduction(+: mag) private(u) num_threads(4)
         for(int i=j;i<m;i++){
             #ifdef EIGEN
                 v(i)= (j == i) ? (u(i) + alpha) : u(i);
@@ -183,7 +183,7 @@ std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve_parallel(Matrix A
                 mag+=v(i,0)*v(i,0);
             #endif
         }
-        mag=sqrt(mag);
+        mag=std::sqrt(mag);
         if (mag < 0.0000000001) continue;
 
 		for (int i = j; i < m; i++) {

@@ -36,7 +36,7 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve(Matrix A){
             if (std::abs(a)>std::abs(b) ){
                 if(a!=0.0){
                     int segno = std::signbit(a) ? -1 : 1;
-                    c = segno / sqrt(1+(b/a)*(b/a));
+                    c = segno / std::sqrt(1+(b/a)*(b/a));
                     s  = std::abs(c/a)*b;
                     } else{
                         c=0.0;
@@ -44,7 +44,7 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve(Matrix A){
                     }
                 }else if (b!=0.0)  {
                     int segno = (std::signbit(b) ? -1 : 1);
-                    s = segno / sqrt(1+(a/b)*(a/b));
+                    s = segno / std::sqrt(1+(a/b)*(a/b));
                     c=std::abs(s/b)*a;
                     } else{
                         s=0.0;
@@ -150,7 +150,7 @@ std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve(Matrix A){
 
             
         }
-        mag=sqrt(mag);
+        mag=std::sqrt(mag);
         #ifdef EIGEN
             alpha = (u(j) < 0) ? mag : -mag ;
         #else
@@ -172,7 +172,7 @@ std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve(Matrix A){
             #endif
         }
 
-        mag=sqrt(mag);
+        mag=std::sqrt(mag);
 
         if (mag < 0.0000000001) continue;
 
