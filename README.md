@@ -35,7 +35,7 @@ Also each command supports the additional options `parallel=on` and `eigen=on` w
 
 # FullMatrix
 
-The `fullMatrix` tests computes the most expensive operation in the whole project: the **matrix-matrix multiplication** using [Hilbert Matrices](https://en.wikipedia.org/wiki/Hilbert_matrix). In particular it takes two matrices $` A \in \mathbb{R}^{mxn} , B \in \mathbb{R}^{nxq} `$ and it outputs the timing results of $` C=AB , C \in \mathbb{R}^{mxq} `$ .
+The `fullMatrix` tests computes the most expensive operation in the whole project: the **matrix-matrix multiplication** using [Hilbert Matrices](https://en.wikipedia.org/wiki/Hilbert_matrix). In particular it takes two matrices $` A \in \mathbb{R}^{m \times n} , B \in \mathbb{R}^{n \times q} `$ and it outputs the timing results of $` C=AB , C \in \mathbb{R}^{m \times q} `$ .
 
 The command to run it is:
 
