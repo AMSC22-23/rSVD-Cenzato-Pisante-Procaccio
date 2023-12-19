@@ -144,8 +144,8 @@ std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve(Matrix A){
                 u(i)=R(i,j);
                 mag+=u(i)*u(i);
             #else
-                u(i,1)=R(i,j);
-                mag+=u(i,1)*u(i,1);
+                u(i,0)=R(i,j);
+                mag+=u(i,0)*u(i,0);
             #endif
 
             
@@ -154,7 +154,7 @@ std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve(Matrix A){
         #ifdef EIGEN
             alpha = (u(j) < 0) ? mag : -mag ;
         #else
-            alpha = (u(j,1) < 0) ? mag : -mag ;
+            alpha = (u(j,0) < 0) ? mag : -mag ;
         #endif
 
         mag=0.0;
@@ -167,8 +167,8 @@ std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve(Matrix A){
                 v(i)= (j == i) ? (u(i) + alpha) : u(i);
                 mag+=v(i)*v(i);
             #else
-                v(i,1)= (j == i) ? (u(i,1) + alpha) : u(i,1);
-                mag+=v(i,1)*v(i,1);
+                v(i,0)= (j == i) ? (u(i,1) + alpha) : u(i,0);
+                mag+=v(i,0)*v(i,0);
             #endif
         }
 
@@ -176,7 +176,7 @@ std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve(Matrix A){
 
         if (mag < 0.0000000001) continue;
 
-        for (int i = j; i < m; i++) v(i) /= mag;
+        for (int i = j; i < m; i++) v(i,0) /= mag;
         
     /**
         * Computing P at the j-th iterate and applying the rotation to R,Q

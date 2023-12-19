@@ -28,8 +28,8 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve_parallel(Matrix A){
                 * below the diagonal to pull them to zero
             */
             
-            double a=R.coeffRef(i-1,j);
-            double b=R.coeffRef(i,j);
+            double a=R(i-1,j);
+            double b=R(i,j);
             double c,s;
         
             if (std::abs(a)>std::abs(b) ){
@@ -155,38 +155,40 @@ std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve_parallel(Matrix A
         * evaluating each component of the matrix R
         */
         mag=0.0;
-        #pragma parallel for reduction(+: mag)
+        #pragma parallel for reduction(+: mag) num_threads(4)
         for(int i=j;i<m;i++){
             #ifdef EIGEN
                 u(i)=R(i,j);
                 mag+=u(i)*u(i);
             #else
-                u(i,1)=R(i,j);
-                mag+=u(i,1)*u(i,1);
+                u(i,0)=R(i,0);
+                mag+=u(i,0)*u(i,0);
             #endif
         }
         mag=sqrt(mag);
         #ifdef EIGEN
             alpha = (u(j) < 0) ? mag : -mag ;
         #else
-            alpha = (u(j,1) < 0) ? mag : -mag ;
+            alpha = (u(j,0) < 0) ? mag : -mag ;
         #endif
 
         mag=0.0;
-        #pragma parallel for reduction(+: mag) private(u)
+        #pragma parallel for reduction(+: mag) private(u) num_threads(4)
         for(int i=j;i<m;i++){
             #ifdef EIGEN
                 v(i)= (j == i) ? (u(i) + alpha) : u(i);
                 mag+=v(i)*v(i);
             #else
-                v(i,1)= (j == i) ? (u(i,1) + alpha) : u(i,1);
-                mag+=v(i,1)*v(i,1);
+                v(i,0)= (j == i) ? (u(i,0) + alpha) : u(i,0);
+                mag+=v(i,0)*v(i,0);
             #endif
         }
         mag=sqrt(mag);
         if (mag < 0.0000000001) continue;
 
-		for (int i = j; i < m; i++) v(i) /= mag;
+		for (int i = j; i < m; i++) {
+            v(i,0) = v(i,0)/mag;
+        }
         
     /**
         * Computing P at the j-th iterate and applying the rotation to R,Q
@@ -209,7 +211,7 @@ std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve_parallel(Matrix A
 
             
     }
-    #pragma omp for collapse(2)
+    #pragma omp parallel for collapse(2) num_threads(4)
     for(int j=0;j<m;j++){
         for(int i=j+1; i<n; i++){
             R(i,j)=0.;
