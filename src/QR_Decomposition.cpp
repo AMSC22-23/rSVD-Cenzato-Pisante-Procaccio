@@ -17,6 +17,7 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve(Matrix A)
      * Assembling the matrix Q by applying the Givens rotation at each
      * iteration and applying each component of Q to R in order to make it triangular
      */
+    double c, s,a,b,tmp;
     for (int j = 0; j < n; j++)
     {
         for (int i = m - 1; i > j; i--)
@@ -31,9 +32,9 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve(Matrix A)
              * below the diagonal to pull them to zero
              */
 
-            double a = R(i - 1, j);
-            double b = R(i, j);
-            double c, s;
+            a = R(i - 1, j);
+            b = R(i, j);
+            
 
             if (std::abs(a) > std::abs(b))
             {
@@ -65,7 +66,7 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve(Matrix A)
              * Instead of creating the Givens matrix, I do directly the computation on Q and R
              * In addition I use a temporal variable to avoid changing the matrix before the computation
              */
-            double tmp = 0.0;
+            tmp = 0.0;
             for (int k = 0; k < n; k++)
             {
                 tmp = c * R(i - 1, k) + s * R(i, k);

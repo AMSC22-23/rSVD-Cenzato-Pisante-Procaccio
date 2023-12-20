@@ -15,11 +15,15 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve_parallel(Matrix A)
      * Assembling the matrix Q by applying the Givens rotation at each
      * iteration and applying each component of Q to R in order to make it triangular
      */
-
+    double c, s, a, b, tmp;
+#pragma omp parallel num_threads(4)
+{
     for (int j = 0; j < n; j++)
     {
         for (int i = m - 1; i > j; i--)
         {
+            #pragma omp single
+            {
             /**
              * Givens rotation gets applied by calculating the values of:
              * c: cosine of the angle of rotation
@@ -29,9 +33,9 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve_parallel(Matrix A)
              * below the diagonal to pull them to zero
              */
 
-            double a = R(i - 1, j);
-            double b = R(i, j);
-            double c, s;
+            a = R(i - 1, j);
+            b = R(i, j);
+            
 
             if (std::abs(a) > std::abs(b))
             {
@@ -64,36 +68,33 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve_parallel(Matrix A)
              * In addition I use a temporal variable to avoid changing the matrix before the computation
              * Since there is dependencies within the for loop, I use atomic add
              */
-            double tmp = 0.0;
+            
+            tmp = 0.0;
+            }
 
-#pragma omp parallel sections
-            {
-#pragma omp section
-                {
-#pragma omp parallel for num_threads(2) private(tmp)
+#pragma omp for private(tmp)
                     for (int k = 0; k < n; k++)
                     {
                         tmp = c * R.coeffRef(i - 1, k) + s * R.coeffRef(i, k);
                         R.coeffRef(i, k) = -s * R.coeffRef(i - 1, k) + c * R.coeffRef(i, k);
                         R.coeffRef(i - 1, k) = tmp;
                     }
-                }
+                
 
-#pragma omp section
-                {
-#pragma omp parallel for num_threads(2) private(tmp)
+
+#pragma omp for private(tmp)
                     for (int k = 0; k < m; k++)
                     {
                         tmp = Q.coeffRef(k, i - 1) * c + Q.coeffRef(k, i) * s;
                         Q.coeffRef(k, i) = Q.coeffRef(k, i - 1) * -s + Q.coeffRef(k, i) * c;
                         Q.coeffRef(k, i - 1) = tmp;
                     }
-                }
-            }
+                
+            
             R.coeffRef(i, j) = 0.;
         }
     }
-
+}
     return std::make_tuple(Q, R);
 }
 
@@ -158,7 +159,7 @@ std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve_parallel(Matrix A
         u.setZero();
         v.setZero();
 #else   
-#pragma omp parallel for num_threads(4)
+#pragma omp for
         for (int i = 0; i < m; i++)
         {
             u(i, 0) = 0.;
@@ -212,7 +213,7 @@ std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve_parallel(Matrix A
          */
         P = I - 2.0 * v * v.transpose();
 
-#pragma omp parallel sections
+#pragma omp sections
         {
 #pragma omp section
             {

@@ -160,10 +160,10 @@ int main(int argc, char**argv)
     std::cout << "Speed Up HouseHolder: " << SpeedUpHH << std::endl;
 
 
-    exportmatrix(R,"./../test_results/R_HH.txt");
-    exportmatrix(Q,"./../test_results/Q_HH.txt");
-    exportmatrix(Rg,"./../test_results/R_GIV.txt");
-    exportmatrix(Qg,"./../test_results/Q_GIV.txt");
+    exportmatrix(Rp,"./../test_results/R_HH.txt");
+    exportmatrix(Qp,"./../test_results/Q_HH.txt");
+    exportmatrix(Rgp,"./../test_results/R_GIV.txt");
+    exportmatrix(Qgp,"./../test_results/Q_GIV.txt");
 
     return 0;
 }
