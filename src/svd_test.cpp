@@ -33,7 +33,7 @@ void exportmatrix(Matrix A, std::string outputFileName){
 }
 
 int main(int argc, char ** argv){
-    std::ifstream file("test_matrices/matrix2.txt");           //file with dim and then matrix
+    std::ifstream file("../src/test_matrices/matrix2.txt");           //file with dim and then matrix
     if (!file.is_open()) {
         std::cerr << "Error opening file." << std::endl;
         return 1;

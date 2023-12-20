@@ -11,7 +11,7 @@ FULLMATRIX_TEST=fullMatrixTestTiming.cpp
 QR_TEST=QR_DecompositionTest.cpp QR_Decomposition.cpp QR_Decomposition_parallel.cpp
 
 #Files for the SVD test
-SVD_TEST=svd_test.cpp svd.cpp QR_Decomposition.cpp
+SVD_TEST=svd_test.cpp svd.cpp QR_Decomposition_parallel.cpp
 
 ifdef parallel
 CXXFLAGS+=-fopenmp
