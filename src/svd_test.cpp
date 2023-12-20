@@ -1,6 +1,6 @@
 #include "svd.hpp"
 
-// g++ -I${mkEigenInc} svd_test.cpp svd.cpp QR_Decomposition_parallel.cpp -o prova -Wall -DEIGEN
+// g++ -I${mkEigenInc} svd_test.cpp svd.cpp QR_Decomposition_parallel.cpp -o svd -Wall -DEIGEN -fopenmp
 // or to test with our matrix class
 // g++ svd_test.cpp svd.cpp QR_Decomposition_parallel.cpp -o prova -Wall
 
@@ -32,12 +32,12 @@ void exportmatrix(Matrix A, std::string outputFileName){
 
 }
 
-int main(){
-    std::ifstream file("test_matrices/matrix3.txt");           //file with dim and then matrix
+int main(int argc, char ** argv){
+    std::ifstream file("test_matrices/matrix2.txt");           //file with dim and then matrix
     if (!file.is_open()) {
         std::cerr << "Error opening file." << std::endl;
         return 1;
-    }
+    } 
 
     // Take the dimensions of the matrix
     int m, n;
@@ -74,16 +74,9 @@ int main(){
     std::cout<<"pm1 : || A - U * S * Vt || = "<<(A-obj.mult_parallel(U_pm,s_pm,V_pm)).norm()<<std::endl;
     std::cout<<"pm2 : || A - U * S * Vt || = "<<(A-obj.mult_parallel(U_pm2,s_pm2,V_pm2)).norm()<<std::endl;
     std::cout<<"Difference eigenvalues = "<<(s_pm2-s_pm).norm()<<std::endl;
-    /*exportmatrix(U_pm,"U_pm.txt");
+    exportmatrix(U_pm,"U_pm.txt");
     exportmatrix(s_pm.transpose(),"s_pm.txt");
-    exportmatrix(V_pm.transpose(),"Vt_pm.txt");*/
-
-/* SVD with Power Method:
-Time of execution power method 1 algorithm: 1.83834 s
-Time of execution power method 2 algorithm: 3.02369 s
-pm1 : || A - U * S * Vt || = 1.58773e-12
-pm2 : || A - U * S * Vt || = 1.72143e-12
-Difference eigenvalues = 5.92867e-13 */
+    exportmatrix(V_pm.transpose(),"Vt_pm.txt");
 
 
     //Test for svd multiplication in parallel
@@ -116,7 +109,7 @@ Speed Up: 9.64258*/
     end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> duration = end  - start;
     std::cout<<"Time of execution to compute the pseudo-inverse: "<< duration.count() << " s" << std::endl;
-    exportmatrix(obj.pseudoinverse(A),"inv.txt");
+    //exportmatrix(obj.pseudoinverse(A),"inv.txt");
 
      
     /*auto start_qr = std::chrono::high_resolution_clock::now();
@@ -131,35 +124,22 @@ Speed Up: 9.64258*/
     exportmatrix(V_qr.transpose(),"Vt_qr.txt");*/
     
 
-    int r=20, p=5, q=1;
+    int r=15, p=0, q=1;
     start = std::chrono::high_resolution_clock::now();
     auto [U_rsvd,s_rsvd,V_rsvd] = obj.rsvd(A,r,p,q);
     end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> duration_rsvd = end  - start;
-    std::cout<<"\nrSVD :\n";
+    std::cout<<"\nrSVD ( r = "<< r <<" ):\n";
     std::cout<<"Time of execution rSVD algorithm: "<< duration_rsvd.count() << " s" << std::endl;
     std::cout<<"Norm of A - U * S * Vt = "<<(A-obj.mult_parallel(U_rsvd,s_rsvd,V_rsvd)).norm()<<std::endl;
 
     double SpeedUp = duration_pm.count()/duration_rsvd.count();
     std::cout << "Speed Up randomized: "<< SpeedUp << std::endl;
+    std::cout << "Norm of difference eigenvalues = " << (s_rsvd - s_pm.head(s_rsvd.rows())).norm()/(r+p) << std::endl;
 
-    /*exportmatrix(U_rsvd,"U_rsvd.txt");
+    exportmatrix(U_rsvd,"U_rsvd.txt");
     exportmatrix(s_rsvd.transpose(),"s_rsvd.txt");
-    exportmatrix(V_rsvd.transpose(),"Vt_rsvd.txt");*/
-
-/* SVD / rSVD
-SVD with Power Method:
-Time of execution power method algorithm: 1.88037 s
-|| A - U * S * Vt || = 1.58493e-12
-rSVD :
-Time of execution rSVD algorithm: 0.704142 s
-Norm of A - U * S * Vt = 1050
-Speed Up randomized: 2.67045*/
-
-    /*std::cout<<"\nComparison between power method and qr algorithm :\n";
-    std::cout<<"Norm of difference U = "<<(U_pm-U_qr).norm()<<std::endl;
-    std::cout<<"Norm of difference s = "<<(s_pm-s_qr).norm()<<std::endl;
-    std::cout<<"Norm of difference V = "<<(V_pm-V_qr).norm()<<std::endl;*/
+    exportmatrix(V_rsvd.transpose(),"Vt_rsvd.txt");
 
     return 0;
 }

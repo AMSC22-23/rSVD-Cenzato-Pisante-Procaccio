@@ -49,6 +49,8 @@ class SVD{
                         [eigenvectors of At*A] */
     std::tuple<Matrix, Vector, Matrix> svd_with_PM(Matrix A);
 
+
+    /* Another algorithm to compute the SVD using the power method */
     std::tuple<Matrix, Vector, Matrix> svd_with_PM2(Matrix A);
 
 
@@ -88,27 +90,6 @@ class SVD{
                         [eigenvectors of At*A] */
     std::tuple<Matrix, Vector, Matrix> svd_with_qr(const Matrix &A);
 
-
-    /* Multiplication to obtain A (m x n) from the svd,
-        Input:
-            U = matrix (m x min) 
-            s = vector (min)
-            V = matrix (n x min) */
-    Matrix mult(Matrix U, Vector s, Matrix V){
-        int m = U.rows(), n = V.rows(), k = s.rows();
-        Matrix A = Matrix::Zero(m, n);
- 
-        for(int r=0; r<m; r++)
-            for(int c=0; c<n; c++)
-                for(int i=0; i<k; i++){
-                    #ifdef EIGEN
-                    A(r,c) += s[i] * U(r,i) * V(c,i);
-                    #else
-                    A(r,c) += s(i,0) * U(r,i) * V(c,i);
-                    #endif
-                }
-        return A;
-    }
 
     /* Multiplication in parallel to obtain A (m x n) from the svd,
         Input:

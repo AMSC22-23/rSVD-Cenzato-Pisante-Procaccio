@@ -71,7 +71,7 @@ std::tuple<Matrix, Vector, Matrix> SVD::rsvd(Matrix A, int r, int p, int q)
     {
         Z = A * (A.transpose() * Z);
     }
-
+    
     auto [Q, R] = QR.Givens_solve_parallel(Z);
     QR.setQR_for_svd_parallel(Q, R);
 
@@ -88,7 +88,7 @@ std::tuple<Matrix, Vector, Matrix> SVD::rsvd(Matrix A, int r, int p, int q)
 
     return std::make_tuple(U, s, V);
 }
-
+/*
 std::tuple<Matrix, Vector, Matrix> SVD::svd_with_qr(const Matrix &A)
 {
     int m = A.rows(), n = A.cols();
@@ -126,7 +126,7 @@ std::tuple<Matrix, Vector, Matrix> SVD::svd_with_qr(const Matrix &A)
     }
 
     return std::make_tuple(U, s, V);
-}
+}*/
 
 Matrix SVD::mult_parallel(Matrix U, Vector s, Matrix V)
 {
