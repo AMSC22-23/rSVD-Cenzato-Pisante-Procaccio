@@ -1,0 +1,51 @@
+800 600
+Time of execution serial givens: 1.10214 s
+Time of execution serial HouseHolder: 0.174682 s
+Time of execution parallel givens: 1.68489 s
+Time of execution parallel: 0.404641 s
+Speed Up Givens: 0.654136
+Speed Up HouseHolder: 0.431697
+
+
+
+100 150
+Time of execution serial givens: 0.000391335 s
+Time of execution serial HouseHolder: 0.000754215 s
+Time of execution parallel givens: 0.0275596 s
+Time of execution parallel: 0.000305331 s
+Speed Up Givens: 0.0141996
+Speed Up HouseHolder: 2.47016
+
+
+10 10
+Time of execution serial givens: 9.158e-06 s
+Time of execution serial HouseHolder: 2.4827e-05 s
+Time of execution parallel givens: 0.0169225 s
+Time of execution parallel: 0.00159643 s
+Speed Up Givens: 0.000541172
+Speed Up HouseHolder: 0.0155516
+
+
+800 600
+Time of execution serial givens: 0.844438 s
+Time of execution serial HouseHolder: 1.10773 s
+Time of execution parallel givens: 2.364 s
+Time of execution parallel: 2.50591 s
+Speed Up Givens: 0.357207
+Speed Up HouseHolder: 0.442046
+
+100 150
+Time of execution serial givens: 0.00117031 s
+Time of execution serial HouseHolder: 0.0381366 s
+Time of execution parallel givens: 0.0177415 s
+Time of execution parallel: 0.0103584 s
+Speed Up Givens: 0.0659646
+Speed Up HouseHolder: 3.68171
+
+10 10
+Time of execution serial givens: 8.015e-06 s
+Time of execution serial HouseHolder: 0.017976 s
+Time of execution parallel givens: 0.00136441 s
+Time of execution parallel: 0.00376676 s
+Speed Up Givens: 0.00587435
+Speed Up HouseHolder: 4.77229
