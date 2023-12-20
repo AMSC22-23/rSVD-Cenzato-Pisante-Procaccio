@@ -28,10 +28,10 @@ void exportmatrix(Matrix A, std::string outputFileName){
 
 
 
-int main()
+int main(int argc, char**argv)
 {
-    int m = 2;
-    int n = 1;
+    int m=(argc>=2)?std::stoul(argv[1]):60;
+	int n=(argc>=3)?std::stoul(argv[2]):60;
 
     Matrix A(m, n);
     for (int j = 0; j < n; j++)
@@ -160,10 +160,10 @@ int main()
     std::cout << "Speed Up HouseHolder: " << SpeedUpHH << std::endl;
 
 
-    exportmatrix(R,"R_HH.txt");
-    exportmatrix(Q,"Q_HH.txt");
-    exportmatrix(Rg,"R_GIV.txt");
-    exportmatrix(Qg,"Q_GIV.txt");
+    exportmatrix(R,"./../test_results/R_HH.txt");
+    exportmatrix(Q,"./../test_results/Q_HH.txt");
+    exportmatrix(Rg,"./../test_results/R_GIV.txt");
+    exportmatrix(Qg,"./../test_results/Q_GIV.txt");
 
     return 0;
 }

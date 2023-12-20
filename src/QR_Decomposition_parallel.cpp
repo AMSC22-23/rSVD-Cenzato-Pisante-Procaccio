@@ -66,7 +66,7 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve_parallel(Matrix A)
              */
             double tmp = 0.0;
 
-#pragma omp sections
+#pragma omp parallel sections
             {
 #pragma omp section
                 {
@@ -212,7 +212,7 @@ std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve_parallel(Matrix A
          */
         P = I - 2.0 * v * v.transpose();
 
-#pragma omp sections
+#pragma omp parallel sections
         {
 #pragma omp section
             {
