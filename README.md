@@ -46,7 +46,13 @@ In particular based on the options specified at compile time (specified above) i
 
 # SVD
 
-TODO
+The `SVD` tests computes the Singular Value Decomposition of a matrix both using the Power Method and the rSVD algorithm. In particular, it takes the matrix $` A \in \mathbb{R}^{m \times n} `$ and outputs the error and the timing results using two different algorithms based on the power method and one on the rSVD algorithm.
+
+The command to run it is:
+```
+./svd
+```
+The test returns also the computed matrices of the algorithm based on the power method (only of the one that performs better) and of the rSVD.
 
 # QR
 
