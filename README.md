@@ -55,7 +55,8 @@ The `QR` tests computes the QR factorization both with Givens rotations and Hous
 The command to run it is:
 
 ```
-./qr
+./qr m n
 ```
 
-Such test also returns 4 files with the matrixes $` R \in \mathbb{R}^{m \times n} , Q \in \mathbb{R}^{m \times m} `$ computed by the 2 algorithms both serially and in parallel. Files names are printed on the output.
+Such test also returns 4 files with the matrixes $` R \in \mathbb{R}^{m \times n} , Q \in \mathbb{R}^{m \times m} `$ computed by the 2 algorithms both serially and in parallel. Dimension on the test matrix can be added too.
+Files names are printed on the output.
