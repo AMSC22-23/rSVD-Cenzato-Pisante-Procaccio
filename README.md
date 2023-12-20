@@ -50,7 +50,7 @@ TODO
 
 # QR
 
-The `QR` tests computes the QR factorization both with Givens rotations and Householder algorithm. In particular it takes the matrix $` A \in \mathbb{R}^{m \times n} $ and it outputs the timing results of the two algorithms both in serial and in parallel, showing the speed up achieved.
+The `QR` tests computes the QR factorization both with Givens rotations and Householder algorithm. In particular it takes the matrix $` A \in \mathbb{R}^{m \times n} `$ and it outputs the timing results of the two algorithms both in serial and in parallel, showing the speed up achieved.
 
 The command to run it is:
 
