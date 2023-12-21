@@ -173,7 +173,7 @@ std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve(Matrix A)
             v(i) = (j == i) ? (u(i) + alpha) : u(i);
             mag += v(i) * v(i);
 #else
-            v(i, 0) = (j == i) ? (u(i, 1) + alpha) : u(i, 0);
+            v(i, 0) = (j == i) ? (u(i, 0) + alpha) : u(i, 0);
             mag += v(i, 0) * v(i, 0);
 #endif
         }
