@@ -39,12 +39,16 @@ void exportmatrix(Matrix A, std::string outputFileName)
 
 int main(int argc, char **argv)
 {
-    std::ifstream file("../test_matrices/matrix2.txt");     // file with dim and then matrix
-    if (argc > 1)
-    {
-        std::ifstream file(argv[1]);
+    const char* filePath;
+    if (argc > 1) {
+        filePath = argv[1];
+        std::cout << "Attempting to open file: " << filePath << std::endl;
+    } else {
+        filePath = "../test_matrices/matrix2.txt";  // Default file path
+        std::cout << "No file path provided. Using default file: " << filePath << std::endl;
     }
-
+    
+    std::ifstream file(filePath);
     if (!file.is_open())
     {
         std::cerr << "Error opening file." << std::endl;
