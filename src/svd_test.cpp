@@ -88,8 +88,9 @@ int main(int argc, char **argv)
 
     std::cout << "Time of execution power method 1 algorithm: " << duration_pm.count() << " s" << std::endl;
     std::cout << "Time of execution power method 2 algorithm: " << duration_pm2.count() << " s" << std::endl;
-    std::cout << "pm1 : || A - U * S * Vt || = " << (A - obj.mult_parallel(U_pm, s_pm, V_pm)).norm() << std::endl;
-    std::cout << "pm2 : || A - U * S * Vt || = " << (A - obj.mult_parallel(U_pm2, s_pm2, V_pm2)).norm() << std::endl;
+    //To do
+    //std::cout << "pm1 : || A - U * S * Vt || = " << (A - obj.mult_parallel(U_pm, s_pm, V_pm)).norm() << std::endl;
+    //std::cout << "pm2 : || A - U * S * Vt || = " << (A - obj.mult_parallel(U_pm2, s_pm2, V_pm2)).norm() << std::endl;
     std::cout << "Difference eigenvalues = " << (s_pm2 - s_pm).norm() << std::endl;
     exportmatrix(U_pm, "U_pm.txt");
     exportmatrix(s_pm.transpose(), "s_pm.txt");
