@@ -18,6 +18,17 @@ ari@Computer-Ari python $ python check_equality.py matrix2_S.txt ../../s_pm.txt
 Row 49 error: 0.001308384382035399
 Total error: 0.001308384382035399
 
+--------------- FullMatrix
+SVD with Power Method:
+Time of execution power method 1 algorithm: 0.105356 s
+Time of execution power method 2 algorithm: 0.335662 s
+Difference eigenvalues = 5.79964e-13
+
+rSVD ( r = 15 ):
+Time of execution rSVD algorithm: 0.0379961 s
+Speed Up randomized: 2.7728
+
+=============================================================
 
 // matrix3.txt (60 x 80)
 SVD with Power Method:
@@ -38,3 +49,13 @@ Speed Up randomized: 7.26913
 ari@Computer-Ari python $ python check_equality.py ../matrix3_S.txt ../../src/s_pm.txt
 Row 59 error: 0.0015638190940165941
 Total error: 0.0015638190940165941
+
+---------- FullMatrix
+SVD with Power Method:
+Time of execution power method 1 algorithm: 0.220119 s
+Time of execution power method 2 algorithm: 0.77393 s
+Difference eigenvalues = 4.90841e-13
+
+rSVD ( r = 15 ):
+Time of execution rSVD algorithm: 0.0562125 s
+Speed Up randomized: 3.91584
