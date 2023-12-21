@@ -56,8 +56,9 @@ class SVD{
 
     /* Computes the pseudo-inverse of a matrix A (m x n) using SVD */
     Matrix pseudoinverse(const Matrix A){
-        auto[U,s,V]=svd_with_PM(A);        
-        for(int i=0; i<s.rows(); i++){
+        auto[U,s,V]=svd_with_PM(A);
+        size_t k =s.rows();        
+        for(size_t i=0; i<k; i++){
             #ifdef EIGEN
             s[i] = 1 / s[i];
             #else
