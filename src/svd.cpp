@@ -5,29 +5,54 @@ std::tuple<Matrix, Vector, Matrix> SVD::svd_with_PM(Matrix A)
     int n = A.cols(), m = A.rows(), i = 0;
     int k = (m > n) ? n : m;
     Matrix B(n, n), U(m, k), V(n, k);
-    Vector u(m), v(n), s(k);
-    double sigma = 1.;
+    Vector s(k), u(m), v(n);
 
+    double sigma = 1.;
     while ((sigma > m_epsilon) && i < k)
     {
         B = A.transpose() * A;
         v = PowerMethod(B);
+
         sigma = (A * v).norm();
-        u = A * v * (1 / sigma);
+
+        if (sigma > m_epsilon)
+        {
+            u = A * v * (1 / sigma);
 
 #ifdef EIGEN
-        V.col(i) = v;
-        U.col(i) = u;
-        s[i] = sigma;
+            V.col(i) = v;
+            U.col(i) = u;
+            s[i] = sigma;
 #else
-        V.col(i, v);
-        U.col(i, u);
-        s(i, 0) = sigma;
+            V.col(i, v);
+            s(i, 0) = sigma;
+            U.col(i, u);
 #endif
-
-        A = A - (sigma * u * v.transpose());
-        i++;
+            A = A - (sigma * u * v.transpose());
+            i++;
+        }
     }
+
+    // if A not full rank
+    if (i < k)
+    {
+        if (i == 0)
+        {
+            return std::make_tuple(Matrix::Zero(m, 1), Vector::Zero(1, 1), Matrix::Zero(n, 1));
+        }
+#ifdef EIGEN
+        std::cout << U << std::endl;
+        U = U.topLeftCorner(m, i);
+        std::cout << U << std::endl;
+        s = s.head(i);
+        V = V.topLeftCorner(n, i);
+#else
+        U.trimCols(k - i);
+        V.trimCols(k - i);
+        s.trimRows(k - i);
+#endif
+    }
+
     return std::make_tuple(U, s, V);
 }
 
@@ -54,26 +79,27 @@ std::tuple<Matrix, Vector, Matrix> SVD::svd_with_PM2(Matrix A)
         U.col(i, u);
         A = A - (s(i, 0) * u * v.transpose());
 #endif
-
         i++;
     }
+
     return std::make_tuple(U, s, V);
 }
 
-std::tuple<Matrix, Vector, Matrix> SVD::rsvd(Matrix A, int r, int p, int q)
+std::tuple<Matrix, Vector, Matrix> SVD::rsvd(const Matrix &A, int r, int p, int q)
 {
     int m = A.rows(), n = A.cols(), k = r + p;
-    Matrix Z(m, k), P = genmat(n, k), Y(k, n), U(m, k);
+    Matrix U(m, k), P = genmat(n, k), V(k, n), Q(m, m);
+    Vector s(k);
     QR_Decomposition QR;
 
-    Z = A * P; // m x k
+    U = A * P; // m x k
     for (int i = 0; i < q; i++)
     {
-        Z = A * (A.transpose() * Z);
+        U = A * (A.transpose() * U);
     }
-    
-    auto [Q, R] = QR.Givens_solve_parallel(Z);
-    QR.setQR_for_svd_parallel(Q, R);
+
+    std::tie(Q, U) = QR.Givens_solve_parallel(U);
+    QR.setQR_for_svd_parallel(Q, U);
 
 #ifdef EIGEN
     Q = Q.topLeftCorner(m, k);
@@ -81,54 +107,16 @@ std::tuple<Matrix, Vector, Matrix> SVD::rsvd(Matrix A, int r, int p, int q)
     Q.trimCols(m - k); // m x k
 #endif
 
-    Y = Q.transpose() * A; // k x n
+    V = Q.transpose() * A; // k x n
 
-    auto [Uy, s, V] = svd_with_PM(Y);
-    U = Q * Uy;
+    P.resize(k, k);
+    std::tie(P, s, V) = svd_with_PM(V);
+    U = Q * P;
 
     return std::make_tuple(U, s, V);
 }
-/*
-std::tuple<Matrix, Vector, Matrix> SVD::svd_with_qr(const Matrix &A)
-{
-    int m = A.rows(), n = A.cols();
-    int min = (m > n) ? n : m;
-    Matrix V(n, min), U(m, min), S;
-    Vector s(min);
-    QR_Decomposition obj_qr;
-    int nmax = 40, i = 0;
-    double err = 1., epsilon = 1e-6;
 
-    // block SVD algorithm
-    V.setIdentity();
-    while (err > epsilon && i < nmax)
-    {
-        auto [Q, R] = obj_qr.Givens_solve_parallel(A * V);
-        U = Q.topLeftCorner(m, min);
-
-        auto [Q2, R2] = obj_qr.Givens_solve_parallel(A.transpose() * U);
-        V = Q2.topLeftCorner(n, min);
-
-#pragma omp simd
-        for (int i = 0; i < min; i++)
-        {
-#ifdef EIGEN
-            s[i] = std::sqrt(std::abs(R2(i, i)));
-#else
-            s(i, 0) = std::sqrt(std::abs(R2(i, i)));
-#endif
-        }
-
-        err = (A - mult_parallel(U, s, V)).norm();
-        if (i < 4)
-            std::cout << i << " - " << err << std::endl;
-        i++;
-    }
-
-    return std::make_tuple(U, s, V);
-}*/
-
-Matrix SVD::mult_parallel(Matrix U, Vector s, Matrix V)
+Matrix SVD::mult_SVD(Matrix U, Vector s, Matrix V)
 {
     int m = U.rows(), n = V.rows(), k = s.rows();
     Matrix A = Matrix::Zero(m, n);
@@ -152,4 +140,26 @@ Matrix SVD::mult_parallel(Matrix U, Vector s, Matrix V)
         }
     }
     return A;
+}
+
+Matrix SVD::preprocess(Matrix &X)
+{
+// Mean over row
+#pragma omp parallel for
+    for (size_t i = 0; i < X.rows(); i++)
+    {
+        double media = 0;
+        for (size_t j = 0; j < X.cols(); j++)
+        {
+            media += X(i, j);
+        }
+        media /= X.cols();
+        for (size_t j = 0; j < X.cols(); j++)
+        {
+            X(i, j) /= media;
+        }
+    }
+
+// Covariance matrix
+    return (1.0 / (X.cols() - 1)) * X.transpose() * X;
 }

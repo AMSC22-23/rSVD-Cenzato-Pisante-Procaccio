@@ -8,7 +8,7 @@ class SVD{
     public:
     /* Constructor : 
             epsilon : precision  */
-        SVD(const double epsilon = 1e-10) : 
+        SVD(const double epsilon = 1e-4) : 
         m_epsilon(epsilon) {}
 
 
@@ -37,6 +37,10 @@ class SVD{
 
     }
 
+    /* Method that computes the mean over row of the matrix and returns
+        the covariance matrix */
+    Matrix preprocess(Matrix &A);
+
 
     /* It computes the reduced SVD using the Power Method :
         Input:
@@ -58,15 +62,15 @@ class SVD{
     Matrix pseudoinverse(const Matrix A){
         auto[U,s,V]=svd_with_PM(A);
         size_t k =s.rows();        
-        for(size_t i=0; i<k; i++){
+        for(size_t i=0; i<k; i++){ //da aggiungere controllo
             #ifdef EIGEN
-            s[i] = 1 / s[i];
+            s[i] /= s[i];
             #else
             s(i,0) = 1 / s(i,0);         
             #endif
         }
 
-        return mult_parallel(V,s,U);
+        return mult_SVD(V,s,U);
     }
 
 
@@ -75,21 +79,9 @@ class SVD{
     Inputs:
         A = m x n matrix
         r = target rank
-        p = oversampling parameter
-        q = exponent of power iteration */
-    std::tuple<Matrix, Vector, Matrix> rsvd(Matrix A, int r, int p, int q); 
-
-
-    /* SVD using QR algorithm :
-        Input:
-            A (m x n) : matrix
-        Outputs:
-            U (m x m) : matrix whose coloumns are left singular vectors of A 
-                        [eigenvectors of A*At]
-            s (n)     : vector the containing singular values of A
-            V (n x n) : matrix whose coloumns are right singular vectors of A 
-                        [eigenvectors of At*A] */
-    std::tuple<Matrix, Vector, Matrix> svd_with_qr(const Matrix &A);
+        p = oversampling parameter (default = 5)
+        q = exponent of power iteration (default = 1) */
+    std::tuple<Matrix, Vector, Matrix> rsvd(const Matrix &A, int r, int p = 5, int q = 1); 
 
 
     /* Multiplication in parallel to obtain A (m x n) from the svd,
@@ -97,7 +89,7 @@ class SVD{
             U = matrix (m x min) 
             s = vector (min)
             V = matrix (n x min) */
-    Matrix mult_parallel(Matrix U, Vector s, Matrix V);
+    Matrix mult_SVD(Matrix U, Vector s, Matrix V);
 
 
     /* Destructor */
@@ -112,7 +104,7 @@ class SVD{
         Output :
             v (n) : x converges to the left singular vector of A
             [x is a vector generated randomically with normal distribution]  */
-    Vector PowerMethod(const Matrix B){
+    Vector PowerMethod(const Matrix &B){
         Vector x = genmat(B.cols(),1);        //initial guess
         Vector xold(x.rows());
         double err = 1.;
@@ -126,7 +118,7 @@ class SVD{
         return x; 
     }
 
-    std::tuple <Vector, Vector> PowerMethod2 (const Matrix A){
+    std::tuple <Vector, Vector> PowerMethod2 (const Matrix &A){
         Vector u(A.rows()), v = genmat(A.cols(),1), v_old(A.cols());
         double err = 1.;
         v = v * (1 / v.norm());
