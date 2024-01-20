@@ -41,11 +41,7 @@ std::tuple<Matrix, Vector, Matrix> SVD::svd_with_PM(Matrix A)
             return std::make_tuple(Matrix::Zero(m, 1), Vector::Zero(1, 1), Matrix::Zero(n, 1));
         }
 #ifdef EIGEN
-        std::cout << U << std::endl;
-        U = U.topLeftCorner(m, i);
-        std::cout << U << std::endl;
-        s = s.head(i);
-        V = V.topLeftCorner(n, i);
+        return std::make_tuple(U.topLeftCorner(m, i), s.head(i), V.topLeftCorner(n, i));
 #else
         U.trimCols(k - i);
         V.trimCols(k - i);
@@ -82,6 +78,22 @@ std::tuple<Matrix, Vector, Matrix> SVD::svd_with_PM2(Matrix A)
         i++;
     }
 
+    // if A not full rank
+    if (i < k)
+    {
+        if (i == 0)
+        {
+            return std::make_tuple(Matrix::Zero(m, 1), Vector::Zero(1, 1), Matrix::Zero(n, 1));
+        }
+#ifdef EIGEN
+        return std::make_tuple(U.topLeftCorner(m, i), s.head(i), V.topLeftCorner(n, i));
+#else
+        U.trimCols(k - i);
+        V.trimCols(k - i);
+        s.trimRows(k - i);
+#endif
+    }
+
     return std::make_tuple(U, s, V);
 }
 
@@ -102,7 +114,9 @@ std::tuple<Matrix, Vector, Matrix> SVD::rsvd(const Matrix &A, int r, int p, int 
     QR.setQR_for_svd_parallel(Q, U);
 
 #ifdef EIGEN
-    Q = Q.topLeftCorner(m, k);
+    P.resize(m,k);
+    P = Q.topLeftCorner(m, k);
+    Q = P;
 #else
     Q.trimCols(m - k); // m x k
 #endif
@@ -146,20 +160,20 @@ Matrix SVD::preprocess(Matrix &X)
 {
 // Mean over row
 #pragma omp parallel for
-    for (size_t i = 0; i < X.rows(); i++)
+    for (int i = 0; i < X.rows(); i++)
     {
         double media = 0;
-        for (size_t j = 0; j < X.cols(); j++)
+        for (int j = 0; j < X.cols(); j++)
         {
             media += X(i, j);
         }
         media /= X.cols();
-        for (size_t j = 0; j < X.cols(); j++)
+        for (int j = 0; j < X.cols(); j++)
         {
             X(i, j) /= media;
         }
     }
 
-// Covariance matrix
+    // Covariance matrix
     return (1.0 / (X.cols() - 1)) * X.transpose() * X;
 }

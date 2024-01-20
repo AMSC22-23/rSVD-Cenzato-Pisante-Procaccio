@@ -71,7 +71,7 @@ int main(int argc, char **argv)
     std::cout << "Time of execution to compute the pseudo-inverse: " << duration.count() << " s" << std::endl;*/
     // exportmatrix(A_inv,"inv.txt");
 
-    /*int r=1;
+    int r=1;
     start = std::chrono::high_resolution_clock::now();
     auto [U_rsvd, s_rsvd, V_rsvd] = obj.rsvd(A,r,0);
     end = std::chrono::high_resolution_clock::now();
@@ -88,7 +88,7 @@ int main(int argc, char **argv)
 
     //exportmatrix(U_rsvd, "U_rsvd.txt");
     exportmatrix(s_rsvd.transpose(), "s_rsvd.txt");
-    //exportmatrix(V_rsvd.transpose(), "Vt_rsvd.txt");*/
+    //exportmatrix(V_rsvd.transpose(), "Vt_rsvd.txt");
 
     return 0;
 }
