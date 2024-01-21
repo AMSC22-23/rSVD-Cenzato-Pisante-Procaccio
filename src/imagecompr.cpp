@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <chrono>
+#include <omp.h>
 
 #include "include/stb_image.h"
 #include "include/stb_image_write.h"
@@ -57,6 +58,7 @@ int main()
     /**
      *  Perform image compression using SVD
     */
+
     Compressed = obj.image_compression(Image, channels, Height, Width);
 
     /**

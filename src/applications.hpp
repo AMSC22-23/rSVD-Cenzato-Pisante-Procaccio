@@ -33,6 +33,7 @@ public:
     Matrix grayscale(const stbi_uc *image, int channels, int Heigth, int Width)
     {
         Matrix grayscaleImage(Heigth, Width);
+        #pragma omp parallel for collapse(2)
         for (int i = 0; i < Heigth; i++)
         {
             for (int j = 0; j < Width; j++)
@@ -70,6 +71,7 @@ public:
     void backward_conversion(stbi_uc *image, Matrix Compressed, int channels, int Height, int Width)
     {
         // Convert the Eigen matrix back to image data
+        #pragma omp parallel for collapse(2)
         for (int i = 0; i < Height; ++i)
         {
             for (int j = 0; j < Width; ++j)
