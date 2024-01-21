@@ -15,10 +15,10 @@
 
 /**
  * Brief Main function to demonstrate image compression.
- * 
+ *
  * This program loads an input image in PNG format, compresses it using an SVD-based
  * method, and saves the compressed image as a PNG file.
- * 
+ *
  * return 0 if the program runs successfully, -1 on failure.
  */
 int main()
@@ -33,16 +33,15 @@ int main()
 
     /**
      * Create the object of the compression image application
-    */
+     */
     APPLICATIONS obj;
 
     int Width, Height, channels;
 
     /**
      * Load the input image
-    */
+     */
     stbi_uc *Image = stbi_load(filename, &Width, &Height, &channels, 0);
-
 
     if (Image == nullptr)
     {
@@ -51,31 +50,37 @@ int main()
     }
 
     /**
-     * Create a matrix for compressed image data
-    */
-    Matrix Compressed(Height, Width);
+     * Create a matrix for compressed image data for each rgb component
+     */
+    Matrix CompressedRed(Height, Width);
+    Matrix CompressedGreen(Height, Width);
+    Matrix CompressedBlue(Height, Width);
 
     /**
      *  Perform image compression using SVD
-    */
+     */
 
-    Compressed = obj.image_compression(Image, channels, Height, Width);
+    CompressedRed = obj.image_compression(Image, channels, 0, Height, Width);
+    CompressedGreen = obj.image_compression(Image, channels, 1, Height, Width);
+    CompressedBlue = obj.image_compression(Image, channels, 2, Height, Width);
 
     /**
      * Perform backward conversion to obtain the decompressed image
-    */
-    obj.backward_conversion(Image, Compressed, channels, Height, Width);
+     */
+    obj.backward_conversion(Image, CompressedRed, channels, 0, Height, Width);
+    obj.backward_conversion(Image, CompressedGreen, channels, 1, Height, Width);
+    obj.backward_conversion(Image, CompressedBlue, channels, 2, Height, Width);
+
 
     /**
      * Save the decompressed image
-    */
+     */
     stbi_write_png(outputFilename, Width, Height, channels, Image, Width * channels);
 
     /**
      * Free allocated memory
-    */
+     */
     stbi_image_free(Image);
-
 
     return 0;
 }
