@@ -18,14 +18,12 @@ public:
         return U.transpose() * X;
     }
 
-    Matrix image_compression(const stbi_uc *R, int channels, int channel, int Heigth, int Width)
+    Matrix image_compression(const stbi_uc *R, int channels, int channel, int Heigth, int Width, int r, int p )
     {
         Matrix X;
         X = ExctractComponentLuminosity(R, channels, channel, Heigth, Width);
 
         SVD obj;
-        int r = 15;
-        int p = 10;
         auto [U, s, V] = obj.rsvd(X, r, p, 0);
         return obj.mult_SVD(U, s, V);
     }
