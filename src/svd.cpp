@@ -155,25 +155,3 @@ Matrix SVD::mult_SVD(Matrix U, Vector s, Matrix V)
     }
     return A;
 }
-
-Matrix SVD::preprocess(Matrix &X)
-{
-// Mean over row
-#pragma omp parallel for
-    for (int i = 0; i < X.rows(); i++)
-    {
-        double media = 0;
-        for (int j = 0; j < X.cols(); j++)
-        {
-            media += X(i, j);
-        }
-        media /= X.cols();
-        for (int j = 0; j < X.cols(); j++)
-        {
-            X(i, j) /= media;
-        }
-    }
-
-    // Covariance matrix
-    return (1.0 / (X.cols() - 1)) * X.transpose() * X;
-}

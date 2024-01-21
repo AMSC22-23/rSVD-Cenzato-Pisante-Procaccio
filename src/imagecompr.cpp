@@ -1,17 +1,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 
-#include <iostream>
-#include <chrono>
-#include <omp.h>
-
-#include "include/stb_image.h"
-#include "include/stb_image_write.h"
-
-#include "utils.hpp"
 #include "applications.hpp"
-#include "fullMatrix.hpp"
-#include "svd.hpp"
 
 /**
  * Brief Main function to demonstrate image compression.

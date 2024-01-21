@@ -14,18 +14,18 @@ void exportmatrix(Matrix A, std::string outputFileName);
 int main()
 {
     std::string ovariancancer_obs_path  = "../python/data/ovariancancer_obs.csv";
-    std::string ovariancancer_grp_path  = "../python/data/ovariancancer_grp.csv";
     Matrix A = readCSV(ovariancancer_obs_path );    // 216 x 4000
     Matrix At = A.transpose();
     A.resize(0,0);
-    std::vector<unsigned int> labels = readCSV_grp(ovariancancer_grp_path);
+
+    //std::string ovariancancer_grp_path  = "../python/data/ovariancancer_grp.csv";
+    //std::vector<unsigned int> labels = readCSV_grp(ovariancancer_grp_path);
 
     APPLICATIONS obj;
     SVD SVD;
 
     auto start = std::chrono::high_resolution_clock::now();
-    //Matrix C = SVD.preprocess(At);
-    Matrix T = obj.pca(At, 50);
+    Matrix T = obj.pca(At, 5);
     exportmatrix(T,"T.txt");
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> duration = end - start;

@@ -37,10 +37,6 @@ class SVD{
 
     }
 
-    /* Method that computes the mean over row of the matrix and returns
-        the covariance matrix */
-    Matrix preprocess(Matrix &A);
-
 
     /* It computes the reduced SVD using the Power Method :
         Input:
