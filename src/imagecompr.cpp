@@ -23,7 +23,11 @@
  */
 int main()
 {
-
+    /**
+     * DEfinition of the scale of compression
+     */
+    int r = 12;
+    int p = 10;
     /**
      * Upload the input image in png format and
      * set the output file image
@@ -49,28 +53,37 @@ int main()
         return -1;
     }
 
+    auto start = std::chrono::high_resolution_clock::now();
     /**
-     * Create a matrix for compressed image data for each rgb component
+     * Create matrices in order to compress each component, keeping the rgb colour values
      */
-    Matrix CompressedRed(Height, Width);
-    Matrix CompressedGreen(Height, Width);
-    Matrix CompressedBlue(Height, Width);
+#pragma omp parallel for
+    for (int i = 0; i < channels; i++)
+    {
+        Matrix Compressed(Height, Width);
+        /**
+         *  Perform image compression using SVD
+         */
+        Compressed = obj.image_compression(Image, channels, i, Height, Width, r, p);
+        /**
+         * Perform backward conversion to obtain the decompressed image
+         */
+        obj.backward_conversion(Image, Compressed, channels, i, Height, Width);
+    }
 
-    /**
-     *  Perform image compression using SVD
-     */
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duration = end - start;
 
-    CompressedRed = obj.image_compression(Image, channels, 0, Height, Width);
-    CompressedGreen = obj.image_compression(Image, channels, 1, Height, Width);
-    CompressedBlue = obj.image_compression(Image, channels, 2, Height, Width);
+    int uncompressedSize = Height * Width;
+    int compressedSize = Height * r + r + r * Width;
 
-    /**
-     * Perform backward conversion to obtain the decompressed image
-     */
-    obj.backward_conversion(Image, CompressedRed, channels, 0, Height, Width);
-    obj.backward_conversion(Image, CompressedGreen, channels, 1, Height, Width);
-    obj.backward_conversion(Image, CompressedBlue, channels, 2, Height, Width);
+    double compressionRatio = uncompressedSize / compressedSize;
+    
+    std::cout << "Uncompressed size: " << uncompressedSize << " bytes" << std::endl;
+    std::cout << "Compressed size: " << compressedSize << " bytes" << std::endl;
+    std::cout << "Compression ratio: " << compressionRatio << std::endl;
 
+    std::cout << "Duration: " << duration.count() << " s" << std::endl;
 
     /**
      * Save the decompressed image
