@@ -14,38 +14,41 @@ public:
     Matrix pca(const Matrix &A, const int r)
     {
         Matrix X = A;
+        size_t m = X.rows(), n = X.cols();
         SVD obj;
 
 // Center X
 #pragma omp parallel for
-        for (size_t i = 0; i < X.rows(); i++)
+        for (size_t i = 0; i < m; i++)
         {
-            double media = 0;
-            for (size_t j = 0; j < X.cols(); j++)
+            double media = 0.;
+            for (size_t j = 0; j < n; j++)
             {
                 media += X(i, j);
             }
-            media /= X.cols();
-            for (size_t j = 0; j < X.cols(); j++)
+            media /= n;
+            for (size_t j = 0; j < n; j++)
             {
-                X(i, j) /= media;
+                X(i, j) -= media;
             }
         }
 
 // Compute rSVD
         auto [U, s, V] = obj.rsvd(X, r);
 
-// Compute Principal Components Matrix T = U * S = V * X.
-#ifdef EIGEN
+
+// Compute Principal Components Matrix T.
+/*#ifdef EIGEN
         return U * s.asDiagonal();
 #else
-        Matrix T(A.rows(), s.rows());
+        Matrix T(m, s.rows());
         #pragma omp parallel for
         for(size_t i = 0; i<s.rows(); i++)
             for(size_t j = 0; j<X.rows(); j++)
                 T(j,i) = s(i,0) * U(j,i);
         return T;
-#endif
+#endif*/
+    return U.transpose() * X;
     }
 
     Matrix image_compression(const stbi_uc *R, int channels, int channel, int Heigth, int Width, int r, int p)

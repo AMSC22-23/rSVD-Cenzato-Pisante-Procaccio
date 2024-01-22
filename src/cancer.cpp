@@ -1,6 +1,3 @@
-#include <fstream>
-#include <sstream>
-
 // g++ -I${mkEigenInc} cancer.cpp svd.cpp QR_Decomposition_parallel.cpp -o cancer -Wall -DEIGEN -fopenmp
 // or to test with our matrix class
 // g++ cancer.cpp svd.cpp QR_Decomposition_parallel.cpp -o cancer -Wall -fopenmp
@@ -25,7 +22,7 @@ int main()
     SVD SVD;
 
     auto start = std::chrono::high_resolution_clock::now();
-    Matrix T = obj.pca(At, 5);
+    Matrix T = obj.pca(At, 50);
     exportmatrix(T,"T.txt");
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> duration = end - start;
