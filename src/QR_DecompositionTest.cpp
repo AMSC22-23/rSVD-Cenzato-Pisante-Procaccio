@@ -34,13 +34,15 @@ int main(int argc, char**argv)
 	int n=(argc>=3)?std::stoul(argv[2]):60;
 
     Matrix A(m, n);
+    
     for (int j = 0; j < n; j++)
     {
         for (int i = 0; i < m; i++)
         {
-            A(i, j) = 2 * i - j;
+            A(i, j) = 0.5*i+std::exp(j)+j*j-i*i*i;
         }
     }
+;
 
     QR_Decomposition QR_A;
 
@@ -53,7 +55,9 @@ int main(int argc, char**argv)
     auto end_givens = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double> duration_g = end_givens - start_givens;
-    /*
+ 
+
+/*
     std::cout<<"Serial Givens:"<<std::endl;
     std::cout<<"R="<<std::endl;
     #ifdef EIGEN
@@ -67,17 +71,17 @@ int main(int argc, char**argv)
     #else
         Qg.print(std::cout);
     #endif
-    */
+*/    
     /**
      * Serial execution with HouseHolder
-     */
+    
 
     auto start_serial = std::chrono::high_resolution_clock::now();
     auto [Q, R] = QR_A.HouseHolder_solve(A);
     auto end_serial = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double> duration_s = end_serial - start_serial;
-
+ */
     /*
     std::cout<<"Serial HouseHolder:"<<std::endl;
     std::cout<<"R="<<std::endl;
@@ -96,15 +100,15 @@ int main(int argc, char**argv)
 
     /**
      * Serial execution with Givens
-     */
-
+     
+*/
     auto start_givensp = std::chrono::high_resolution_clock::now();
     auto [Qgp, Rgp] = QR_A.Givens_solve_parallel(A);
     auto end_givensp = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double> duration_gp = end_givensp - start_givensp;
 
-    /*
+ /*   
     std::cout<<std::endl;
     std::cout<<"Parallel Givens:"<<std::endl;
     std::cout<<"R="<<std::endl;
@@ -119,11 +123,11 @@ int main(int argc, char**argv)
     #else
         Qgp.print(std::cout);
     #endif
-    */
+*/    
 
     /**
      * Parallel execution of HouseHolder on OpenMP
-     */
+     
 
     std::cout << std::endl;
 
@@ -132,7 +136,7 @@ int main(int argc, char**argv)
     auto end_parallel = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double> duration_p = end_parallel - start_parallel;
-
+*/
     /*
     std::cout<<"Parallel HouseHolder:"<<std::endl;
     std::cout<<"R="<<std::endl;
@@ -150,20 +154,20 @@ int main(int argc, char**argv)
     */
 
     std::cout << "Time of execution serial givens: " << duration_g.count() << " s" << std::endl;
-    std::cout << "Time of execution serial HouseHolder: " << duration_s.count() << " s" << std::endl;
+    //std::cout << "Time of execution serial HouseHolder: " << duration_s.count() << " s" << std::endl;
     std::cout << "Time of execution parallel givens: " << duration_gp.count() << " s" << std::endl;
-    std::cout << "Time of execution parallel: " << duration_p.count() << " s" << std::endl;
+    //std::cout << "Time of execution parallel: " << duration_p.count() << " s" << std::endl;
 
     double SpeedUpG = duration_g.count() / duration_gp.count();
-    double SpeedUpHH = duration_s.count() / duration_p.count();
+    //double SpeedUpHH = duration_s.count() / duration_p.count();
     std::cout << "Speed Up Givens: " << SpeedUpG << std::endl;
-    std::cout << "Speed Up HouseHolder: " << SpeedUpHH << std::endl;
+    //std::cout << "Speed Up HouseHolder: " << SpeedUpHH << std::endl;
 
-
+/*
     exportmatrix(Rp,"./../test_results/R_HH.txt");
     exportmatrix(Qp,"./../test_results/Q_HH.txt");
     exportmatrix(Rgp,"./../test_results/R_GIV.txt");
     exportmatrix(Qgp,"./../test_results/Q_GIV.txt");
-
+*/
     return 0;
 }

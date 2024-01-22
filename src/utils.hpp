@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cmath>
 #include <omp.h>
+#include <mpi.h>
 #include <tuple>
 #include <chrono>
 #include <random>

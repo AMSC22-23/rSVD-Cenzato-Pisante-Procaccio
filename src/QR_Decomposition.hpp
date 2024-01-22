@@ -28,6 +28,7 @@ public:
      * Parallel method for QR Decomposition
     */
     std::tuple<Matrix, Matrix> Givens_solve_parallel(const Matrix A);
+    std::tuple<Matrix, Matrix> Givens_solve_mpi(const Matrix A, const unsigned int rank,const unsigned int size);
     std::tuple<Matrix, Matrix> HouseHolder_solve_parallel(const Matrix A);
 
     /**
