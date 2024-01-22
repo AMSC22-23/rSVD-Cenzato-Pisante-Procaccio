@@ -1,8 +1,8 @@
 #include "svd.hpp"
 
-// g++ -I${mkEigenInc} svd_test.cpp svd.cpp QR_Decomposition_parallel.cpp -o svd -Wall -DEIGEN -fopenmp
+// g++ -I${mkEigenInc} svd_test.cpp svd.cpp QR_Decomposition_parallel.cpp -o svd -Wall -DEIGEN -fopenmp -DPARALLEL
 // or to test with our matrix class
-// g++ svd_test.cpp svd.cpp QR_Decomposition_parallel.cpp -o prova -Wall -fopenmp
+// g++ svd_test.cpp svd.cpp QR_Decomposition_parallel.cpp -o prova -Wall -fopenmp -DPARALLEL
 
 void exportmatrix(Matrix A, std::string outputFileName);
 
@@ -71,7 +71,7 @@ int main(int argc, char **argv)
     std::cout << "Time of execution to compute the pseudo-inverse: " << duration.count() << " s" << std::endl;*/
     // exportmatrix(A_inv,"inv.txt");
 
-    int r=1;
+    int r=20;
     start = std::chrono::high_resolution_clock::now();
     auto [U_rsvd, s_rsvd, V_rsvd] = obj.rsvd(A,r,0);
     end = std::chrono::high_resolution_clock::now();

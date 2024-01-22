@@ -155,3 +155,25 @@ Matrix SVD::mult_SVD(Matrix U, Vector s, Matrix V)
     }
     return A;
 }
+
+Matrix SVD::genmat(const int m, const int n)
+{
+    Matrix M(m, n);
+    std::random_device rd;
+    std::normal_distribution<double> dice(0.0, 1.0);
+
+#pragma omp parallel num_threads(4)
+    {
+        int rank = 0;
+#ifdef PARALLEL
+        rank = omp_get_thread_num();
+#endif
+        std::mt19937 reng(rd() + rank);
+#pragma omp for
+        for (int i = 0; i < m; i++)
+            for (int j = 0; j < n; j++)
+                M(i, j) = dice(reng);
+    }
+
+    return M;
+}

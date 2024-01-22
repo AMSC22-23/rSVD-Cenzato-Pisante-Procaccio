@@ -1,6 +1,6 @@
-// g++ -I${mkEigenInc} cancer.cpp svd.cpp QR_Decomposition_parallel.cpp -o cancer -Wall -DEIGEN -fopenmp
+// g++ -I${mkEigenInc} cancer.cpp svd.cpp QR_Decomposition_parallel.cpp -o cancer -Wall -DEIGEN -fopenmp -DPARALLEL
 // or to test with our matrix class
-// g++ cancer.cpp svd.cpp QR_Decomposition_parallel.cpp -o cancer -Wall -fopenmp
+// g++ cancer.cpp svd.cpp QR_Decomposition_parallel.cpp -o cancer -Wall -fopenmp -DPARALLEL
 
 #include "applications.hpp"
 
@@ -10,22 +10,19 @@ void exportmatrix(Matrix A, std::string outputFileName);
 
 int main()
 {
-    std::string ovariancancer_obs_path  = "../python/data/ovariancancer_obs.csv";
-    Matrix A = readCSV(ovariancancer_obs_path );    // 216 x 4000
-    Matrix At = A.transpose();
-    A.resize(0,0);
+    std::string ovariancancer_obs_path  = "../data/ovariancancer_obs.csv";
+    Matrix A = (readCSV(ovariancancer_obs_path )).transpose();    // 4000 x 216
 
     //std::string ovariancancer_grp_path  = "../python/data/ovariancancer_grp.csv";
     //std::vector<unsigned int> labels = readCSV_grp(ovariancancer_grp_path);
 
     APPLICATIONS obj;
-    SVD SVD;
 
     auto start = std::chrono::high_resolution_clock::now();
-    Matrix T = obj.pca(At, 50);
-    exportmatrix(T,"T.txt");
+    Matrix T = obj.pca(A, 200);
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> duration = end - start;
+    exportmatrix(T,"T.txt");
     std::cout << "Time of execution PCA: " << duration.count() << " s" << std::endl;
 
     return 0;

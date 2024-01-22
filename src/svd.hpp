@@ -11,33 +11,6 @@ class SVD{
         SVD(const double epsilon = 1e-4) : 
         m_epsilon(epsilon) {}
 
-
-    void exportmatrix(const Matrix& A, std::string outputFileName){
-        // Write the matrix to the file
-        std::ofstream outputFile(outputFileName);
-        if (outputFile.is_open()) {
-            int rows = A.rows(), cols = A.cols();
-            // Write dimensions to the first row
-            outputFile << rows << " " << cols << std::endl;
-
-            // Write matrix data
-            for (int i = 0; i < rows; ++i) {
-                for (int j = 0; j < cols; ++j) {
-                    outputFile << std::setw(8) << std::fixed << std::setprecision(4) << A(i,j) << " ";
-                }
-                outputFile << std::endl;
-            }
-            std::cout << "Computed matrix has been written to "<< outputFileName << std::endl;
-
-            // Close the file
-            outputFile.close();
-        } else {
-            std::cerr << "Error opening file for writing." << std::endl;
-        }
-
-    }
-
-
     /* It computes the reduced SVD using the Power Method :
         Input:
             A (m x n) : matrix
@@ -58,7 +31,7 @@ class SVD{
     Matrix pseudoinverse(const Matrix A){
         auto[U,s,V]=svd_with_PM(A);
         size_t k =s.rows();        
-        for(size_t i=0; i<k; i++){ //da aggiungere controllo
+        for(size_t i=0; i<k; i++){ 
             #ifdef EIGEN
             s[i] /= s[i];
             #else
@@ -82,9 +55,9 @@ class SVD{
 
     /* Multiplication in parallel to obtain A (m x n) from the svd,
         Input:
-            U = matrix (m x min) 
-            s = vector (min)
-            V = matrix (n x min) */
+            U = matrix (m x r) 
+            s = vector (r)
+            V = matrix (n x r) */
     Matrix mult_SVD(Matrix U, Vector s, Matrix V);
 
 
@@ -132,18 +105,7 @@ class SVD{
 
 
     /* Generates m x n Gaussian matrix */
-    Matrix genmat(const int m, const int n){
-        Matrix M(m,n);
-        //std::default_random_engine gen;
-        std::random_device rd ;
-        std::knuth_b reng{rd ()};
-        std::normal_distribution<> dice(0.,1.);
-        for(int i=0;i<m;i++){
-            for(int j=0;j<n;j++)
-                M(i,j) = dice(reng);
-        }
-        return M;
-    }
+    Matrix genmat(const int m, const int n);
 
     const double m_epsilon;
 };

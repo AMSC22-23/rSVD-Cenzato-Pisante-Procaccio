@@ -1,3 +1,6 @@
+#ifndef APPLICATIONS_HPP
+#define APPLICATIONS_HPP
+
 #include "svd.hpp"
 #include "include/stb_image.h"
 #include "include/stb_image_write.h"
@@ -36,6 +39,7 @@ public:
 
         // Compute rSVD
         auto [U, s, V] = obj.rsvd(X, r);
+        exportmatrix(s,"s.txt");
 
         // Compute Principal Components Matrix T.
         /*#ifdef EIGEN
@@ -166,3 +170,5 @@ public:
         }
     }
 };
+
+#endif //APPLICATIONS_HPP
