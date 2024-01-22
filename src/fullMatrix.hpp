@@ -741,7 +741,7 @@ Hyphothesis: col<m_cols && toInsert.size()<=m_rows
 			os<<mat.rows()<<" "<<mat.cols()<<std::endl;
 			for(size_t i=0;i<mat.m_rows;++i){
 				for(size_t j=0;j<mat.m_cols;++j){
-					os<<mat(i,j)<<" ";
+          os<<std::setw(8)<<std::fixed<<std::setprecision(4)<<mat(i,j)<<" ";
 				}
 				os<<std::endl;
 			}

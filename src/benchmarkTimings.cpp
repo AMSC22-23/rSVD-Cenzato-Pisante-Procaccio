@@ -283,6 +283,7 @@ int main(int argc, char** argv){
 
 #ifdef _OPENMP
 			
+			//This are my optimal threads, i can achieve more than that (up to 20) but the performance decreases
 			omp_set_num_threads(12);
 
 			timings.clear();
