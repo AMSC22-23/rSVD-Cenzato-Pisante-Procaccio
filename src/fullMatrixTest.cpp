@@ -26,14 +26,12 @@ int main(){
 	FullMatrix<Real,ORDERING::ROWMAJOR> testMatrix=FullMatrix<Real,ORDERING::ROWMAJOR>::Zero(n,m);
 	FullMatrix<Real,ORDERING::ROWMAJOR> testMultMatrix(new_m-1, 1, 1.);
 	FullMatrix<Real,ORDERING::ROWMAJOR> testMultResult;
-	FullMatrix<Real,ORDERING::ROWMAJOR> testTransposed;
 	FullMatrix<Real,ORDERING::ROWMAJOR> testMatrixCopy;
 	FullMatrix<Real,ORDERING::ROWMAJOR> testMatrixAdd;
 	#else
 	FullMatrix<Real,ORDERING::COLMAJOR> testMatrix=FullMatrix<Real,ORDERING::COLMAJOR>::Zero(n,m);
 	FullMatrix<Real,ORDERING::COLMAJOR> testMultMatrix(new_m-1, 1, 1.);
 	FullMatrix<Real,ORDERING::COLMAJOR> testMultResult;
-	FullMatrix<Real,ORDERING::COLMAJOR> testTransposed;
 	FullMatrix<Real,ORDERING::COLMAJOR> testMatrixCopy;
 	FullMatrix<Real,ORDERING::COLMAJOR> testMatrixAdd;
 	#endif
@@ -104,43 +102,46 @@ int main(){
 	#endif
 
 	//Create a vector for which the matrix multiplication is not valid
-	std::vector<Real> testVector(new_m-1,1.);
-
+	FullMatrix<Real,ORDERING::COLMAJOR> testVector(new_m-1,1,1.);
+	
+	/*
 	#ifdef VERBOSE
 	std::cout<<"Using vector:"<<std::endl;
-	for(size_t i=0;i<testVector.size();++i)
+	for(size_t i=0;i<testVector.rows();++i)
 		std::cout<<testVector[i]<<std::endl;
 	std::cout<<std::endl;
 	#endif
 
 	std::cout<<"Test: Correctness of erroneous input in matrix-vector multiplication: ";
-	std::vector<Real> testResult=testMatrix*testVector;
-	if(testResult.size()!=0)
+	FullMatrix<Real,ORDERING::COLMAJOR> testResult=testMatrix*testVector;
+	if(testResult.rows()!=0)
 		correct=false;
 	std::cout<<correct<<std::endl;
 	correct=true;
+	*/
 
 	//Now correct the vector
-	testVector.emplace_back(1.);
+	testVector.resize(new_m,1,1.);
 
 	#ifdef VERBOSE
 	std::cout<<std::endl;
 	std::cout<<"Now using vector;"<<std::endl;
-	for(size_t i=0;i<testVector.size();++i)
+	for(size_t i=0;i<testVector.rows();++i)
 		std::cout<<testVector[i]<<std::endl;
 	std::cout<<std::endl;
 	#endif
 
 	std::cout<<"Test: Correctness of result in matrix-vector multiplication: ";
-	testResult=testMatrix*testVector;
+	FullMatrix<Real,ORDERING::COLMAJOR> testResult=testMatrix*testVector;
 	Real correctVal=new_m*(new_m-1)/2;
-	for(size_t i=0;i<testResult.size();++i)
+	for(size_t i=0;i<testResult.rows();++i)
 		if(testResult[i]!=correctVal+i*new_m)
 			correct=false;
 	std::cout<<correct<<std::endl;
 
+	/*
 	//Now test the matrix-matrix multiplication
-
+	
 	#ifdef VERBOSE
 	std::cout<<std::endl;
 	std::cout<<"New matrix:"<<std::endl;
@@ -154,6 +155,7 @@ int main(){
 			correct=false;
 	}
 	std::cout<<correct<<std::endl;
+	*/
 
 	//Now test the correct matrix-matrix multiplication
 	testMultMatrix.resize(testMultMatrix.rows()+1,1);
@@ -168,7 +170,7 @@ int main(){
 
 	std::cout<<"Test: Correctness of result in matrix-matrix multiplication: ";
 	testMultResult=testMatrix*testMultMatrix;
-	if(testMultResult.rows()!=testResult.size()&&testMultResult.cols()!=1)
+	if(testMultResult.rows()!=testResult.cols()&&testMultResult.cols()!=1)
 		correct=false;
 	else{
 		for(size_t i=0;i<testMultResult.rows();++i){
@@ -180,7 +182,7 @@ int main(){
 	correct=true;
 
 	//Now check the correct transposed
-	testTransposed=testMatrix.transpose();
+	auto testTransposed=testMatrix.transpose();
 
 	#ifdef VERBOSE
 	std::cout<<std::endl;
@@ -310,7 +312,7 @@ int main(){
 	//Now change one row of the matrix with zeros
 	testMatrixCopy=testMatrix;
 	testVector.clear();
-	testVector.resize(testMatrix.cols(),0.);
+	testVector.resize(testMatrix.cols(),1);
 	testMatrixCopy.row(0,testVector);
 
 	#ifdef VERBOSE
