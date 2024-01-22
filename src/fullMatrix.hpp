@@ -421,17 +421,31 @@ class FullMatrix : public Expr<FullMatrix<Real,ORDER>> {
 		/*
 			 Here i am missing also the case when i am doing Expression*Matrix and vice-versa
 
+			 NB: i have to do the same for the transposed
+
 Careful: if i do not specify the overload for the multiplication between a matrix and a 
 transposed it enters here, hence creating a temporary for nothing
 		 */
-		template <class T>
-			friend FullMatrix operator*(const Expr<T> &e, const FullMatrix& B){
+		template <is_expr T>
+			friend FullMatrix operator*(const T &e, const FullMatrix& B){
 				//I need to collapse the expression
 				FullMatrix A=e;
 				return A*B;
 			}
-		template <class T>
-			friend FullMatrix operator*(const FullMatrix& A, const Expr<T> &e){
+		template <is_expr T>
+			friend FullMatrix operator*(const FullMatrix& A, const T &e){
+				//I need to collapse the expression
+				FullMatrix B=e;
+				return A*B;
+			}
+		template <is_expr T>
+			friend FullMatrix operator*(const T &e, const FullMatrixAdjoint& B){
+				//I need to collapse the expression
+				FullMatrix A=e;
+				return A*B;
+			}
+		template <is_expr T>
+			friend FullMatrix operator*(const FullMatrixAdjoint& A, const T &e){
 				//I need to collapse the expression
 				FullMatrix B=e;
 				return A*B;
@@ -777,10 +791,7 @@ template<class L, class R> using MultExpr=CWiseBinaryOperator<L,R,Mult>;
 	 Moreover they are specialized only for my class 
  */
 
-template<class T>
-concept is_expr=std::is_base_of<Expr<T>, T>::value;
-
-template<is_expr L, is_my_matrix R>
+template<is_expr L, is_expr R>
 inline AddExpr<L,R>
 operator+(const L &l, const R &r){
 	return AddExpr<L,R>(l,r);

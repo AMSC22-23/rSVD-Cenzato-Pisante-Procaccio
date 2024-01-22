@@ -215,4 +215,10 @@ using Mult=std::multiplies<Real>;
 using Add=std::plus<Real>;
 using Sub=std::minus<Real>;
 
+/*
+	Create a concept for the expression
+*/
+template<class T>
+concept is_expr=std::is_base_of<Expr<T>, T>::value;
+
 #endif
