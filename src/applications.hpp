@@ -6,7 +6,8 @@ class APPLICATIONS
 {
 public:
     APPLICATIONS()
-    {}
+    {
+    }
 
     /* Reduction of dimensionality of the matrix A:
         It returns a matrix with the first r (+ 5 = oversampling parameter)
@@ -33,29 +34,32 @@ public:
             }
         }
 
-// Compute rSVD
+        // Compute rSVD
         auto [U, s, V] = obj.rsvd(X, r);
 
-
-// Compute Principal Components Matrix T.
-/*#ifdef EIGEN
-        return U * s.asDiagonal();
-#else
-        Matrix T(m, s.rows());
-        #pragma omp parallel for
-        for(size_t i = 0; i<s.rows(); i++)
-            for(size_t j = 0; j<X.rows(); j++)
-                T(j,i) = s(i,0) * U(j,i);
-        return T;
-#endif*/
-    return U.transpose() * X;
+        // Compute Principal Components Matrix T.
+        /*#ifdef EIGEN
+                return U * s.asDiagonal();
+        #else
+                Matrix T(m, s.rows());
+                #pragma omp parallel for
+                for(size_t i = 0; i<s.rows(); i++)
+                    for(size_t j = 0; j<X.rows(); j++)
+                        T(j,i) = s(i,0) * U(j,i);
+                return T;
+        #endif*/
+        return U.transpose() * X;
     }
 
     Matrix image_compression(const stbi_uc *R, int channels, int channel, int Heigth, int Width, int r, int p)
     {
         Matrix X;
-        X = ExctractComponentLuminosity(R, channels, channel, Heigth, Width);
 
+#ifdef RGB
+        X = ExctractComponentLuminosity(R, channels, channel, Heigth, Width);
+#else
+        X = grayscale(R, channels, Heigth, Width);
+#endif
         SVD obj;
         auto [U, s, V] = obj.rsvd(X, r, p, 0);
         return obj.mult_SVD(U, s, V);
@@ -80,6 +84,44 @@ public:
         }
 
         return RgbComponent;
+    }
+
+    Matrix grayscale(const stbi_uc *image, int channels, int Heigth, int Width)
+    {
+        Matrix grayscaleImage(Heigth, Width);
+#pragma omp parallel for collapse(2)
+        for (int i = 0; i < Heigth; i++)
+        {
+            for (int j = 0; j < Width; j++)
+            {
+                int index = (i * Width + j) * channels;
+
+                /**
+                 * Extraction of color components from an image in RGB format
+                 * We store the three components in an array
+                 */
+                unsigned char red = image[index];
+                unsigned char green = image[index + 1];
+                unsigned char blue = image[index + 2];
+
+                /**
+                    Set the grayscale value by using the luminosity formula for each channel and normalize by the max value = 255
+                */
+                // grayscaleImage(i, j) = static_cast<double>(0.21 * red + 0.72 * green + 0.07 * blue) / 255.;
+
+                /**
+                 * AVG method
+                 */
+                grayscaleImage(i, j) = static_cast<double>((red + green + blue) / 3) / 255.;
+
+                /**
+                 * LIGHTNESS method
+                 */
+                // grayscaleImage(i, j) = static_cast<double>((std::max({red, green, blue}) + std::min({red, green, blue})) / 2) / 255.;
+            }
+        }
+
+        return grayscaleImage;
     }
 
     void backward_conversion(stbi_uc *image, const Matrix CompressedComponent, int channels, int channel, int Height, int Width)

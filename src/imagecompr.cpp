@@ -16,7 +16,7 @@ int main()
     /**
      * DEfinition of the scale of compression
      */
-    int r = 12;
+    int r = 3;
     int p = 10;
     /**
      * Upload the input image in png format and
@@ -44,9 +44,11 @@ int main()
     }
 
     auto start = std::chrono::high_resolution_clock::now();
-    /**
-     * Create matrices in order to compress each component, keeping the rgb colour values
-     */
+/**
+ * Create matrices in order to compress each component, keeping the rgb colour values
+ */
+#ifdef RGB
+
 #pragma omp parallel for
     for (int i = 0; i < channels; i++)
     {
@@ -60,6 +62,17 @@ int main()
          */
         obj.backward_conversion(Image, Compressed, channels, i, Height, Width);
     }
+#else
+    Matrix Compressed(Height, Width);
+    /**
+     *  Perform image compression using SVD
+     */
+    Compressed = obj.image_compression(Image, channels, 0, Height, Width, r, p);
+    for (int i = 0; i < channels; i++)
+    {
+        obj.backward_conversion(Image, Compressed, channels, i, Height, Width);
+    }
+#endif
 
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> duration = end - start;
@@ -68,7 +81,7 @@ int main()
     int compressedSize = Height * r + r + r * Width;
 
     double compressionRatio = uncompressedSize / compressedSize;
-    
+
     std::cout << "Uncompressed size: " << uncompressedSize << " bytes" << std::endl;
     std::cout << "Compressed size: " << compressedSize << " bytes" << std::endl;
     std::cout << "Compression ratio: " << compressionRatio << std::endl;
