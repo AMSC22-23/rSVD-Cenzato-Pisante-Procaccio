@@ -13,6 +13,12 @@ QR_TEST=QR_DecompositionTest.cpp QR_Decomposition.cpp QR_Decomposition_parallel.
 #Files for the SVD test
 SVD_TEST=svd_test.cpp svd.cpp QR_Decomposition_parallel.cpp
 
+#Files for image compression
+IMAGE_TEST=svd.cpp QR_Decomposition_parallel.cpp imagecompr.cpp
+
+#Files for pca 
+PCA_TEST=cancer.cpp svd.cpp QR_Decomposition_parallel.cpp
+
 ifdef parallel
 CXXFLAGS+=-fopenmp
 #LDFLAGS+=-fopenmp
@@ -24,6 +30,10 @@ ifdef eigen
 CXXFLAGS+=-I$(EIGEN)
 LDFLAGS+=-I$(EIGEN)
 CPPFLAGS+=-DEIGEN
+endif
+
+ifdef RGB
+CPPFLAGS+=-DRGB
 endif
 
 #Compiler version
@@ -46,6 +56,8 @@ help:
 	@echo "  fullMatrix           "
 	@echo "  qr                   "
 	@echo "  svd                  "
+	@echo "  compression		  "
+	@echo "  pca				  "
 	@echo "  clean                "
 	@echo "  distclean            "
 
@@ -54,6 +66,8 @@ all:
 	$(MAKE) qr
 	$(MAKE) svd
 	$(MAKE) fullMatrix
+	$(MAKE) compression
+	$(MAKE) pca
 
 clean: 
 	$(RM) $(BUILD)/*.o
@@ -74,6 +88,16 @@ qr: $(QR_TEST)
 	$(MAKE) clean
 
 svd: $(SVD_TEST)
+	mkdir -p $(BUILD)
+	$(CXX) $^ -o $(BUILD)/$@ $(LDFLAGS) $(CPPFLAGS) $(CXXFLAGS) 
+	$(MAKE) clean
+
+compression: $(IMAGE_TEST)
+	mkdir -p $(BUILD)
+	$(CXX) $^ -o $(BUILD)/$@ $(LDFLAGS) $(CPPFLAGS) $(CXXFLAGS) 
+	$(MAKE) clean
+
+pca: $(PCA_TEST)
 	mkdir -p $(BUILD)
 	$(CXX) $^ -o $(BUILD)/$@ $(LDFLAGS) $(CPPFLAGS) $(CXXFLAGS) 
 	$(MAKE) clean

@@ -22,8 +22,8 @@ int main()
      * Upload the input image in png format and
      * set the output file image
      */
-    const char *filename = "input_image/luna_rossa.png";
-    const char *outputFilename = "output_image/luna_rossa_out.png";
+    const char *filename = "../data/luna_rossa.png";
+    const char *outputFilename = "../data_output/luna_rossa_out.png";
 
     /**
      * Create the object of the compression image application
