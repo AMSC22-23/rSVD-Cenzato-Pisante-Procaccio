@@ -38,18 +38,6 @@ class FullMatrix : public Expr<FullMatrix<Real,ORDER>> {
 	public:
 
 		/*
-			Specify that this class has to evaluate the expression before assignment
-		*/
-		static constexpr int FLAGS=BIT_MASKS::EVALUATE_BEFORE_ASSIGNING;
-
-		/*
-			For this matrix we can just return false
-		*/
-		constexpr bool hasToBeEvaluatedFlag(){
-			return false;
-		}
-
-		/*
 			 Constructor of a n x m matrix with a value initVal
 		 */
 		FullMatrix(const size_t n,const size_t m,const Real initVal=0): m_rows(n), m_cols(m) {
@@ -60,7 +48,7 @@ class FullMatrix : public Expr<FullMatrix<Real,ORDER>> {
 		}
 		/*
 			 Constructor with just one dimension, useful for vector operations
-		*/
+		 */
 		FullMatrix(const size_t n): FullMatrix(n,1) {}
 
 		/*
@@ -85,57 +73,63 @@ class FullMatrix : public Expr<FullMatrix<Real,ORDER>> {
 		FullMatrix &operator=(FullMatrix &&) = default;
 
 		/*
-			Constructor from an expression
-		*/
+			 Constructor from an expression
+		 */
 		template <class T> FullMatrix(const Expr<T> &e): m_rows(e.rows()), m_cols(e.cols()) {
 			//Casting
 			const T &el(e);
 			m_entries.resize(m_rows*m_cols);
 			if constexpr(ORDER==ORDERING::ROWMAJOR){
-#pragma omp parallel for shared(m_entries)
-				for(size_t i=0;i<m_rows;++i)
+#pragma omp parallel for shared(m_entries,m_rows,m_cols,el) 
+				for(size_t i=0;i<m_rows;++i){
+					const auto ofs=i*m_cols;
 					for(size_t j=0;j<m_cols;++j)
-						this->operator()(i,j)=el(i,j);
+						m_entries[ofs+j]=el(i,j);
+				}
 			}
 			else{
-#pragma omp parallel for shared(m_entries)
-				for(size_t j=0;j<m_cols;++j)
+#pragma omp parallel for shared(m_entries,m_rows,m_cols,el) 
+				for(size_t j=0;j<m_cols;++j){
+					const auto ofs=j*m_rows;
 					for(size_t i=0;i<m_rows;++i)
-						this->operator()(i,j)=el(i,j);
+						m_entries[ofs+i]=el(i,j);
+				}
 			}
 		}
 		/*
-			Assignment from an expression
-		*/
+			 Assignment from an expression
+		 */
 		template <class T> FullMatrix& operator=(const Expr<T> &e){
 			//Casting
 			const T &el(e);
 			this->resize(e.rows(),e.cols());
-			if constexpr(e.hasToBeEvaluatedFlag())
-			else
 			if constexpr(ORDER==ORDERING::ROWMAJOR){
-#pragma omp parallel for 
-				for(size_t i=0;i<m_rows;++i)
+#pragma omp parallel for shared(m_entries,m_rows,m_cols,el) 
+				for(size_t i=0;i<m_rows;++i){
+					const auto ofs=i*m_cols;
 					for(size_t j=0;j<m_cols;++j)
-						this->operator()(i,j)=el(i,j);
+						m_entries[ofs+j]=el(i,j);
+				}
 			}
 			else{
-#pragma omp parallel for
-				for(size_t j=0;j<m_cols;++j)
+#pragma omp parallel for shared(m_entries,m_rows,m_cols,el) 
+				for(size_t j=0;j<m_cols;++j){
+					const auto ofs=j*m_rows;
 					for(size_t i=0;i<m_rows;++i)
-						this->operator()(i,j)=el(i,j);
+						m_entries[ofs+i]=el(i,j);
+				}
 			}
 			return *this;
 		}
-		
+
 		/*
-			When i found a matrix i collapse it by using the constructor of the FullMatrix class
-		*/
+			 When i found a matrix i collapse it by using the constructor of the FullMatrix class
+		 */
 		template <class T>
-		const Real normExpr(const Expr<T> &e) const {
-			FullMatrix toReturn(e);
-			return toReturn.norm();
-		}
+			const Real normExpr(const Expr<T> &e) const {
+				FullMatrix toReturn(e);
+				return toReturn.norm();
+			}
 
 		/*
 			 Override of the operator []
@@ -197,37 +191,27 @@ class FullMatrix : public Expr<FullMatrix<Real,ORDER>> {
 		}
 
 		/*
-			This class stores a reference to a FullMatrix 
-			which is either stored in rowmajor or colmajor, then it is accessed in the opposite way.
-		
-			It also need to enable expression templating
-		*/
-		
+			 This class stores a reference to a FullMatrix 
+			 which is either stored in rowmajor or colmajor, then it is accessed in the opposite way.
+
+			 It also need to enable expression templating
+		 */
+
 		class FullMatrixAdjoint: public Expr<FullMatrixAdjoint>{
 
 			public:
 
 				/*
-					Specify that this class has to evaluate the expression before assignment
-				*/
-				static constexpr int FLAGS=BIT_MASKS::EVALUATE_BEFORE_ASSIGNING;
-
-				/*
-					For this matrix we can just return false
-				*/
-				constexpr bool hasToBeEvaluatedFlag(){
-					return false;
-				}
-
-				/*
-					Constructor of the class
-				*/
+					 Constructor of the class
+				 */
 				FullMatrixAdjoint(const FullMatrix<Real,ORDER>& matrix) : m_matrix(matrix) {}
-			
+
 				/*
-					The only thing i need is an overload to the access operator in the opposite way
-					I just need the constant ones
-				*/
+					 The only thing i need is an overload to the access operator in the opposite way
+				 */
+				Real operator[](const size_t index){
+					return m_matrix[index];
+				}
 				const Real operator[](const size_t index) const{
 					return m_matrix[index];
 				}
@@ -245,8 +229,8 @@ class FullMatrix : public Expr<FullMatrix<Real,ORDER>> {
 					return this->operator[](i);
 				}
 				/*
-					Printing methods
-				*/
+					 Printing methods
+				 */
 				void print(std::ostream &os=std::cout) const{
 					os<<rows()<<" "<<cols()<<std::endl;
 					for(size_t i=0;i<rows();++i){
@@ -268,8 +252,8 @@ class FullMatrix : public Expr<FullMatrix<Real,ORDER>> {
 					return os;
 				}
 				/*
-					Some other useful methods
-				*/
+					 Some other useful methods
+				 */
 				const size_t& rows() const{
 					return m_matrix.m_cols;
 				}
@@ -279,23 +263,24 @@ class FullMatrix : public Expr<FullMatrix<Real,ORDER>> {
 
 			private:
 
-			/*
-				Reference to the matrix
-			*/
-			const FullMatrix<Real,ORDER>& m_matrix;
+				/*
+					 Reference to the matrix
+				 */
+				const FullMatrix<Real,ORDER>& m_matrix;
 
 		};
 
 		/*
-			This class is declared as friend so that it can also access the matrix private
-			attributes directly.
-		*/
+			 This class is declared as friend so that it can also access the matrix private
+			 attributes directly.
+		 */
 		friend class FullMatrixAdjoint;
 
+#ifndef LAZY
 		/*
 			 Override of the multiplication for matrix-scalar
 			 Note that it returns a new matrix
-
+		 */
 		friend FullMatrix operator*(const FullMatrix& A, const Real k){
 			FullMatrix toReturn(A.rows(),A.cols());
 
@@ -305,15 +290,15 @@ class FullMatrix : public Expr<FullMatrix<Real,ORDER>> {
 
 			return toReturn;
 		}
-		
-			 Override of the associative multiplication scalar-matrix
-		 
+		/*	
+				Override of the associative multiplication scalar-matrix
+		 */
 		friend FullMatrix operator*(const Real k, const FullMatrix& A){
 			return A*k;
 		}
-		
+		/*
 			 Override of the operator for the summation (?) of two matrices
-		 
+		 */
 		friend FullMatrix operator+(const FullMatrix& A,const FullMatrix& B){
 			FullMatrix toReturn;
 			if(A.rows()!=B.rows() || A.cols()!=B.cols())
@@ -327,9 +312,9 @@ class FullMatrix : public Expr<FullMatrix<Real,ORDER>> {
 
 			return toReturn;
 		}
-		
+		/*
 			 Override of the operator for the subtraction of two matrices
-		 
+		 */
 		friend FullMatrix operator-(const FullMatrix& A,const FullMatrix& B){
 			FullMatrix toReturn;
 			if(A.rows()!=B.rows() || A.cols()!=B.cols())
@@ -343,9 +328,10 @@ class FullMatrix : public Expr<FullMatrix<Real,ORDER>> {
 
 			return toReturn;
 		}
-		
+#endif
+		/*
 			 Overload of the multiplication operator for matrix-vector
-		 
+		 */
 		friend std::vector<Real> operator*(const FullMatrix& A, const std::vector<Real>& x){
 
 			std::vector<Real> toReturn;
@@ -379,37 +365,37 @@ class FullMatrix : public Expr<FullMatrix<Real,ORDER>> {
 
 			return toReturn;
 		}
-		
+		/*
 			 Override of the multiplication operator for matrix-matrix
 			 It is cache friendly: reference: https://siboehm.com/articles/22/Fast-MMM-on-CPU
-		*/
-		FullMatrix forceMatMult(const FullMatrix& B) const{
+		 */
+		friend FullMatrix operator*(const FullMatrix& A, const FullMatrix& B){
 
 			FullMatrix toReturn;
 
 			//Check if matrix-matrix multiplication is feasible
-			if(this->cols()!=B.rows())
+			if(A.cols()!=B.rows())
 				return toReturn;
 
-			toReturn.resize(this->rows(),B.cols());
+			toReturn.resize(A.rows(),B.cols());
 
 			//https://stackoverflow.com/questions/2324658/how-to-determine-the-version-of-the-c-standard-used-by-the-compiler
-//#if __cplusplus == 202002L
+			//#if __cplusplus == 202002L
 
-//			std::cout<<"HELLO BABY!!!"<<std::endl;
+			//			std::cout<<"HELLO BABY!!!"<<std::endl;
 
-//#else
+			//#else
 
 			if constexpr(ORDER==ORDERING::ROWMAJOR){
 #pragma omp parallel for shared(B,toReturn)
-				for(size_t i=0;i<this->rows();++i){
+				for(size_t i=0;i<A.rows();++i){
 					for(size_t k=0;k<B.rows();++k){
 						const auto ofs1=i*B.cols();
-						const auto ofs2=i*this->cols();
+						const auto ofs2=i*A.cols();
 						const auto ofs3=k*B.cols();
 						//#pragma omp parallel for shared(ofs1,ofs2,ofs3,k,B,toReturn)
 						for(size_t j=0;j<B.cols();++j){
-							toReturn.m_entries[ofs1+j]+=this->m_entries[ofs2+k]*B.m_entries[ofs3+j];
+							toReturn.m_entries[ofs1+j]+=A.m_entries[ofs2+k]*B.m_entries[ofs3+j];
 						}
 					}
 				}
@@ -417,21 +403,120 @@ class FullMatrix : public Expr<FullMatrix<Real,ORDER>> {
 			else{
 #pragma omp parallel for shared(B,toReturn)
 				for(size_t j=0;j<B.cols();++j){
-					for(size_t k=0;k<this->cols();++k){
-						const auto ofs1=this->rows()*k;
+					for(size_t k=0;k<A.cols();++k){
+						const auto ofs1=A.rows()*k;
 						const auto ofs2=B.rows()*j;
 						//#pragma omp parallel for shared(ofs1,ofs2,B,toReturn) 
-						for(size_t i=0;i<this->rows();++i){
-							toReturn.m_entries[i+ofs2]+=this->m_entries[i+ofs1]*B.m_entries[k+ofs2];
+						for(size_t i=0;i<A.rows();++i){
+							toReturn.m_entries[i+ofs2]+=A.m_entries[i+ofs1]*B.m_entries[k+ofs2];
 						}
 					}
 				}
 			}
 
-//#endif
-			
+			//#endif
+
 			return toReturn;
 		}
+		/*
+			 Here i am missing also the case when i am doing Expression*Matrix and vice-versa
+
+Careful: if i do not specify the overload for the multiplication between a matrix and a 
+transposed it enters here, hence creating a temporary for nothing
+		 */
+		template <class T>
+			friend FullMatrix operator*(const Expr<T> &e, const FullMatrix& B){
+				//I need to collapse the expression
+				FullMatrix A=e;
+				return A*B;
+			}
+		template <class T>
+			friend FullMatrix operator*(const FullMatrix& A, const Expr<T> &e){
+				//I need to collapse the expression
+				FullMatrix B=e;
+				return A*B;
+			}
+		/*
+			 Also for matrix and adjoint 
+TODO: think more about this
+		 */
+		friend FullMatrix operator*(const FullMatrixAdjoint& A, const FullMatrix& B){
+
+			FullMatrix toReturn;
+
+			if(A.cols()!=B.rows())
+				return toReturn;
+
+			toReturn.resize(A.rows(),B.cols());
+
+			if constexpr(ORDER==ORDERING::ROWMAJOR){
+#pragma omp parallel for shared(B,toReturn)
+				for(size_t i=0;i<A.rows();++i){
+					for(size_t k=0;k<B.rows();++k){
+						const auto ofs1=i*B.cols();
+						const auto ofs2=i*A.cols();
+						const auto ofs3=k*B.cols();
+						for(size_t j=0;j<B.cols();++j){
+							toReturn.m_entries[ofs1+j]+=A[ofs2+k]*B.m_entries[ofs3+j];
+						}
+					}
+				}
+			}
+			else{
+#pragma omp parallel for shared(B,toReturn)
+				for(size_t j=0;j<B.cols();++j){
+					for(size_t k=0;k<A.cols();++k){
+						const auto ofs1=A.rows()*k;
+						const auto ofs2=B.rows()*j;
+						for(size_t i=0;i<A.rows();++i){
+							toReturn.m_entries[i+ofs2]+=A[i+ofs1]*B.m_entries[k+ofs2];
+						}
+					}
+				}
+			}
+
+			//#endif
+
+			return toReturn;
+		}
+		friend FullMatrix operator*(const FullMatrix& A, const FullMatrixAdjoint& B){
+
+			FullMatrix toReturn;
+
+			if(A.cols()!=B.rows())
+				return toReturn;
+
+			toReturn.resize(A.rows(),B.cols());
+
+			if constexpr(ORDER==ORDERING::ROWMAJOR){
+#pragma omp parallel for shared(B,toReturn)
+				for(size_t i=0;i<A.rows();++i){
+					for(size_t k=0;k<B.rows();++k){
+						const auto ofs1=i*B.cols();
+						const auto ofs2=i*A.cols();
+						const auto ofs3=k*B.cols();
+						for(size_t j=0;j<B.cols();++j){
+							toReturn.m_entries[ofs1+j]+=A.m_entries[ofs2+k]*B[ofs3+j];
+						}
+					}
+				}
+			}
+			else{
+#pragma omp parallel for shared(B,toReturn)
+				for(size_t j=0;j<B.cols();++j){
+					for(size_t k=0;k<A.cols();++k){
+						const auto ofs1=A.rows()*k;
+						const auto ofs2=B.rows()*j;
+						for(size_t i=0;i<A.rows();++i){
+							toReturn.m_entries[i+ofs2]+=A.m_entries[i+ofs1]*B[k+ofs2];
+						}
+					}
+				}
+			}
+
+			return toReturn;
+		}
+
 		/*
 			 Method to access the number of rows of the matrix
 		 */
@@ -517,8 +602,8 @@ Hyphothesis: col<m_cols && toInsert.size()<=m_rows
 			this->resize(n,m,0.);
 		}
 		/*
-			Resize of the matrix with a parameter also
-		*/
+			 Resize of the matrix with a parameter also
+		 */
 		void resize(const size_t n, const size_t m, const Real val){
 			m_entries.resize(n*m,val);
 			m_rows=n;
@@ -600,27 +685,27 @@ Hyphothesis: col<m_cols && toInsert.size()<=m_rows
 			 Now it returns a FullMatrixAdjoint object
 		 */
 		FullMatrixAdjoint transpose() const{
-			
+
 			FullMatrixAdjoint toReturn(*this);
 
 			return toReturn;
 
 			/*
-			FullMatrix toReturn(m_cols,m_rows);
+				 FullMatrix toReturn(m_cols,m_rows);
 
-			if constexpr(ORDER==ORDERING::ROWMAJOR){
-				for(size_t i=0;i<rows();++i)
-					for(size_t j=0;j<cols();++j)
-						toReturn.m_entries[j*m_rows+i]=m_entries[i*m_cols+j];
-			}
-			else{
-				for(size_t j=0;j<cols();++j)
-					for(size_t i=0;i<rows();++i)
-						toReturn.m_entries[i*m_cols+j]=m_entries[j*m_rows+i];
-			}
+				 if constexpr(ORDER==ORDERING::ROWMAJOR){
+				 for(size_t i=0;i<rows();++i)
+				 for(size_t j=0;j<cols();++j)
+				 toReturn.m_entries[j*m_rows+i]=m_entries[i*m_cols+j];
+				 }
+				 else{
+				 for(size_t j=0;j<cols();++j)
+				 for(size_t i=0;i<rows();++i)
+				 toReturn.m_entries[i*m_cols+j]=m_entries[j*m_rows+i];
+				 }
 
-			return toReturn;
-			*/
+				 return toReturn;
+			 */
 		}
 		/*
 			 Method for printing all elements in the matrix in a generic stream
@@ -657,7 +742,7 @@ Hyphothesis: col<m_cols && toInsert.size()<=m_rows
 			for(size_t i=0;i<m_rows;++i)
 				this->operator()(i,i)=1.;
 		}
-	
+
 	private:
 		/*
 			 Elements of the matrix
@@ -676,75 +761,50 @@ Hyphothesis: col<m_cols && toInsert.size()<=m_rows
 
 //EXPRESSION TEMPLATES
 
+#ifdef LAZY
+
 /*
-	Using some useful aliases to alleviate the notation for user functions
-*/
+	 Using some useful aliases to alleviate the notation for user functions
+ */
 template<class L, class R> using AddExpr=CWiseBinaryOperator<L,R,Add>;
 template<class L, class R> using SubExpr=CWiseBinaryOperator<L,R,Sub>;
 template<class L, class R> using MultExpr=CWiseBinaryOperator<L,R,Mult>;
-template<class L, class R> using MatMultExpr=RCBinaryOperator<L,R,MatMult<L,R>>;
 
 /*
-	These are the operators that the user will use
-	They are defined inline so that they can be substituted at compile time
+	 These are the operators that the user will use
+	 They are defined inline so that they can be substituted at compile time
 
-	Moreover they are specialized only for my class 
-*/
-
-/*
-template <class T>
-struct is_matrix : std::false_type {};
-
-template <typename Real, ORDERING ORDER>
-struct is_matrix<FullMatrix<Real, ORDER>> : std::true_type {};
-
-//template <typename Real, ORDERING ORDER>
-//struct is_matrix<FullMatrix<Real,ORDER>::FullMatrixAdjoint> : std::true_type {};
-
-template <class E>
-struct is_matrix<Expr<E>> : std::true_type {};
-
-template <class L, class R, class OP>
-struct is_matrix<BinaryOperator<L,R,OP>> : std::true_type {};
-
-template <class L, class OP>
-struct is_matrix<BinaryOperator<L,Real,OP>> : std::true_type {};
-template <class R, class OP>
-struct is_matrix<BinaryOperator<Real,R,OP>> : std::true_type {};
-*/
+	 Moreover they are specialized only for my class 
+ */
 
 template<class T>
-concept is_my_matrix=std::is_base_of<Expr<T>, T>::value;
+concept is_expr=std::is_base_of<Expr<T>, T>::value;
 
-template<is_my_matrix L, is_my_matrix R>
+template<is_expr L, is_my_matrix R>
 inline AddExpr<L,R>
 operator+(const L &l, const R &r){
 	return AddExpr<L,R>(l,r);
 }
 
-template<is_my_matrix L, is_my_matrix R>
+template<is_expr L, is_expr R>
 inline SubExpr<L,R>
 operator-(const L &l, const R &r){
 	return SubExpr<L,R>(l,r);
 }
 
-template<is_my_matrix L, std::floating_point R>
+template<is_expr L, std::floating_point R>
 inline MultExpr<L,R> 
 operator*(const L &l, const R &r){
 	return MultExpr<L,R>(l,r);
 }
 
-template<std::floating_point L, is_my_matrix R>
+template<std::floating_point L, is_expr R>
 inline MultExpr<L,R> 
 operator*(const L &l, const R &r){
 	return MultExpr<L,R>(l,r);
 }
 
-template<is_my_matrix L, is_my_matrix R>
-inline MatMultExpr<L,R>
-operator*(const L &l, const R &r){
-	return MatMultExpr<L,R>(l,r);
-}
+#endif
 
 #pragma GCC diagnostic pop
 
