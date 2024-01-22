@@ -36,6 +36,10 @@ ifdef RGB
 CPPFLAGS+=-DRGB
 endif
 
+ifdef lazy
+CPPFLAGS+=-DLAZY
+endif
+
 #Compiler version
 CXX=g++
 #Preprocessor flags

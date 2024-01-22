@@ -146,6 +146,7 @@ public:
         std::ofstream outputFile(outputFileName);
         if (outputFile.is_open())
         {
+						/*
             int rows = A.rows(), cols = A.cols();
             // Write dimensions to the first row
             outputFile << rows << " " << cols << std::endl;
@@ -159,6 +160,11 @@ public:
                 }
                 outputFile << std::endl;
             }
+						*/
+						
+						//Again here
+						outputFile<<A;
+
             std::cout << "Computed matrix has been written to " << outputFileName << std::endl;
 
             // Close the file
@@ -170,5 +176,6 @@ public:
         }
     }
 };
+
 
 #endif //APPLICATIONS_HPP

@@ -16,9 +16,9 @@ using EigenMatrix=Eigen::MatrixXd;
 void constructHilbertMatrix(EigenMatrix& h){
 	for(auto i=0;i<h.rows();++i)
 		for(auto j=0;j<h.cols();++j)
-			h(i,j)=1/(i+j+1);
+			h(i,j)=1/static_cast<double>(i+j+1);
 }
-Real checkMatrixDiff(Matrix& a,EigenMatrix& e){
+Real checkMatrixDiff(const Matrix& a,const EigenMatrix& e){
 	Real diff=0.;
 	for(size_t i=0;i<a.rows();++i)
 		for(size_t j=0;j<a.cols();++j)
@@ -38,7 +38,7 @@ https://en.wikipedia.org/wiki/Hilbert_matrix
 void constructHilbertMatrix(Matrix& h){
 	for(size_t i=0;i<h.rows();++i)
 		for(size_t j=0;j<h.cols();++j)
-			h(i,j)=1/(i+j+1);
+			h(i,j)=1/static_cast<double>(i+j+1);
 }
 
 int main(int argc, char**argv){
@@ -110,17 +110,19 @@ int main(int argc, char**argv){
 	std::cout<<std::endl;
 	std::cout<<"  Multiplicating the two matrices... ";
 	const auto t0=std::chrono::high_resolution_clock::now();
-	auto ret=mat1*mat2;
+	//NB: they must not be auto as they will be returned as expressions
+	Matrix ret=mat1*mat2;
 	const auto t1=std::chrono::high_resolution_clock::now();
 	std::cout<<"Completed"<<std::endl;
 	const auto dt=std::chrono::duration_cast<std::chrono::microseconds>(t1-t0).count();
 
+	//std::cout<<ret<<std::endl;
+
 	#ifdef _OPENMP
-	std::cout<<std::endl;
 	std::cout<<"  Multiplicating the two matrices with just one thread... ";
 	omp_set_num_threads(1);
 	const auto t0p=std::chrono::high_resolution_clock::now();
-	auto retp=mat1*mat2;
+	Matrix retp=mat1*mat2;
 	const auto t1p=std::chrono::high_resolution_clock::now();
 	std::cout<<"Completed"<<std::endl;
 	const auto dtp=std::chrono::duration_cast<std::chrono::microseconds>(t1p-t0p).count();
@@ -143,14 +145,18 @@ int main(int argc, char**argv){
 	std::cout<<"  Elapsed time         :\t"<< dt<<"\t[mus]"<<std::endl;
 	
 	#ifdef _OPENMP
+	std::cout<<std::endl;
 	std::cout<<"  Elapsed time 1 thread:\t"<<dtp<<"\t[mus]"<<std::endl;
-	std::cout<<"      Ratio OpenMP/Mine:\t"<<((double)dtp/dt)<<std::endl;
+	std::cout<<std::endl;
+	std::cout<<"      Ratio Mine/OpenMP:\t"<<((double)dtp/dt)<<std::endl;
 	#endif
 
 	#ifdef EIGEN
-	std::cout<<"  Elapsed time Eigen   :\t"<<dte<<"\t[mus]"<<std::endl;
 	std::cout<<std::endl;
-	std::cout<<"    Ratio Eigen/Mine   :\t"<<((double)dt/dte)<<std::endl;
+	std::cout<<"  Elapsed time Eigen   :\t"<<dte<<"\t[mus]"<<std::endl;
+	
+	std::cout<<std::endl;
+	std::cout<<"       Ratio Mine/Eigen:\t"<<((double)dt/dte)<<std::endl;
 	std::cout<<std::endl;
 	std::cout<<"  Difference between results:\t"<<checkMatrixDiff(ret,rete)<<std::endl;
 	#endif

@@ -19,7 +19,7 @@ int main()
     APPLICATIONS obj;
 
     auto start = std::chrono::high_resolution_clock::now();
-    Matrix T = obj.pca(A, 200);
+    Matrix T = obj.pca(A, 50);
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> duration = end - start;
     exportmatrix(T,"T.txt");
@@ -102,6 +102,7 @@ void exportmatrix(Matrix A, std::string outputFileName)
     std::ofstream outputFile(outputFileName);
     if (outputFile.is_open())
     {
+				/*
         int rows = A.rows(), cols = A.cols();
         // Write dimensions to the first row
         outputFile << rows << " " << cols << std::endl;
@@ -115,6 +116,11 @@ void exportmatrix(Matrix A, std::string outputFileName)
             }
             outputFile << std::endl;
         }
+				*/
+				
+				//I already have a method, you can do simply
+				outputFile<<A;
+
         std::cout << "Computed matrix has been written to " << outputFileName << std::endl;
 
         // Close the file
