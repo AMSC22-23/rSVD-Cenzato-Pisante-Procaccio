@@ -8,7 +8,7 @@ class SVD{
     public:
     /* Constructor : 
             epsilon : precision  */
-        SVD(const double epsilon = 1e-4) : 
+        SVD(const double epsilon = 1e-8) : 
         m_epsilon(epsilon) {}
 
     /* It computes the reduced SVD using the Power Method :

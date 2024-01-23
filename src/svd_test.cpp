@@ -13,7 +13,7 @@ int main(int argc, char **argv)
         filePath = argv[1];
         std::cout << "Attempting to open file: " << filePath << std::endl;
     } else {
-        filePath = "test_matrices/matrix2.txt";  // Default file path
+        filePath = "test_matrices/matrix.txt";  // Default file path
         std::cout << "No file path provided. Using default file: " << filePath << std::endl;
     }
     
@@ -52,16 +52,16 @@ int main(int argc, char **argv)
     std::cout << "pm1 : || A - U * S * Vt || = " << (A - obj.mult_SVD(U_pm, s_pm, V_pm)).norm() << std::endl;
 
     // 2-nd algorithm using A
-    /*start = std::chrono::high_resolution_clock::now();
+    start = std::chrono::high_resolution_clock::now();
     auto [U_pm2, s_pm2, V_pm2] = obj.svd_with_PM2(A);
     end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> duration_pm2 = end - start;
     std::cout << "Time of execution power method 2-nd algorithm: " << duration_pm2.count() << " s" << std::endl;
-    std::cout << "pm2 : || A - U * S * Vt || = " << (A - obj.mult_parallel(U_pm2, s_pm2, V_pm2)).norm() << std::endl;
-    std::cout << "Difference eigenvalues = " << (s_pm2 - s_pm).norm() << std::endl;*/
-    exportmatrix(U_pm, "U_pm.txt");
+    std::cout << "pm2 : || A - U * S * Vt || = " << (A - obj.mult_SVD(U_pm2, s_pm2, V_pm2)).norm() << std::endl;
+    std::cout << "Difference eigenvalues = " << (s_pm2 - s_pm).norm() << std::endl;
+    //exportmatrix(U_pm, "U_pm.txt");
     exportmatrix(s_pm.transpose(), "s_pm.txt");
-    exportmatrix(V_pm.transpose(), "Vt_pm.txt");
+    //exportmatrix(V_pm.transpose(), "Vt_pm.txt");
 
     /*std::cout << "\nPseudo-inverse :\n";
     start = std::chrono::high_resolution_clock::now();
@@ -71,9 +71,9 @@ int main(int argc, char **argv)
     std::cout << "Time of execution to compute the pseudo-inverse: " << duration.count() << " s" << std::endl;*/
     // exportmatrix(A_inv,"inv.txt");
 
-    int r=20;
+    int r=60;
     start = std::chrono::high_resolution_clock::now();
-    auto [U_rsvd, s_rsvd, V_rsvd] = obj.rsvd(A,r,0);
+    auto [U_rsvd, s_rsvd, V_rsvd] = obj.rsvd(A,r,0,1);
     end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> duration_rsvd = end - start;
     std::cout << "\nrSVD ( r = " << r << " ):\n";
@@ -83,7 +83,7 @@ int main(int argc, char **argv)
     double SpeedUp = duration_pm.count() / duration_rsvd.count();
     std::cout << "Speed Up randomized: " << SpeedUp << std::endl;
     #ifdef EIGEN
-    std::cout << "Norm of difference eigenvalues = " << (s_rsvd - s_pm.head(s_rsvd.rows())).norm()/(r+5) << std::endl;
+    std::cout << "Norm of difference first r eigenvalues = " << (s_rsvd - s_pm.head(s_rsvd.rows())).norm()/s_rsvd.rows() << std::endl;
     #endif
 
     //exportmatrix(U_rsvd, "U_rsvd.txt");
@@ -99,21 +99,9 @@ void exportmatrix(Matrix A, std::string outputFileName)
     std::ofstream outputFile(outputFileName);
     if (outputFile.is_open())
     {
-        int rows = A.rows(), cols = A.cols();
-        // Write dimensions to the first row
-        outputFile << rows << " " << cols << std::endl;
-
-        // Write matrix data
-        for (int i = 0; i < rows; ++i)
-        {
-            for (int j = 0; j < cols; ++j)
-            {
-                outputFile << std::setw(8) << std::fixed << std::setprecision(8) << A(i, j) << " ";
-            }
-            outputFile << std::endl;
-        }
+        outputFile<<A.rows() << " " << A.cols()<<std::endl;
+		outputFile<<A;
         std::cout << "Computed matrix has been written to " << outputFileName << std::endl;
-
         // Close the file
         outputFile.close();
     }

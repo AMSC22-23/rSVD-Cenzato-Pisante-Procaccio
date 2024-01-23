@@ -3,7 +3,7 @@
 #	Code to generate SVD with numpy
 #
 # Command to execute: python check_python.py filename.txt
-#		python check_python.py ../matrix2.txt
+#		python check_python.py ../matrix.txt
 #
 #------------------------------------
 
@@ -17,7 +17,7 @@ import sys
 def print_vector_to_file(filename,vector):
 	out_file=open(filename,"w")
 	out_file.write(f'1 {len(vector)}\n')
-	out_file.write(' '.join(str(num) for num in vector))
+	out_file.write(' '.join(f'{num:.4f}' for num in vector))
 	out_file.close()
 	return 
 
@@ -26,7 +26,7 @@ def print_matrix_to_file(filename,matrix):
 	rows,cols=shape(matrix)
 	out_file.write(f'{rows} {cols}\n')
 	for row in matrix:
-		out_file.write(' '.join(str(num) for num in row))
+		out_file.write(' '.join(f'{num:.4f}' for num in row))
 		out_file.write('\n')
 	out_file.close()
 	return
@@ -59,8 +59,8 @@ for x in in_file:
 # Close everything at the end for safety
 in_file.close();
 
-print("This is the matrix:")
-print(a)
+#print("This is the matrix:")
+#print(a)
 # Compute the svd using numpy
 U,S,Vt=linalg.svd(a,full_matrices=False) # Can be also full_matrices=False
 
@@ -69,7 +69,7 @@ ext=".txt"
 filename=filename.split(ext)
 
 # Print the results to a file
-print_matrix_to_file(filename[0]+"_U"+ext,U)
-print_vector_to_file(filename[0]+"_S"+ext,S)
-print_matrix_to_file(filename[0]+"_V"+ext,Vt.transpose())
+#print_matrix_to_file(filename[0]+"_U"+ext,U)
+print_vector_to_file(filename[0]+"_s"+ext,S)
+#print_matrix_to_file(filename[0]+"_V"+ext,Vt.transpose())
 print("Successfully printed everything, check your folder :)")

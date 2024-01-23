@@ -40,7 +40,7 @@ for i in range(n_patients) :
         color='b'
     plt.scatter(T[0,i], T[1,i],color=color)
 
-output_path = '/home/ari/rSVD-Cenzato-Pisante-Procaccio/python/output/pca_c++_2.png'
+output_path = '/home/ari/rSVD-Cenzato-Pisante-Procaccio/data_output/pca_2scatterplot.png'
 plt.savefig(output_path, bbox_inches='tight', pad_inches=0)
 
 fig = plt.figure()
@@ -55,7 +55,7 @@ for i in range(n_patients) :
     
     ax.view_init(25,20)
 
-output_path = '/home/ari/rSVD-Cenzato-Pisante-Procaccio/python/output/pca_c++_3.png'
+output_path = '/home/ari/rSVD-Cenzato-Pisante-Procaccio/data_output/pca_3scatterplot.png'
 plt.savefig(output_path, bbox_inches='tight', pad_inches=0)
 
 #read s

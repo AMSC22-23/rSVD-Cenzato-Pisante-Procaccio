@@ -57,25 +57,28 @@ std::tuple<Matrix, Vector, Matrix> SVD::svd_with_PM2(Matrix A)
     int n = A.cols(), m = A.rows(), i = 0;
     int k = (m > n) ? n : m;
     Matrix U(m, k), V(n, k);
-    Vector s = Vector::Zero(k, 1);
+    Vector s(k);
     double sigma = 1.;
 
     while ((sigma > m_epsilon) && i < k)
     {
         auto [u, v] = PowerMethod2(A);
+        sigma = (A * v).norm();
 
+        if (sigma > m_epsilon)
+        {
 #ifdef EIGEN
-        s[i] = (A * v).norm();
-        V.col(i) = v;
-        U.col(i) = u;
-        A = A - (s[i] * u * v.transpose());
+            s[i] = sigma;
+            V.col(i) = v;
+            U.col(i) = u;
 #else
-        s(i, 0) = (A * v).norm();
-        V.col(i, v);
-        U.col(i, u);
-        A = A - (s(i, 0) * u * v.transpose());
+            s(i, 0) = sigma;
+            V.col(i, v);
+            U.col(i, u);
 #endif
-        i++;
+            A = A - (sigma * u * v.transpose());
+            i++;
+        }
     }
 
     // if A not full rank
@@ -100,8 +103,12 @@ std::tuple<Matrix, Vector, Matrix> SVD::svd_with_PM2(Matrix A)
 std::tuple<Matrix, Vector, Matrix> SVD::rsvd(const Matrix &A, int r, int p, int q)
 {
     int m = A.rows(), n = A.cols(), k = r + p;
-    Matrix U(m, k), P = genmat(n, k), V(k, n), Q(m, m);
-    Vector s(k);
+    if (k > m || k > n)
+    {
+        std::cerr << "\nTarget rank too big for matrix dimensions!" << std::endl;
+        return std::make_tuple(Matrix::Zero(m, 1), Vector::Zero(1, 1), Matrix::Zero(n, 1));
+    }
+    Matrix U(m, k), P = genmat(n, k), Q(m, m), Y(k, n);
     QR_Decomposition QR;
 
     U = A * P; // m x k
@@ -114,18 +121,17 @@ std::tuple<Matrix, Vector, Matrix> SVD::rsvd(const Matrix &A, int r, int p, int 
     QR.setQR_for_svd_parallel(Q, U);
 
 #ifdef EIGEN
-    P.resize(m,k);
+    P.resize(m, k);
     P = Q.topLeftCorner(m, k);
     Q = P;
 #else
     Q.trimCols(m - k); // m x k
 #endif
 
-    V = Q.transpose() * A; // k x n
+    Y = Q.transpose() * A; // k x n
 
-    P.resize(k, k);
-    std::tie(P, s, V) = svd_with_PM(V);
-    U = Q * P;
+    auto [Uy, s, V] = svd_with_PM(Y);
+    U = Q * Uy;
 
     return std::make_tuple(U, s, V);
 }
@@ -171,6 +177,7 @@ Matrix SVD::genmat(const int m, const int n)
         std::mt19937 reng(rd() + rank);
 #pragma omp for
         for (int i = 0; i < m; i++)
+#pragma omp simd
             for (int j = 0; j < n; j++)
                 M(i, j) = dice(reng);
     }

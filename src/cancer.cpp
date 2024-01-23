@@ -102,27 +102,8 @@ void exportmatrix(Matrix A, std::string outputFileName)
     std::ofstream outputFile(outputFileName);
     if (outputFile.is_open())
     {
-				/*
-        int rows = A.rows(), cols = A.cols();
-        // Write dimensions to the first row
-        outputFile << rows << " " << cols << std::endl;
-
-        // Write matrix data
-        for (int i = 0; i < rows; ++i)
-        {
-            for (int j = 0; j < cols; ++j)
-            {
-                outputFile << std::setw(8) << std::fixed << std::setprecision(4) << A(i, j) << " ";
-            }
-            outputFile << std::endl;
-        }
-				*/
-				
-				//I already have a method, you can do simply
-				outputFile<<A;
-
+		outputFile<<A;
         std::cout << "Computed matrix has been written to " << outputFileName << std::endl;
-
         // Close the file
         outputFile.close();
     }
