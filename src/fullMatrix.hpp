@@ -9,6 +9,7 @@
 #include <vector>
 #include <iostream>
 #include <cmath>
+#include <iomanip>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunknown-pragmas"
@@ -676,6 +677,25 @@ Hyphothesis: col<m_cols && toInsert.size()<=m_rows
 
 		}
 		/*
+			Method to return a block of the matrix starting from position i,j and of dimension nxm
+		*/
+		FullMatrix block(const size_t i, const size_t j, const size_t n, const size_t m) const{
+			
+			FullMatrix toReturn;
+		
+			//Do some checks on the bound
+			if(i+n>this->m_rows || j+m>this->m_cols)
+				return toReturn;
+
+			toReturn.resize(n,m,0.);
+
+			for(size_t h=0;h<n;++h)
+				for(size_t k=0;k<m;++k)
+					toReturn(h,k)=this->operator(i+h,j+k);
+			
+			return toReturn;
+		}
+		/*
 			 Method to multiply the current matrix by a constant
 		 */
 		void scale(const Real k){
@@ -755,6 +775,15 @@ Hyphothesis: col<m_cols && toInsert.size()<=m_rows
 			resize(m_rows,m_cols);
 			for(size_t i=0;i<m_rows;++i)
 				this->operator()(i,i)=1.;
+		}
+
+		/*
+			Method to return the data of the matrix
+
+			Useful for MPI
+		*/
+		Real* data(){
+			return this->m_entries.data();
 		}
 
 	private:
