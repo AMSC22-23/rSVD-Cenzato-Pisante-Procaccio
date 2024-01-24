@@ -17,80 +17,79 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve(Matrix A)
      * Assembling the matrix Q by applying the Givens rotation at each
      * iteration and applying each component of Q to R in order to make it triangular
      */
-    double c, s,a,b,tmp;
+    double c, s, a, b, tmp;
     for (int j = 0; j < n; j++)
     {
         for (int i = m - 1; i > j; i--)
         {
-            if( R(i , j)!= 0)
+            if (R(i, j) != 0)
             {
 
-            /**
-             * Givens rotation gets applied by calculating the values of:
-             * c: cosine of the angle of rotation
-             * s: sine of the angle of rotation
-             *
-             * The idea is to calculate the rotations on smaller vectors, iterating on the cells
-             * below the diagonal to pull them to zero
-             */
+                /**
+                 * Givens rotation gets applied by calculating the values of:
+                 * c: cosine of the angle of rotation
+                 * s: sine of the angle of rotation
+                 *
+                 * The idea is to calculate the rotations on smaller vectors, iterating on the cells
+                 * below the diagonal to pull them to zero
+                 */
 
-            a = R(i - 1, j);
-            b = R(i, j);
-            
+                a = R(i - 1, j);
+                b = R(i, j);
 
-            if (std::abs(a) > std::abs(b))
-            {
-                if (a != 0.0)
+                if (std::abs(a) > std::abs(b))
                 {
-                    int segno = std::signbit(a) ? -1 : 1;
-                    c = segno / sqrt(1 + (b / a) * (b / a));
-                    s = std::abs(c / a) * b;
+                    if (a != 0.0)
+                    {
+                        int segno = std::signbit(a) ? -1 : 1;
+                        c = segno / sqrt(1 + (b / a) * (b / a));
+                        s = std::abs(c / a) * b;
+                    }
+                    else
+                    {
+                        c = 0.0;
+                        s = (a >= 0.0 ? 1.0 : -1.0);
+                    }
+                }
+                else if (b != 0.0)
+                {
+                    int segno = (std::signbit(b) ? -1 : 1);
+                    s = segno / sqrt(1 + (a / b) * (a / b));
+                    c = std::abs(s / b) * a;
                 }
                 else
                 {
-                    c = 0.0;
-                    s = (a >= 0.0 ? 1.0 : -1.0);
+                    s = 0.0;
+                    c = (b >= 0.0 ? 1.0 : -1.0);
                 }
-            }
-            else if (b != 0.0)
-            {
-                int segno = (std::signbit(b) ? -1 : 1);
-                s = segno / sqrt(1 + (a / b) * (a / b));
-                c = std::abs(s / b) * a;
-            }
-            else
-            {
-                s = 0.0;
-                c = (b >= 0.0 ? 1.0 : -1.0);
-            }
 
-            /**
-             * Instead of creating the Givens matrix, I do directly the computation on Q and R
-             * In addition I use a temporal variable to avoid changing the matrix before the computation
-             */
-            tmp = 0.0;
-            for (int k = 0; k < n; k++)
-            {
-                tmp = c * R(i - 1, k) + s * R(i, k);
-                R(i, k) = -s * R(i - 1, k) + c * R(i, k);
-                R(i - 1, k) = tmp;
-            }
+                /**
+                 * Instead of creating the Givens matrix, I do directly the computation on Q and R
+                 * In addition I use a temporal variable to avoid changing the matrix before the computation
+                 */
+                tmp = 0.0;
+                for (int k = 0; k < n; k++)
+                {
+                    tmp = c * R(i - 1, k) + s * R(i, k);
+                    R(i, k) = -s * R(i - 1, k) + c * R(i, k);
+                    R(i - 1, k) = tmp;
+                }
 
-            /**
-             * Forcing rotated component to zero to avoid floating point approximations
-             */
+                /**
+                 * Forcing rotated component to zero to avoid floating point approximations
+                 */
 
-            R(i, j) = 0;
+                R(i, j) = 0;
 
-            /**
-             * Computation of Q, at each iterate
-             */
-            for (int k = 0; k < m; k++)
-            {
-                tmp = Q(k, i - 1) * c + Q(k, i) * s;
-                Q(k, i) = Q(k, i - 1) * -s + Q(k, i) * c;
-                Q(k, i - 1) = tmp;
-            }
+                /**
+                 * Computation of Q, at each iterate
+                 */
+                for (int k = 0; k < m; k++)
+                {
+                    tmp = Q(k, i - 1) * c + Q(k, i) * s;
+                    Q(k, i) = Q(k, i - 1) * -s + Q(k, i) * c;
+                    Q(k, i - 1) = tmp;
+                }
             }
         }
     }
@@ -130,7 +129,7 @@ std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve(Matrix A)
     u = Vector(m);
     v = Vector(m);
 
-    for (int j = 0; j < std::min(m,n); j++)
+    for (int j = 0; j < std::min(m, n); j++)
     {
 
 #ifdef EIGEN
@@ -207,6 +206,115 @@ std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve(Matrix A)
             R(i, j) = 0.;
         }
     }
+    return std::make_tuple(Q, R);
+}
+
+//
+std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve_2(Matrix A)
+{
+
+    int m = A.rows();
+    int n = A.cols();
+
+    /**
+     * Initialize matrix Q (size m x m), matrix R(m x n) and rotation matrix P(m x m)
+     */
+    Matrix I(m, m);
+    I.setIdentity();
+
+    Matrix Q = I;
+    Matrix R = A;
+
+    double normx = 0.;
+    double u1;
+    Vector w(m);
+    double tau;
+    Vector tmp_R(n);
+    Vector tmp_Q(m);
+
+    for (int j = 0; j < std::min(n,m); j++)
+    {
+        for (int i = j; i < m; i++)
+        {
+            normx += R(i, j) * R(i, j);
+        }
+        normx = std::sqrt(normx);
+        int s = ((R(j, j) >= 0) ? -1 : 1);
+        u1 = R(j, j) - s * normx;
+
+        for (int i = j + 1; i < m; i++)
+        {
+#ifdef EIGEN
+            w(i) = R(i, j) / u1;
+
+#else
+            w(i, 0) = R(i, j) / u1;
+#endif
+        }
+#ifdef EIGEN
+        w(j) = 1;
+#else
+        w(j, 0) = 1;
+#endif
+        tau = -s * u1 / normx;
+        /**
+         * Computation of Q and R
+         */
+        for (int l = j; l < n; l++)
+        {
+            for (int i = j; i < m; i++)
+            {
+
+#ifdef EIGEN
+                tmp_R(l) += w(i) * R(i, l);
+#else
+                tmp_R(l, 0) += w(i, 0) * R(i, l);
+#endif
+            }
+        }
+        for (int i = j; i < m; i++)
+        {
+
+            for (int l = j; l < n; ++l)
+            {
+#ifdef EIGEN
+                R(i, l) -= (tau * w(i)) * tmp_R(l);
+#else
+                R(i, l) -= (tau * w(i, 0)) * tmp_R(l, 0);
+#endif
+            }
+        }
+
+        for (int k = 0; k < m; k++)
+        {
+
+            for (int l = j; l < m; ++l)
+            {
+#ifdef EIGEN
+                tmp_Q(k) += Q(k, l) * w(l);
+#else
+                tmp_Q(k, 0) += Q(k, l) * w(l, 0);
+#endif
+            }
+        }
+
+        for (int k = 0; k < m; ++k)
+        {
+            for (int l = j; l < m; ++l)
+            {
+#if EIGEN
+                Q(k, l) -= tmp_Q(k) * w(l) * tau ;
+#else
+                Q(k, l) -= tmp_Q(k,0) * w(l, 0) * tau;
+#endif
+            }
+        }
+        tmp_R = 0 * tmp_R;
+        tmp_Q = 0 * tmp_Q;
+
+        normx = 0.0;
+    }
+
     return std::make_tuple(Q, R);
 }
 
