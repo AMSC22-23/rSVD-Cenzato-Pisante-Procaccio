@@ -50,7 +50,7 @@ The more correct solution would be similar to the Eigen implementation, each mat
 
 Small note: there is some code repetition in the matrix class, since the matrix multiplication needs to be specified for matrix-transposed and the reverse, and for transposed-expression and reverse.
 
-The correct solution is to perform a partial specialization of the method with a concept (defined for matrix and its transposed) but there was a problem since I could not create a concept for the FullMatrixTransposed class, since the compiler continued to give an error for the type declaration of the class.
+A better solution is to perform a partial specialization of the method with a concept (defined for matrix and its transposed) but there was a problem since I could not create a concept for the FullMatrixTransposed class, the type should be something along the line of: FullMatrix<Real,ORDERING>::FullMatrixAdjoint but no matter the template I created the compiler continued to give an error for the type declaration of the class.
 
 MULTIPLICATION
 
@@ -89,7 +89,7 @@ There was also the possibility to construct lazily the row-column product, but t
 
 - the optimization for cache friendly accesses would require to the multiplication operator (defined as a functor) to know about the ordering of the matrix at compile time and to reorder the operations accordingly.
 
-- there is a major problem when performing an operation as follows:
+- there is a major problem when performing an operation such as:
 
 FullMatrix a;
 
@@ -107,29 +107,29 @@ Note: the same problem emerges when doing an operation such that
 
 a = a + (or -) a.transpose();
 
-Which results
+Which returns the symmetric (or skew-symmetrix) part of a matrix, but since it is not required from the application it was not addressed.
 
-The tests in order to understand the improvement were performed on 5 different operations, both in a lazy and non-lazy way, all with the optimization flags enabled:
+The tests in order to understand the improvements were performed on 5 different operations, both in a lazy and non-lazy way, all with the optimization flags enabled:
 
-- c = a + b;						//SUM_SHORT
-- c = a + b + a + b + a + b + a + b + a + b;		//SUM_LONG
-- c = a * 2.;						//PROD_SHORT
-- c = a * 2. * 2. * 2. * 2. * 2. * 2. * 2. * 2. * 2.;	//PROD_LONG
-- c = a * ( a + b * 2. ) * a.transpose();		//MIXED
-
-Photo of sumshort_lazy.png
-Photo of sumshort_nolazy.png
-Photo of sumlong_lazy.png
-Photo of sumlong_ nolazy.png
-
-Here we can see that using lazy evaluation has a huge impact since for the long operation the speedup is up to 25x.
-
-Now since this operation is not very realistic, we can see that only with a small operation we get an approximate 2.5x speedup, and since the operation is just 1 sum against the 10 sums of before, the results are expected.
+- c = a + b;                                      //SUM_SHORT
+- c = a + b + a + b + a + b + a + b + a + b;      //SUM_LONG
+- c = a * 2.;                                          //PROD_SHORT
+- c = a * 2. * 2. * 2. * 2. * 2. * 2. * 2. * 2. * 2.;  //PROD_LONG
+- c = a * ( a + b * 2. ) * a.transpose();		      //MIXED
 
 Photo of sumshort_lazy.png
 Photo of sumshort_nolazy.png
 Photo of sumlong_lazy.png
-Photo of sumlong_ nolazy.png
+Photo of sumlong_nolazy.png
+
+Here we can see that using lazy evaluation on the sum of matrices has a huge impact since for the long operation the speedup reaches 25x.
+
+Now since this operation is not very realistic, we can see that only with a small operation we get an approximate 2.5x speedup, and since is just 1 against the 9 sums of before, the results are expected (we create 9 temporaries and do a last assignment -> 10 operations in total).
+
+Photo of sumshort_lazy.png
+Photo of sumshort_nolazy.png
+Photo of sumlong_lazy.png
+Photo of sumlong_nolazy.png
 
 Also for the product of multiple scalars we get a similar speedup, this time is actually higher since we have to do less accesses to the memory because we work only with one matrix.
 
@@ -141,13 +141,13 @@ Photo of mixed_lazy.png
 For a mixed operation we can see that the graph very much resembles the matrix-matrix multiplication, just with a lot more time since now we perform 3 multiplications.
 
 So if we would like an improvement from the timing perspective we would need to increase much more the size of the lazy expression, but it is not realistic since it is not in any of the algorithms implemented.
-But at least there is an improvement in memory usage.
+But at least there is an improvement in memory usage, since less temporaries are created.
 
 BENCHMARKS
 
 The specifics of my computer are the following:
 
-Photo
+Photo of my_specs.png
 
 All the tests are performed using a benchmark that executes the operations a bunch of times for different sizes of the matrices. 
 
@@ -157,7 +157,7 @@ The formula for how many iterations have to be performed is the following expone
 
 times = floor(2. + (end – 2.) * std::exp( (tau/end) * (start - i) ) );
 
-where I s the current dimension of the matrix, start is the initial dimension, end is the final dimension, and tau is a constant decided differently for each operation.
+where i s the current dimension of the matrix, start is the initial dimension, end is the final dimension, and tau is a constant decided differently for each operation.
 
 Small note: in the code there is also a linear interpolator and a cubic interpolator, but first of all the cubic does not work well and the linear does not reflect well the difference in time/size with the matrix multiplication (since it grows as a cubic function) .
 
@@ -169,7 +169,7 @@ There are other possibilities for growing even more the project , for instance I
 
 - complete the section on lazy evaluations by adding the lazy row-column product where the decision of storing it in a temporary or not is performed at compile time.
 
-- introduce the lazy evaluation with ranges: here in this article https://gieseanw.wordpress.com/2019/10/20/we-dont-need-no-stinking-expression-templates/ there is a (informal) description of how we can perform lazy evaluation with one of the newest introductions in c++, the ranges. It shows also how to perform matrix-vector multiplication but the matrix was stored in a 2D array.
+- introduce the lazy evaluation with ranges: here in this article https://gieseanw.wordpress.com/2019/10/20/we-dont-need-no-stinking-expression-templates/ there is a (informal) description of how we can perform lazy evaluation with one of the newest introductions in C++, the ranges. It shows also how to perform matrix-vector multiplication but the matrix was stored in a 2D array.
 An interesting starting point would be the function std::ranges::view::chunk and chunk_view (described here: https://en.cppreference.com/w/cpp/ranges/chunk_view) to split the 1D vector in chunks of equal size.
 But this implementation requires C++ 23, which is only supported by the newest compiler versions, and we would need to change all the versions of our current compiler.
 I personally do not think that we can get any substantial improvement with respect to the expression templates implementation, but it can be very interesting to study a more “functional” and modern approach to the problem, since there is not a lot of literature on this topic yet.
