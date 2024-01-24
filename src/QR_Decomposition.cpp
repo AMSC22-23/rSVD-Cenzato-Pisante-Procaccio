@@ -22,6 +22,8 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve(Matrix A)
     {
         for (int i = m - 1; i > j; i--)
         {
+            if( R(i , j)!= 0)
+            {
 
             /**
              * Givens rotation gets applied by calculating the values of:
@@ -88,6 +90,7 @@ std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve(Matrix A)
                 tmp = Q(k, i - 1) * c + Q(k, i) * s;
                 Q(k, i) = Q(k, i - 1) * -s + Q(k, i) * c;
                 Q(k, i - 1) = tmp;
+            }
             }
         }
     }
