@@ -691,7 +691,7 @@ Hyphothesis: col<m_cols && toInsert.size()<=m_rows
 
 			for(size_t h=0;h<n;++h)
 				for(size_t k=0;k<m;++k)
-					toReturn(h,k)=this->operator(i+h,j+k);
+					toReturn(h,k)=this->operator()(i+h,j+k);
 			
 			return toReturn;
 		}

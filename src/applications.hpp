@@ -14,45 +14,60 @@ public:
 
     /* Reduction of dimensionality of the matrix A:
         It returns a matrix with the first r (+ 5 = oversampling parameter)
-        principal components axes.*/
+        principal components.*/
     Matrix pca(const Matrix &A, const int r)
     {
-        Matrix X = A;
-        size_t m = X.rows(), n = X.cols();
+        size_t m = A.rows(), n = A.cols();
         SVD obj;
+        Matrix X;
+        if (m > n)
+        {
+            X = A;
+        }
+        else
+        {
+            X = A.transpose();
+            m = X.rows();
+            n = X.cols();
+        }
+        std::cout << X.rows() << " x " << X.cols() << std::endl;
 
-// Center X
+        // Center X
 #pragma omp parallel for
         for (size_t i = 0; i < m; i++)
         {
             double media = 0.;
             for (size_t j = 0; j < n; j++)
-            {
                 media += X(i, j);
-            }
+
             media /= n;
             for (size_t j = 0; j < n; j++)
-            {
                 X(i, j) -= media;
-            }
         }
 
         // Compute rSVD
         auto [U, s, V] = obj.rsvd(X, r);
-        exportmatrix(s,"s.txt");
+        exportmatrix(s, "s.txt");
 
         // Compute Principal Components Matrix T.
-        /*#ifdef EIGEN
-                return U * s.asDiagonal();
-        #else
-                Matrix T(m, s.rows());
-                #pragma omp parallel for
-                for(size_t i = 0; i<s.rows(); i++)
-                    for(size_t j = 0; j<X.rows(); j++)
-                        T(j,i) = s(i,0) * U(j,i);
-                return T;
-        #endif*/
-        return U.transpose() * X;
+        if (m > n)
+        {
+#ifdef EIGEN
+            return U * s.asDiagonal();
+#else
+            Matrix T(m, s.rows());
+#pragma omp parallel for
+            for (size_t i = 0; i < s.rows(); i++)
+#pragma omp simd
+                for (size_t j = 0; j < X.rows(); j++)
+                    T(j, i) = s(i, 0) * U(j, i);
+            return T;
+#endif
+        }
+        else // if I'm using A transpose
+        {
+            return U.transpose() * X;
+        }
     }
 
     Matrix image_compression(const stbi_uc *R, int channels, int channel, int Heigth, int Width, int r, int p)
@@ -146,24 +161,24 @@ public:
         std::ofstream outputFile(outputFileName);
         if (outputFile.is_open())
         {
-						/*
-            int rows = A.rows(), cols = A.cols();
-            // Write dimensions to the first row
-            outputFile << rows << " " << cols << std::endl;
+            /*
+int rows = A.rows(), cols = A.cols();
+// Write dimensions to the first row
+outputFile << rows << " " << cols << std::endl;
 
-            // Write matrix data
-            for (int i = 0; i < rows; ++i)
-            {
-                for (int j = 0; j < cols; ++j)
-                {
-                    outputFile << std::setw(8) << std::fixed << std::setprecision(4) << A(i, j) << " ";
-                }
-                outputFile << std::endl;
-            }
-						*/
-						
-						//Again here
-						outputFile<<A;
+// Write matrix data
+for (int i = 0; i < rows; ++i)
+{
+    for (int j = 0; j < cols; ++j)
+    {
+        outputFile << std::setw(8) << std::fixed << std::setprecision(4) << A(i, j) << " ";
+    }
+    outputFile << std::endl;
+}
+            */
+
+            // Again here
+            outputFile << A;
 
             std::cout << "Computed matrix has been written to " << outputFileName << std::endl;
 
@@ -177,5 +192,4 @@ public:
     }
 };
 
-
-#endif //APPLICATIONS_HPP
+#endif // APPLICATIONS_HPP
