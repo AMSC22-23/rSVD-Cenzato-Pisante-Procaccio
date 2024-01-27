@@ -29,6 +29,7 @@ The test files can also be generated indipendently, in fact the makefile support
 + `make qr`
 + `make pca`
 + `make compression`
++ `make benchmarks`
 + `make help`      (if for some reason you forget about them)
 
 Also each command supports the additional options `parallel=on` and `eigen=on` which respectively compile the program using OpenMp and the matrices provided by the [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page) library (make sure to have it installed!!).
@@ -88,7 +89,24 @@ are 2000 mass-charge values, and each row represents the ion-intensity levels of
 particular mass-charge value.
 
 The command to run the test is:
+
 ```
 ./pca
 ```
+
 It returns a matrix containing the first 50 principal components of the dataset.
+
+# BENCHMARKS
+
+To view the effectiveness of the lazy evaluation compared to a naive implementation, we can run the command `make benchmarks` which creates the executables containing some default operations explained in detail in the report.
+
+In order to run any of the tests the command is :
+
+```
+./b_matmult start end step
+```
+
+Where `start` is the starting dimension of the matrix, `end` the last dimension, `step` how much the matrix increases in dimension at each iteration (it is additive, not multiplicative).
+
+**NB**: Remember to add `make ... lazy=on` in order to use lazy evaluation.
+        Also when compiling with Eigen it gives a wall of warings because of the deprecated functions used in the Eigen library when compiling with `std=c++20`, so nothing can be done about it.
