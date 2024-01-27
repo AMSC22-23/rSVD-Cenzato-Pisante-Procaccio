@@ -60,6 +60,9 @@ class SVD{
             V = matrix (n x r) */
     Matrix mult_SVD(Matrix U, Vector s, Matrix V);
 
+    /* Generates m x n Gaussian matrix */
+    Matrix genmat(const int m, const int n);
+    
 
     /* Destructor */
         ~SVD() = default;
@@ -102,10 +105,6 @@ class SVD{
         }
         return std::make_tuple(u,v);
     }
-
-
-    /* Generates m x n Gaussian matrix */
-    Matrix genmat(const int m, const int n);
 
     const double m_epsilon;
 };

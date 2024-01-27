@@ -7,8 +7,8 @@ std::tuple<Matrix, Vector, Matrix> SVD::svd_with_PM(Matrix A)
     Matrix B(n, n), U(m, k), V(n, k);
     Vector s(k), u(m), v(n);
 
-    double sigma = 1.;
-    while ((sigma > m_epsilon) && i < k)
+    double sigma;
+    while (i < k)
     {
         B = A.transpose() * A;
         v = PowerMethod(B);
@@ -31,22 +31,20 @@ std::tuple<Matrix, Vector, Matrix> SVD::svd_with_PM(Matrix A)
             A = A - (sigma * u * v.transpose());
             i++;
         }
-    }
-
-    // if A not full rank
-    if (i < k)
-    {
-        if (i == 0)
+        else
         {
-            return std::make_tuple(Matrix::Zero(m, 1), Vector::Zero(1, 1), Matrix::Zero(n, 1));
-        }
+            if (i == 0)
+            {
+                return std::make_tuple(Matrix::Zero(m, 1), Vector::Zero(1, 1), Matrix::Zero(n, 1));
+            }
 #ifdef EIGEN
-        return std::make_tuple(U.topLeftCorner(m, i), s.head(i), V.topLeftCorner(n, i));
+            return std::make_tuple(U.topLeftCorner(m, i), s.head(i), V.topLeftCorner(n, i));
 #else
-        U.trimCols(k - i);
-        V.trimCols(k - i);
-        s.trimRows(k - i);
+            U.trimCols(k - i);
+            V.trimCols(k - i);
+            s.trimRows(k - i);
 #endif
+        }
     }
 
     return std::make_tuple(U, s, V);
@@ -58,9 +56,9 @@ std::tuple<Matrix, Vector, Matrix> SVD::svd_with_PM2(Matrix A)
     int k = (m > n) ? n : m;
     Matrix U(m, k), V(n, k);
     Vector s(k);
-    double sigma = 1.;
+    double sigma;
 
-    while ((sigma > m_epsilon) && i < k)
+    while (i < k)
     {
         auto [u, v] = PowerMethod2(A);
         sigma = (A * v).norm();
@@ -79,12 +77,9 @@ std::tuple<Matrix, Vector, Matrix> SVD::svd_with_PM2(Matrix A)
             A = A - (sigma * u * v.transpose());
             i++;
         }
-    }
-
-    // if A not full rank
-    if (i < k)
-    {
-        if (i == 0)
+        else
+        {
+            if (i == 0)
         {
             return std::make_tuple(Matrix::Zero(m, 1), Vector::Zero(1, 1), Matrix::Zero(n, 1));
         }
@@ -95,6 +90,7 @@ std::tuple<Matrix, Vector, Matrix> SVD::svd_with_PM2(Matrix A)
         V.trimCols(k - i);
         s.trimRows(k - i);
 #endif
+        }
     }
 
     return std::make_tuple(U, s, V);
@@ -168,7 +164,7 @@ Matrix SVD::genmat(const int m, const int n)
     std::random_device rd;
     std::normal_distribution<double> dice(0.0, 1.0);
 
-#pragma omp parallel num_threads(4)
+#pragma omp parallel num_threads(6)
     {
         int rank = 0;
 #ifdef PARALLEL

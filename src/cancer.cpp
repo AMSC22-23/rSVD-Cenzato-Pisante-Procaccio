@@ -11,7 +11,7 @@ void exportmatrix(Matrix A, std::string outputFileName);
 int main()
 {
     std::string ovariancancer_obs_path  = "../data/ovariancancer_obs.csv";
-    Matrix A = (readCSV(ovariancancer_obs_path )).transpose();    // 4000 x 216
+    Matrix A = readCSV(ovariancancer_obs_path );    // 216 x 4000
 
     //std::string ovariancancer_grp_path  = "../python/data/ovariancancer_grp.csv";
     //std::vector<unsigned int> labels = readCSV_grp(ovariancancer_grp_path);

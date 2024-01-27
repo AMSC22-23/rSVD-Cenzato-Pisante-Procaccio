@@ -120,20 +120,13 @@ void setQR_for_svd_parallel(Matrix Q, Matrix R)
     }
 }
 
-std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve_parallel(Matrix A)
+std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve_parallel(const Matrix &A)
 {
-
     int m = A.rows();
     int n = A.cols();
+    Vector u(m);
 
-    /**
-     * Initialize v,u
-     */
-    Vector u(m), v(m);
-
-    /**
-     * Initialize matrix Q (size m x m), matrix R(m x n) and rotation matrix P(m x m)
-     */
+    // Initialize matrix Q (size m x m), matrix R(m x n) and rotation matrix P(m x m)
     Matrix I(m, m);
     I.setIdentity();
 
@@ -141,99 +134,164 @@ std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve_parallel(Matrix A
     Matrix P = I;
     Matrix R = A;
 
-    /**
-     * Starting the computation of Q,R
-     */
-    double mag, alpha;
-    /**
-     * Initialize u,v to zero at each iteration-i
-     */
-    u = Vector(m);
-    v = Vector(m);
+    double mag, mag2;
 
     for (int j = 0; j < std::min(m, n); j++)
     {
-
-#ifdef EIGEN
-        u.setZero();
-        v.setZero();
-#else
-#pragma omp for
-        for (int i = 0; i < m; i++)
-        {
-            u(i, 0) = 0.;
-            v(i, 0) = 0.;
-        }
-#endif
-
-        /**
-         * evaluating each component of the matrix R
-         */
-        mag = 0.0;
-
+        mag = 0.;
+        u = Vector::Zero(m, 1);
+#pragma omp parallel for reduction(+ : mag)
         for (int i = j; i < m; i++)
         {
-#ifdef EIGEN
-            u(i) = R(i, j);
-            mag += u(i) * u(i);
-#else
             u(i, 0) = R(i, j);
             mag += u(i, 0) * u(i, 0);
-#endif
         }
-        mag = std::sqrt(mag);
-#ifdef EIGEN
-        alpha = (u(j) < 0) ? mag : -mag;
-#else
-        alpha = (u(j, 0) < 0) ? mag : -mag;
-#endif
 
-        mag = 0.0;
+        mag2 = mag - u(j, 0) * u(j, 0);
+        mag = sqrt(mag);
 
-        for (int i = j; i < m; i++)
+        u(j, 0) = (u(j, 0) < 0) ? u(j, 0) + mag : u(j, 0) - mag;
+        mag2 += u(j, 0) * u(j, 0);
+        mag2 = sqrt(mag2);
+
+        if (mag2 >= 0.0000000001)
         {
-#ifdef EIGEN
-            v(i) = (j == i) ? (u(i) + alpha) : u(i);
-            mag += v(i) * v(i);
-#else
-            v(i, 0) = (j == i) ? (u(i, 0) + alpha) : u(i, 0);
-            mag += v(i, 0) * v(i, 0);
-#endif
-        }
-        mag = std::sqrt(mag);
-        if (mag < 0.0000000001)
-            continue;
+#pragma omp parallel for simd
+            for (int i = j; i < m; i++)
+                u(i, 0) /= mag2;
 
-        for (int i = j; i < m; i++)
-            v(i, 0) /= mag;
-
-        /**
-         * Computing P at the j-th iterate and applying the rotation to R,Q
-         */
-        P = I - 2.0 * v * v.transpose();
-
-#pragma omp sections
-        {
-#pragma omp section
-            {
-#pragma omp critical
-                R = P * R;
-            }
-#pragma omp section
-            {
-#pragma omp critical
-                Q = Q * P;
-            }
+            // Computing P at the j-th iterate and applying the rotation to R,Q          
+            P = I - 2.0 * u * u.transpose();
+            R = P * R;
+            Q = Q * P;
         }
     }
 
-#pragma omp parallel for collapse(2) num_threads(4)
+#pragma omp parallel for collapse(2)
     for (int j = 0; j < n; j++)
     {
         for (int i = j + 1; i < m; i++)
         {
             R(i, j) = 0.;
         }
+    }
+
+    return std::make_tuple(Q, R);
+}
+
+std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve_2_parallel(const Matrix &A)
+{
+    int m = A.rows();
+    int n = A.cols();
+
+    /**
+     * Initialize matrix Q (size m x m), matrix R(m x n) and rotation matrix P(m x m)
+     */
+    Matrix Q(m, m);
+    Q.setIdentity();
+    Matrix R = A;
+
+    double normx = 0.;
+    double u1;
+    Vector w(m);
+    double tau;
+    Vector tmp_R(n);
+    Vector tmp_Q(m);
+
+    for (int j = 0; j < std::min(n, m); j++)
+    {
+        int s = ((R(j, j) >= 0) ? -1 : 1);
+#pragma omp parallel
+        {
+#pragma omp for reduction(+ : normx)
+            for (int i = j; i < m; i++)
+            {
+                normx += R(i, j) * R(i, j);
+            }
+#pragma omp single
+            {
+                normx = std::sqrt(normx);
+                u1 = R(j, j) - s * normx;
+            }
+#pragma omp for
+            for (int i = j + 1; i < m; i++)
+            {
+#ifdef EIGEN
+                w(i) = R(i, j) / u1;
+#else
+                w(i, 0) = R(i, j) / u1;
+#endif
+            }
+
+#pragma omp single
+            {
+#ifdef EIGEN
+                w(j) = 1;
+#else
+                w(j, 0) = 1;
+#endif
+                tau = -s * u1 / normx;
+            }
+/**
+ * Computation of Q and R
+ */
+#pragma omp for
+            for (int l = j; l < n; l++)
+            {
+                for (int i = j; i < m; i++)
+                {
+#ifdef EIGEN
+                    tmp_R(l) += w(i) * R(i, l);
+#else
+                    tmp_R(l, 0) += w(i, 0) * R(i, l);
+#endif
+                }
+            }
+
+#pragma omp for collapse(2)
+            for (int i = j; i < m; i++)
+            {
+
+                for (int l = j; l < n; ++l)
+                {
+#ifdef EIGEN
+                    R(i, l) -= (tau * w(i)) * tmp_R(l);
+#else
+                    R(i, l) -= (tau * w(i, 0)) * tmp_R(l, 0);
+#endif
+                }
+            }
+
+#pragma omp for
+            for (int k = 0; k < m; k++)
+            {
+                for (int l = j; l < m; ++l)
+                {
+#ifdef EIGEN
+                    tmp_Q(k) += Q(k, l) * w(l);
+#else
+                    tmp_Q(k, 0) += Q(k, l) * w(l, 0);
+#endif
+                }
+            }
+
+#pragma omp for collapse(2)
+            for (int k = 0; k < m; ++k)
+            {
+                for (int l = j; l < m; ++l)
+                {
+#if EIGEN
+                    Q(k, l) -= tmp_Q(k) * w(l) * tau;
+#else
+                    Q(k, l) -= tmp_Q(k, 0) * w(l, 0) * tau;
+#endif
+                }
+            }
+        }
+        tmp_R = 0 * tmp_R;
+        tmp_Q = 0 * tmp_Q;
+
+        normx = 0.0;
     }
 
     return std::make_tuple(Q, R);
