@@ -19,6 +19,9 @@ IMAGE_TEST=svd.cpp QR_Decomposition_parallel.cpp imagecompr.cpp
 #Files for pca 
 PCA_TEST=cancer.cpp svd.cpp QR_Decomposition_parallel.cpp
 
+#Files for the benchmarks
+BENCHMARKS=benchmarkTimings.cpp
+
 ifdef parallel
 CXXFLAGS+=-fopenmp
 #LDFLAGS+=-fopenmp
@@ -45,9 +48,9 @@ CXX=g++
 #Preprocessor flags
 CPPFLAGS+= -I./include 
 #Compiler flags
-CXXFLAGS+= -std=c++20 $(WARNINGS)
+CXXFLAGS+= -std=c++20 $(WARNINGS) $(OPTIMIZATION)
 #Linker flags
-LDFLAGS+= $(OPTIMIZATION)
+#LDFLAGS+= $(OPTIMIZATION)
 #Path for the files 
 VPATH=./src
 
@@ -60,10 +63,11 @@ help:
 	@echo "  fullMatrix           "
 	@echo "  qr                   "
 	@echo "  svd                  "
-	@echo "  compression		  "
-	@echo "  pca				  "
+	@echo "  compression		      "
+	@echo "  pca				          "
 	@echo "  clean                "
 	@echo "  distclean            "
+	@echo "  benchmarks           "
 
 all:
 	mkdir -p $(BUILD)
@@ -72,6 +76,7 @@ all:
 	$(MAKE) fullMatrix
 	$(MAKE) compression
 	$(MAKE) pca
+	$(MAXE) benchmarks
 
 clean: 
 	$(RM) $(BUILD)/*.o
@@ -104,6 +109,16 @@ compression: $(IMAGE_TEST)
 pca: $(PCA_TEST)
 	mkdir -p $(BUILD)
 	$(CXX) $^ -o $(BUILD)/$@ $(LDFLAGS) $(CPPFLAGS) $(CXXFLAGS) 
+	$(MAKE) clean
+
+benchmarks: $(BENCHMARKS)
+	mkdir -p $(BUILD)
+	$(CXX) $^ -o $(BUILD)/b_lazyprodlong  $(LDLFLAGS) $(CPPFLAGS) $(CXXFLAGS) -DLAZYPRODLONG
+	$(CXX) $^ -o $(BUILD)/b_lazyprodshort $(LDLFLAGS) $(CPPFLAGS) $(CXXFLAGS) -DLAZYPRODSHORT
+	$(CXX) $^ -o $(BUILD)/b_lazysumlong   $(LDLFLAGS) $(CPPFLAGS) $(CXXFLAGS) -DLAZYSUMLONG
+	$(CXX) $^ -o $(BUILD)/b_lazysumshort  $(LDLFLAGS) $(CPPFLAGS) $(CXXFLAGS) -DLAZYSUMSHORT
+	$(CXX) $^ -o $(BUILD)/b_lazymixed     $(LDLFLAGS) $(CPPFLAGS) $(CXXFLAGS) -DMIXED
+	$(CXX) $^ -o $(BUILD)/b_matmult       $(LDLFLAGS) $(CPPFLAGS) $(CXXFLAGS) 
 	$(MAKE) clean
 
 #$(QR_TEST):  

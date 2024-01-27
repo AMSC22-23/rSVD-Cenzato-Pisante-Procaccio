@@ -173,8 +173,8 @@ int main(int argc, char** argv){
 
 	std::cout<<std::setprecision(10);
 
-	size_t start=(argc>=2)?std::stoul(argv[1]):2;
-	size_t end  =(argc>=3)?std::stoul(argv[2]):1024;
+	size_t start=(argc>=2)?std::stoul(argv[1]):0;
+	size_t end  =(argc>=3)?std::stoul(argv[2]):1000;
 	size_t step =(argc>=4)?std::stoul(argv[3]):100;
 
 	Matrix a,b,c;
