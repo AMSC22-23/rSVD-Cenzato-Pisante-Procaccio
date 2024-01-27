@@ -27,6 +27,8 @@ The test files can also be generated indipendently, in fact the makefile support
 + `make fullMatrix`
 + `make svd`
 + `make qr`
++ `make pca`
++ `make compression`
 + `make help`      (if for some reason you forget about them)
 
 Also each command supports the additional options `parallel=on` and `eigen=on` which respectively compile the program using OpenMp and the matrices provided by the [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page) library (make sure to have it installed!!).
@@ -46,14 +48,20 @@ In particular based on the options specified at compile time (specified above) i
 
 # SVD
 
-The `SVD` tests computes the Singular Value Decomposition of a matrix both using the Power Method and the rSVD algorithm. In particular, it takes the matrix $` A \in \mathbb{R}^{m \times n} `$ (which can be provided by the user or is a predefined one - matrix2.txt in the test_matrices folder) and outputs the error and the timing results using two different algorithms based on the power method and one on the rSVD algorithm.
+The `SVD` test computes the Singular Value Decomposition of a matrix both using the Power Method and the rSVD algorithm. In particular, it takes a gaussian matrix $` A \in \mathbb{R}^{m \times n} `$ (where m and n can be provided by the user) and outputs the error and the timing results of the different algorithms.
 
 The command to run it is:
 ```
-./svd filename.txt
+./svd [flag] [m] [n] [r]
 ```
-filename.txt is optional.
-The test returns also the computed matrices of the algorithm based on the power method (only of the one that performs better) and of the rSVD.
+Where flag, m, n and r are optional:
+
++ `flag` = 0 (which is the default): computes 2 algorithms that use the power method and the rSVD; `flag` = 1: computes PM1 and PM2; `flag` = 2: computes PM1 and rSVD; `flag` = 3: computes PM1 and pseudo-inverse using PM1; any other value computes only PM1.
+
++ `m` and `n` are used to set the dimensions of the matrix (default are m = n = 10).
+
++ `r` is used to set the target rank in the rSVD (default is r = 5).
+
 
 # QR
 
@@ -67,3 +75,20 @@ The command to run it is:
 
 Such test also returns 4 files with the matrixes $` R \in \mathbb{R}^{m \times n} , Q \in \mathbb{R}^{m \times m} `$ computed by the 2 algorithms both serially and in parallel. Dimension on the test matrix can be added too.
 Files names are printed on the output.
+
+
+# PCA
+
+In this test, we performed the principal component analysis (PCA) on a dataset from the FDA-NCI Clinical Proteomics Program Databank.
+
+Each column of the dataset represents measurements taken from a patient. There are 216 columns
+representing 216 patients, out of which 121 are ovarian cancer patients and 95 are normal patients.
+Each row represents the ion intensity level at a specific mass-charge value indicated in MZ. There
+are 2000 mass-charge values, and each row represents the ion-intensity levels of the patients at that
+particular mass-charge value.
+
+The command to run the test is:
+```
+./pca
+```
+It returns a matrix containing the first 50 principal components of the dataset.
