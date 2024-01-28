@@ -75,6 +75,7 @@ class FullMatrix : public Expr<FullMatrix<Real,ORDER>> {
 
 		/*
 			 Constructor from an expression
+			 NB:this is called also when creating a matrix from a transposed
 		 */
 		template <class T> FullMatrix(const Expr<T> &e): m_rows(e.rows()), m_cols(e.cols()) {
 			//Casting
@@ -211,10 +212,17 @@ class FullMatrix : public Expr<FullMatrix<Real,ORDER>> {
 					 The only thing i need is an overload to the access operator in the opposite way
 				 */
 				Real operator[](const size_t index){
-					return m_matrix[index];
+					if constexpr(ORDER==ORDERING::ROWMAJOR)
+						return m_matrix(index%cols(),index/cols());
+					else
+						return m_matrix(index/rows(),index%rows());
 				}
 				const Real operator[](const size_t index) const{
-					return m_matrix[index];
+					if constexpr(ORDER==ORDERING::ROWMAJOR)
+						return m_matrix(index%cols(),index/cols());
+					else
+						return m_matrix(index/rows(),index%rows());
+					//return m_matrix[index];
 				}
 				//This is the only important
 				const Real& operator()(const size_t i, const size_t j) const{
@@ -723,7 +731,6 @@ Hyphothesis: col<m_cols && toInsert.size()<=m_rows
 			FullMatrixAdjoint toReturn(*this);
 
 			return toReturn;
-
 			/*
 				 FullMatrix toReturn(m_cols,m_rows);
 
@@ -739,7 +746,7 @@ Hyphothesis: col<m_cols && toInsert.size()<=m_rows
 				 }
 
 				 return toReturn;
-			 */
+			*/
 		}
 		/*
 			 Method for printing all elements in the matrix in a generic stream
