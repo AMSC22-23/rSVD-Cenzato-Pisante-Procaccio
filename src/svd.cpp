@@ -43,6 +43,7 @@ std::tuple<Matrix, Vector, Matrix> SVD::svd_with_PM(Matrix A)
             U.trimCols(k - i);
             V.trimCols(k - i);
             s.trimRows(k - i);
+            return std::make_tuple(U, s, V);
 #endif
         }
     }
@@ -89,6 +90,7 @@ std::tuple<Matrix, Vector, Matrix> SVD::svd_with_PM2(Matrix A)
         U.trimCols(k - i);
         V.trimCols(k - i);
         s.trimRows(k - i);
+        return std::make_tuple(U, s, V);
 #endif
         }
     }

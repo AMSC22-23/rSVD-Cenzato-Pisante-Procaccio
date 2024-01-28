@@ -27,10 +27,10 @@ public:
         else
         {
             X = A.transpose();
-            m = X.rows();
+            m = n;
             n = X.cols();
         }
-        std::cout << X.rows() << " x " << X.cols() << std::endl;
+        //std::cout << X.rows() << " x " << X.cols() << std::endl;
 
         // Center X
 #pragma omp parallel for
@@ -47,7 +47,7 @@ public:
 
         // Compute rSVD
         auto [U, s, V] = obj.rsvd(X, r);
-        exportmatrix(s, "s.txt");
+        //exportmatrix(s, "s.txt");
 
         // Compute Principal Components Matrix T.
         if (m > n)

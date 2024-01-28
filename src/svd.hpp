@@ -15,10 +15,10 @@ class SVD{
         Input:
             A (m x n) : matrix
         Outputs:
-            U (m x m) : matrix whose coloumns are left singular vectors of A 
+            U (m x r) : matrix whose coloumns are left singular vectors of A 
                         [eigenvectors of A*At]
-            s (n)     : vector containing the singular values of A
-            V (n x n) : matrix whose coloumns are right singular vectors of A 
+            s (r)     : vector containing the singular values of A
+            V (n x r) : matrix whose coloumns are right singular vectors of A 
                         [eigenvectors of At*A] */
     std::tuple<Matrix, Vector, Matrix> svd_with_PM(Matrix A);
 
@@ -27,23 +27,22 @@ class SVD{
     std::tuple<Matrix, Vector, Matrix> svd_with_PM2(Matrix A);
 
 
-    /* Computes the pseudo-inverse of a matrix A (m x n) using SVD */
+    /* Computes the Moore-Penrose pseudo-inverse of a matrix A (m x n) using SVD */
     Matrix pseudoinverse(const Matrix A){
         auto[U,s,V]=svd_with_PM(A);
         size_t k =s.rows();        
         for(size_t i=0; i<k; i++){ 
             #ifdef EIGEN
-            s[i] /= s[i];
+            s[i] = 1 / s[i];
             #else
             s(i,0) = 1 / s(i,0);         
             #endif
         }
-
         return mult_SVD(V,s,U);
     }
 
 
-    /* This procedure computes an approximate rank-k factorization UΣV∗, 
+    /* This procedure computes an approximate rank-k factorization U*Σ*Vt, 
     where U and V are orthonormal, and Σ is nonnegative and diagonal.
     Inputs:
         A = m x n matrix

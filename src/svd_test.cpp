@@ -10,6 +10,7 @@ int main(int argc, char **argv)
 {
     int flag = (argc > 1) ? std::stoi(argv[1]) : 0;
     // flag = 0: computes everything, 1: pm1 & pm2, 2: pm1 & rsvd, 3: pseudoinverse.
+    bool exportmat = false;
 
     /*const char* filePath;
     if (argc > 2) {
@@ -53,6 +54,8 @@ int main(int argc, char **argv)
 
     SVD obj;
     Matrix A = obj.genmat(m, n);
+    if(exportmat)
+        exportmatrix(A, "A.txt");
 
     std::cout << "\nSVD with Power Method:\n";
 
@@ -63,9 +66,12 @@ int main(int argc, char **argv)
     std::chrono::duration<double> duration_pm = end - start;
     std::cout << "Time of execution power method 1-st algorithm: " << duration_pm.count() << " s" << std::endl;
     std::cout << "pm1 : || A - U * S * Vt || = " << (A - obj.mult_SVD(U_pm, s_pm, V_pm)).norm() << std::endl;
-    // exportmatrix(U_pm, "U_pm.txt");
-    exportmatrix(s_pm.transpose(), "s_pm.txt");
-    // exportmatrix(V_pm.transpose(), "Vt_pm.txt");
+    if (exportmat)
+    {
+        // exportmatrix(U_pm, "U_pm.txt");
+        exportmatrix(s_pm.transpose(), "s_pm.txt");
+        // exportmatrix(V_pm.transpose(), "Vt_pm.txt");
+    }
 
     if (!flag || flag == 1)
     {
@@ -81,7 +87,7 @@ int main(int argc, char **argv)
 
     if (!flag || flag == 2)
     {
-        int r = (argc > 3) ? std::stoi(argv[4]) : 5;
+        int r = (argc > 4) ? std::stoi(argv[4]) : 5;
         start = std::chrono::high_resolution_clock::now();
         auto [U_rsvd, s_rsvd, V_rsvd] = obj.rsvd(A, r, 0, 1);
         end = std::chrono::high_resolution_clock::now();
@@ -96,9 +102,12 @@ int main(int argc, char **argv)
         std::cout << "Norm of difference first r eigenvalues = " << (s_rsvd - s_pm.head(s_rsvd.rows())).norm() / s_rsvd.rows() << std::endl;
 #endif
 
-        // exportmatrix(U_rsvd, "U_rsvd.txt");
-        exportmatrix(s_rsvd.transpose(), "s_rsvd.txt");
-        // exportmatrix(V_rsvd.transpose(), "Vt_rsvd.txt");
+        if (exportmat)
+        {
+            // exportmatrix(U_rsvd, "U_rsvd.txt");
+            exportmatrix(s_rsvd.transpose(), "s_rsvd.txt");
+            // exportmatrix(V_rsvd.transpose(), "Vt_rsvd.txt");
+        }
     }
 
     if (flag == 3)
@@ -109,7 +118,11 @@ int main(int argc, char **argv)
         end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> duration = end - start;
         std::cout << "Time of execution to compute the pseudo-inverse: " << duration.count() << " s" << std::endl;
-        // exportmatrix(A_inv,"inv.txt");
+        std::cout << "|| A - A A+ A || = " << (A - A * A_inv * A).norm() << std::endl;
+        if (exportmat)
+        {
+            exportmatrix(A_inv, "A_inv.txt");
+        }
     }
 
     return 0;
