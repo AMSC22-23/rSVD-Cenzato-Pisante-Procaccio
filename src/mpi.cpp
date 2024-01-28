@@ -72,7 +72,7 @@ std::tuple<double, double> findSine_Cosine(Matrix R, int i, int tmp_rank)
     return std::make_tuple(s, c);
 }
 
-void applyGivensRotation(Matrix &R, Matrix &Q, int row, double c, double s, int rank, MPI_Comm original_comm)
+void applyGivensRotation(Matrix &R, Matrix &Q, int row, double c, double s)
 {
     double tmp;
 
@@ -119,7 +119,7 @@ std::tuple<Matrix, Matrix> Givens_solve_mpi(const Matrix &A, const int rank, con
     /**
      * Start to iterate over A
      */
-    while (rank > 1 && syncflag < 3 * (rank - 1))
+    while (rank > 1 && syncflag < 3 * (rank - 1) - 1)
     {
         MPI_Recv(&syncflag, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
         MPI_Recv(R.data(), m * n, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, &status);
@@ -127,12 +127,11 @@ std::tuple<Matrix, Matrix> Givens_solve_mpi(const Matrix &A, const int rank, con
     }
     if (rank != 0)
     {
-        for (int tmp_rank = rank - 1; tmp_rank < n; tmp_rank += size - 1)
+        for (int tmp_rank = rank - 1; tmp_rank < n - 2; tmp_rank += size - 1)
         {
             /**
              * Passed the MPI_Recv, the tmp_rank processor starts
              */
-            std::cout.flush() << "Processore " << rank << " inizia a lavorare con syncflag pari a " << syncflag << std::endl;
 
             for (int i = m - 1; i > tmp_rank; i--)
             {
@@ -140,24 +139,33 @@ std::tuple<Matrix, Matrix> Givens_solve_mpi(const Matrix &A, const int rank, con
                  * Synchronize the computation at each row
                  */
                 MPI_Recv(&syncflag, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
-
-                std::cout.flush() << "Processore " << rank << " lavora sulla cella --> " << i << " " << tmp_rank << std::endl;
-
-                auto [s, c] = findSine_Cosine(R, i, tmp_rank);
-                applyGivensRotation(R, Q, i, c, s, rank, MPI_COMM_WORLD);
-
-                localR = R.block(i - 1, 0, 2, n);
-                localQ = Q.block(0, i - 1, m, 2);
-
                 MPI_Send(&i, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
-                MPI_Send(localR.data(), 2 * n, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
-                MPI_Send(localQ.data(), 2 * m, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
-                if (n - tmp_rank <= size - 1 && i == tmp_rank + 1 || n - tmp_rank <= size && i == tmp_rank + 1)
+                MPI_Send(&tmp_rank, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+
+                if (R(i, tmp_rank) != 0)
+                {
+                    auto [s, c] = findSine_Cosine(R, i, tmp_rank);
+                    applyGivensRotation(R, Q, i, c, s);
+
+                    localR = R.block(i - 1, 0, 2, n);
+                    localQ = Q.block(0, i - 1, m, 2);
+
+                    MPI_Send(localR.data(), 2 * n, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+                    MPI_Send(localQ.data(), 2 * m, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+                }
+
+                if (n - 2 - tmp_rank < size && i == tmp_rank + 1)
                 {
                     flag++;
                 }
+
                 MPI_Send(&flag, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
-                MPI_Recv(&flag, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
+
+                if (flag == 1)
+                {
+                    MPI_Send(&rank, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+                }
+                flag = 0;
 
                 MPI_Recv(R.data(), m * n, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, &status);
                 MPI_Recv(Q.data(), m * m, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, &status);
@@ -170,56 +178,83 @@ std::tuple<Matrix, Matrix> Givens_solve_mpi(const Matrix &A, const int rank, con
      */
     else
     {
-        int i;
+        int i, j, tmp;
         int count = 0;
-        while (flag != size - 1)
+        Vector rm_rank(size);
+        for (int k = 0; k < size; k++)
+        {
+            rm_rank(k) = k;
+        }
+
+        while (count != size - 1)
         {
 
             syncflag++;
-            std::cout.flush() << "Processore " << rank << " syncflag aumentata a " << syncflag << std::endl;
-            for (int l = count + 1; l < size; l++)
-            {
-                MPI_Send(&syncflag, 1, MPI_INT, l, 0, MPI_COMM_WORLD);
 
-                if (l > 1 && syncflag <= 3 * (l - 1))
+            for (int l = 1; l < size; l++)
+            {
+                if (rm_rank(l) != 0)
+                {
+                    MPI_Send(&syncflag, 1, MPI_INT, l, 0, MPI_COMM_WORLD);
+                }
+            }
+            for (int l = 1; l < size && syncflag > 3 * (l - 1) - 1; l++)
+            {
+                if (rm_rank(l) != 0)
+                {
+                    MPI_Recv(&i, 1, MPI_INT, l, 0, MPI_COMM_WORLD, &status);
+                    MPI_Recv(&j, 1, MPI_INT, l, 0, MPI_COMM_WORLD, &status);
+
+                    if (R(i, j) != 0)
+                    {
+                        MPI_Recv(localR.data(), 2 * n, MPI_DOUBLE, l, 0, MPI_COMM_WORLD, &status);
+                        MPI_Recv(localQ.data(), 2 * m, MPI_DOUBLE, l, 0, MPI_COMM_WORLD, &status);
+
+                        for (int k = j; k < R.cols(); k++)
+                        {
+                            R(i - 1, k) = localR(0, k);
+                            R(i, k) = localR(1, k);
+                        }
+                        for (int k = j; k < Q.rows(); k++)
+                        {
+                            Q(k, i - 1) = localQ(k, 0);
+                            Q(k, i) = localQ(k, 1);
+                        }
+                    }
+                    MPI_Recv(&flag, 1, MPI_INT, l, 0, MPI_COMM_WORLD, &status);
+                    if (flag == 1)
+                    {
+                        count++;
+                        MPI_Recv(&tmp, 1, MPI_INT, l, 0, MPI_COMM_WORLD, &status);
+                        rm_rank(tmp) = 0;
+                        MPI_Send(R.data(), m * n, MPI_DOUBLE, tmp, 0, MPI_COMM_WORLD);
+                        MPI_Send(Q.data(), m * m, MPI_DOUBLE, tmp, 0, MPI_COMM_WORLD);
+                    }
+                }
+            }
+
+            for (int l = 1; l < size; l++)
+            {
+                if (rm_rank(l) != 0)
                 {
                     MPI_Send(R.data(), m * n, MPI_DOUBLE, l, 0, MPI_COMM_WORLD);
                     MPI_Send(Q.data(), m * m, MPI_DOUBLE, l, 0, MPI_COMM_WORLD);
-                    std::cout.flush() << "Ultima volta che passo R,Q in questo modo con syncflag " << syncflag << std::endl;
                 }
             }
-            for (int l = count + 1; l < size && syncflag > 3 * (l - 1); l++)
-            {
-                MPI_Recv(&i, 1, MPI_INT, l, 0, MPI_COMM_WORLD, &status);
-                MPI_Recv(localR.data(), 2 * n, MPI_DOUBLE, l, 0, MPI_COMM_WORLD, &status);
-                MPI_Recv(localQ.data(), 2 * m, MPI_DOUBLE, l, 0, MPI_COMM_WORLD, &status);
-
-                for (int k = 0; k < R.cols(); k++)
-                {
-                    R(i - 1, k) = localR(0, k);
-                    R(i, k) = localR(1, k);
-                }
-                for (int k = 0; k < Q.rows(); k++)
-                {
-                    Q(k, i - 1) = localQ(k, 0);
-                    Q(k, i) = localQ(k, 1);
-                }
-                MPI_Recv(&flag, 1, MPI_INT, l, 0, MPI_COMM_WORLD, &status);
-                if (flag - count == 1)
-                {
-                    count = flag;
-                }
-                MPI_Send(&count, 1, MPI_INT, l, 0, MPI_COMM_WORLD);
-
-                MPI_Send(R.data(), m * n, MPI_DOUBLE, l, 0, MPI_COMM_WORLD);
-                MPI_Send(Q.data(), m * m, MPI_DOUBLE, l, 0, MPI_COMM_WORLD);
-            }
-
-            std::cout << "inviato" << std::endl;
         }
     }
 
-    std::cout << rank << " ha finito" << std::endl;
+    if (rank == 0)
+    {
+        for (int j = n - 2; j < n; j++)
+        {
+            for (int i = m - 1; i > j; i--)
+            {
+                auto [s, c] = findSine_Cosine(R, i, j);
+                applyGivensRotation(R, Q, i, c, s);
+            }
+        }
+    }
     MPI_Barrier(MPI_COMM_WORLD);
 
     return std::make_tuple(Q, R);
@@ -232,49 +267,27 @@ int main(int argc, char **argv)
     int rank, size;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
-    /*
-        int m = 8;
-        int n = 8;
 
-        Matrix A(m, n);
-        if (rank == 0)
-        {
-
-            A = Eigen::MatrixXd::Zero(m, n);
-            for (int i = 0; i < m; ++i)
-            {
-                A(i, i) = 2.0; // Elementi diagonali
-                if (i < m - 1)
-                {
-                    A(i, i + 1) = -1.0; // Elementi sopra la diagonale
-                    A(i + 1, i) = -1.0; // Elementi sotto la diagonale
-                }
-            }
-        }
-    */
-    int m = 4;
-    int n = 4;
+    int m = 8;
+    int n = 8;
 
     Matrix A(m, n);
     if (rank == 0)
     {
-        for (size_t i = 0; i < m; i++)
+
+        A = Eigen::MatrixXd::Zero(m, n);
+        for (int i = 0; i < m; ++i)
         {
-            for (size_t j = 0; j < n; j++)
+            A(i, i) = 2.0; // Elementi diagonali
+            if (i < m - 1)
             {
-                A(i, j) = 4 + i - j;
+                A(i, i + 1) = -1.0; // Elementi sopra la diagonale
+                A(i + 1, i) = -1.0; // Elementi sotto la diagonale
             }
         }
     }
-    MPI_Barrier(MPI_COMM_WORLD);
-    MPI_Bcast(A.data(), 4 * 4, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    MPI_Barrier(MPI_COMM_WORLD);
 
-    if (rank == 0)
-    {
-        std::cout << "Inizio esecuzione" << std::endl;
-    }
-    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Bcast(A.data(), m * n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
     auto [Qgp, Rgp] = Givens_solve_mpi(A, rank, size);
 
@@ -287,8 +300,6 @@ int main(int argc, char **argv)
         std::cout << "R=" << std::endl;
         std::cout << Rgp << std::endl;
 
-        std::cout << "Q=" << std::endl;
-        std::cout << Qgp << std::endl;
     }
 
     MPI_Finalize();
