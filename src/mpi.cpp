@@ -115,6 +115,7 @@ std::tuple<Matrix, Matrix> Givens_solve_mpi(const Matrix &A, const int rank, con
     int syncflag = 0;
     MPI_Status status;
     int flag = 0;
+    int tmp = 0;
 
     /**
      * Start to iterate over A
@@ -132,6 +133,15 @@ std::tuple<Matrix, Matrix> Givens_solve_mpi(const Matrix &A, const int rank, con
             /**
              * Passed the MPI_Recv, the tmp_rank processor starts
              */
+            tmp = 0;
+            while (tmp_rank > size - 1 && tmp == 0)
+            {
+                MPI_Recv(&syncflag, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
+                tmp--;
+                MPI_Send(&tmp, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+                MPI_Recv(R.data(), m * n, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, &status);
+                MPI_Recv(Q.data(), m * m, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, &status);
+            }
 
             for (int i = m - 1; i > tmp_rank; i--)
             {
@@ -181,6 +191,7 @@ std::tuple<Matrix, Matrix> Givens_solve_mpi(const Matrix &A, const int rank, con
         int i, j, tmp;
         int count = 0;
         Vector rm_rank(size);
+
         for (int k = 0; k < size; k++)
         {
             rm_rank(k) = k;
@@ -203,25 +214,33 @@ std::tuple<Matrix, Matrix> Givens_solve_mpi(const Matrix &A, const int rank, con
                 if (rm_rank(l) != 0)
                 {
                     MPI_Recv(&i, 1, MPI_INT, l, 0, MPI_COMM_WORLD, &status);
-                    MPI_Recv(&j, 1, MPI_INT, l, 0, MPI_COMM_WORLD, &status);
-
-                    if (R(i, j) != 0)
+                    if (i >= 0)
                     {
-                        MPI_Recv(localR.data(), 2 * n, MPI_DOUBLE, l, 0, MPI_COMM_WORLD, &status);
-                        MPI_Recv(localQ.data(), 2 * m, MPI_DOUBLE, l, 0, MPI_COMM_WORLD, &status);
+                        MPI_Recv(&j, 1, MPI_INT, l, 0, MPI_COMM_WORLD, &status);
+                        std::cout.flush() << j << " lavora su -->" << i << " " << j << std::endl;
 
-                        for (int k = j; k < R.cols(); k++)
+                        if (R(i, j) != 0)
                         {
-                            R(i - 1, k) = localR(0, k);
-                            R(i, k) = localR(1, k);
+                            MPI_Recv(localR.data(), 2 * n, MPI_DOUBLE, l, 0, MPI_COMM_WORLD, &status);
+                            MPI_Recv(localQ.data(), 2 * m, MPI_DOUBLE, l, 0, MPI_COMM_WORLD, &status);
+
+                            for (int k = j; k < R.cols(); k++)
+                            {
+                                R(i - 1, k) = localR(0, k);
+                                R(i, k) = localR(1, k);
+                            }
+                            for (int k = j; k < Q.rows(); k++)
+                            {
+                                Q(k, i - 1) = localQ(k, 0);
+                                Q(k, i) = localQ(k, 1);
+                            }
                         }
-                        for (int k = j; k < Q.rows(); k++)
-                        {
-                            Q(k, i - 1) = localQ(k, 0);
-                            Q(k, i) = localQ(k, 1);
-                        }
+                        MPI_Recv(&flag, 1, MPI_INT, l, 0, MPI_COMM_WORLD, &status);
                     }
-                    MPI_Recv(&flag, 1, MPI_INT, l, 0, MPI_COMM_WORLD, &status);
+                    else
+                    {
+                        std::cout.flush() << j << " sono dentro" << std::endl;
+                    }
                     if (flag == 1)
                     {
                         count++;
@@ -241,6 +260,9 @@ std::tuple<Matrix, Matrix> Givens_solve_mpi(const Matrix &A, const int rank, con
                     MPI_Send(Q.data(), m * m, MPI_DOUBLE, l, 0, MPI_COMM_WORLD);
                 }
             }
+            std::cout.flush() << "R=" << std::endl;
+            std::cout.flush() << R << std::endl;
+            std::cout.flush() << "================================================================================" << std::endl;
         }
     }
 
@@ -272,20 +294,31 @@ int main(int argc, char **argv)
     int n = 8;
 
     Matrix A(m, n);
-    if (rank == 0)
-    {
+    A << 1, 2, 3, 4, 5, 6, 7, 8,
+        12, 3, 4, 5, 3, 24, 5, 6,
+        4, 34, 45, 2, 34, 32, 3, 4,
+        23, 34, 2, 3, 1, 1, 2, 43,
+        2, 2.4, 2.3, 43.2, 2, 3, 4, 2,
+        2, 3, 1, 4, 0, 4, 2, 1,
+        3, 4, 1, 2, 4, 122, 3, 4,
+        12, 34, 12, 34, 2, 4, 223, 2;
 
-        A = Eigen::MatrixXd::Zero(m, n);
-        for (int i = 0; i < m; ++i)
-        {
-            A(i, i) = 2.0; // Elementi diagonali
-            if (i < m - 1)
-            {
-                A(i, i + 1) = -1.0; // Elementi sopra la diagonale
-                A(i + 1, i) = -1.0; // Elementi sotto la diagonale
-            }
-        }
-    }
+    /*
+ if (rank == 0)
+ {
+
+     A = Eigen::MatrixXd::Zero(m, n);
+     for (int i = 0; i < m; ++i)
+     {
+         A(i, i) = 2.0; // Elementi diagonali
+         if (i < m - 1)
+         {
+             A(i, i + 1) = -1.0; // Elementi sopra la diagonale
+             A(i + 1, i) = -1.0; // Elementi sotto la diagonale
+         }
+     }
+ }
+ */
 
     MPI_Bcast(A.data(), m * n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
@@ -299,7 +332,6 @@ int main(int argc, char **argv)
     {
         std::cout << "R=" << std::endl;
         std::cout << Rgp << std::endl;
-
     }
 
     MPI_Finalize();
