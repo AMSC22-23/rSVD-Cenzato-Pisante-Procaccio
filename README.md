@@ -33,6 +33,7 @@ The test files can also be generated indipendently, in fact the makefile support
 + `make help`      (if for some reason you forget about them)
 
 Also each command supports the additional options `parallel=on` and `eigen=on` which respectively compile the program using OpenMp and the matrices provided by the [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page) library (make sure to have it installed!!).
+In addition, image compression command supports the additional option `RGB=on`, which computes the compression in RGB format and keeps the colours' information in the compressed image. If the option is not flagged, grayscale compression is automatically applied.
 
 ## RUNNING THE TESTS
 
@@ -97,6 +98,20 @@ The command to run the test is:
 ```
 
 It returns a matrix containing the first 50 principal components of the dataset. It also prints the variance explained by the 1-st eigenvalue and the time of execution of the PCA.
+
+# IMAGE COMPRESSION
+In this test, we performed the image compression of a png image in RGB format
+
+Such image, included in the data directory, is directly converted inside the imagecompr.cpp by using the stb library.
+Target rank can be added in the command. Compression rate is inversely proportional to the target rank.
+
+The command to run the test is:
+
+```
+./compression r
+```
+
+The test returns a compressed image in png format.
 
 # BENCHMARKS
 

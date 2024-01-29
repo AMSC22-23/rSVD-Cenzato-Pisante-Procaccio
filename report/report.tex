@@ -65,11 +65,6 @@
 \begin{document}
 \maketitle
 
-\begin{abstract}
-The report should contain a brief description of the numerical methodology and of the code organization. 
-The programming architectural choices should be explained as well as the main structure of the code. It should contain the description of some numerical experiment that highlight the effectiveness of the code. It should contain the instructions to run a test case and the expected results. 
-\end{abstract}
-
 \section{Introduction}
 SVD decomposes $A$ into three matrices, $U$, $\Sigma$, and $V$, ordered by their contributions to $A$. This ordering facilitates efficient approximation by retaining only the most significant components of these matrices.
 
@@ -824,16 +819,6 @@ The formula for how many iterations have to be performed is the following expone
 where \(i\) is the current dimension of the matrix, \(\text{{start}}\) is the initial dimension, \(\text{{end}}\) is the final dimension, and \(\tau\) is a constant decided differently for each operation.
 
 \textbf{Small note:} In the code, there is also a linear interpolator and a cubic interpolator, but the cubic does not work well, and the linear does not reflect well the difference in time/size with the matrix multiplication (since it grows as a cubic function).
-
-\subsection{For the Future}
-
-There are other possibilities for growing the project even more. Here are some ideas:
-
-\begin{itemize}
-    \item Doing tiling in matrix-matrix multiplications (or even using GPUs, with CUDA).
-    \item Completing the section on lazy evaluations by adding the lazy row-column product where the decision of storing it in a temporary or not is performed at compile time.
-    \item Introducing lazy evaluation with ranges: in this [article](https://gieseanw.wordpress.com/2019/10/20/we-dont-need-no-stinking-expression-templates/), there is an informal description of how we can perform lazy evaluation with one of the newest introductions in C++, the ranges. It shows also how to perform matrix-vector multiplication, but the matrix was stored in a 2D array. An interesting starting point would be the function \texttt{std::ranges::view::chunk} and \texttt{chunk\_view} (described [here](https://en.cppreference.com/w/cpp/ranges/chunk_view)) to split the 1D vector into chunks of equal size. However, this implementation requires C++ 23, which is only supported by the newest compiler versions, and we would need to change all the versions of our current compiler. I personally do not think that we can get any substantial improvement with respect to the expression templates implementation, but it can be very interesting to study a more "functional" and modern approach to the problem, since there is not a lot of literature on this topic yet.
-\end{itemize}
 
 
 \end{document}
