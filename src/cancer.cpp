@@ -17,13 +17,15 @@ int main()
     //std::vector<unsigned int> labels = readCSV_grp(ovariancancer_grp_path);
 
     APPLICATIONS obj;
+    Vector explained_variance = obj.explained_variance(A);
+    std::cout << "Explained variance 1-st eigenvalue = " << explained_variance(0,0) << std::endl;
 
     auto start = std::chrono::high_resolution_clock::now();
-    Matrix T = obj.pca(A, 50);
+    Matrix T = obj.pca(A, 20);
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> duration = end - start;
     exportmatrix(T,"T.txt");
-    std::cout << "Time of execution PCA: " << duration.count() << " s" << std::endl;
+    std::cout << "Time of execution PCA = " << duration.count() << " s" << std::endl;
 
     return 0;
 }

@@ -8,9 +8,9 @@ void exportmatrix(Matrix A, std::string outputFileName);
 
 int main(int argc, char **argv)
 {
-    int flag = (argc > 1) ? std::stoi(argv[1]) : 0;
+    bool exportmat = (argc > 1) ? (atoi(argv[1]) == 1) : false;
+    int flag = (argc > 2) ? std::stoi(argv[2]) : 0;
     // flag = 0: computes everything, 1: pm1 & pm2, 2: pm1 & rsvd, 3: pseudoinverse.
-    bool exportmat = false;
 
     /*const char* filePath;
     if (argc > 2) {
@@ -45,10 +45,10 @@ int main(int argc, char **argv)
 
     int m = 10, n = 10;
     // Check if command-line arguments are provided
-    if (argc > 2)
+    if (argc > 3)
     {
-        m = std::stoi(argv[2]);
-        n = std::stoi(argv[3]);
+        m = std::stoi(argv[3]);
+        n = std::stoi(argv[4]);
     }
     std::cout << "\nGaussian matrix " << m << " x " << n << std::endl;
 
@@ -87,7 +87,7 @@ int main(int argc, char **argv)
 
     if (!flag || flag == 2)
     {
-        int r = (argc > 4) ? std::stoi(argv[4]) : 5;
+        int r = (argc > 5) ? std::stoi(argv[5]) : 5;
         start = std::chrono::high_resolution_clock::now();
         auto [U_rsvd, s_rsvd, V_rsvd] = obj.rsvd(A, r, 0, 1);
         end = std::chrono::high_resolution_clock::now();

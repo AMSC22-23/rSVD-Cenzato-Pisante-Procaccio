@@ -40,8 +40,8 @@ def readmatrix(filename):
     in_file.close()
     return A
 
-A = readmatrix("../../A.txt")
-Ainv_mia = readmatrix("../../A_inv.txt")
+A = readmatrix("../src/A.txt")
+Ainv_mia = readmatrix("../src/A_inv.txt")
 A_inv = linalg.pinv(A)
 exportmatrix("A_inv_py.txt",A_inv)
 

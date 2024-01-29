@@ -4,6 +4,7 @@
 #include "svd.hpp"
 #include "include/stb_image.h"
 #include "include/stb_image_write.h"
+#include <numeric>
 
 class APPLICATIONS
 {
@@ -30,7 +31,7 @@ public:
             m = n;
             n = X.cols();
         }
-        //std::cout << X.rows() << " x " << X.cols() << std::endl;
+        // std::cout << X.rows() << " x " << X.cols() << std::endl;
 
         // Center X
 #pragma omp parallel for
@@ -47,10 +48,10 @@ public:
 
         // Compute rSVD
         auto [U, s, V] = obj.rsvd(X, r);
-        //exportmatrix(s, "s.txt");
+        // exportmatrix(s, "s.txt");
 
         // Compute Principal Components Matrix T.
-        if (m > n)
+        if (A.rows() > A.cols())
         {
 #ifdef EIGEN
             return U * s.asDiagonal();
@@ -68,6 +69,20 @@ public:
         {
             return U.transpose() * X;
         }
+    }
+
+    Vector explained_variance(const Matrix &A)
+    {
+        SVD svd;
+        auto [U, s, V] = svd.svd_with_PM(A.transpose());
+        std::inclusive_scan(s.data(), s.data() + s.rows(), s.data());
+       
+#ifdef EIGEN
+        return s / s(s.rows() - 1);
+#else
+        return s * (1 / s(s.rows() - 1, 0));
+
+#endif
     }
 
     Matrix image_compression(const stbi_uc *R, int channels, int channel, int Heigth, int Width, int r, int p)

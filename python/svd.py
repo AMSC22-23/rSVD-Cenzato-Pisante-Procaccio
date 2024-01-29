@@ -56,7 +56,7 @@ U,s,Vt=linalg.svd(A,full_matrices=False)
 
 s_mio=readmatrix("../src/s_pm.txt")
 print("Difference eigenvalues :")
-print(linalg.norm(s-s_mio))
+print(linalg.norm(s-s_mio)/shape(s)[0])
 
 # Print the results to a file
 # Split the filename to add the extensions
