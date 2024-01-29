@@ -8,6 +8,13 @@
 	Everything in this file is a test for the correct implementation of the class FullMatrix.
 	It can (and it should) be compiled indipendently from the main file.
 */
+
+#ifdef BYROWS
+using Matrix=FullMatrix<Real,ORDERING::ROWMAJOR>;
+#else
+using Matrix=FullMatrix<Real,ORDERING::COLMAJOR>;
+#endif
+
 int main(){
 
 	//Create the dimensions of the test matrix
@@ -22,19 +29,11 @@ int main(){
 
 	
 	//Create the test matrix of dimensions n x m
-	#ifdef BYROWS
-	FullMatrix<Real,ORDERING::ROWMAJOR> testMatrix=FullMatrix<Real,ORDERING::ROWMAJOR>::Zero(n,m);
-	FullMatrix<Real,ORDERING::ROWMAJOR> testMultMatrix(new_m-1, 1, 1.);
-	FullMatrix<Real,ORDERING::ROWMAJOR> testMultResult;
-	FullMatrix<Real,ORDERING::ROWMAJOR> testMatrixCopy;
-	FullMatrix<Real,ORDERING::ROWMAJOR> testMatrixAdd;
-	#else
-	FullMatrix<Real,ORDERING::COLMAJOR> testMatrix=FullMatrix<Real,ORDERING::COLMAJOR>::Zero(n,m);
-	FullMatrix<Real,ORDERING::COLMAJOR> testMultMatrix(new_m-1, 1, 1.);
-	FullMatrix<Real,ORDERING::COLMAJOR> testMultResult;
-	FullMatrix<Real,ORDERING::COLMAJOR> testMatrixCopy;
-	FullMatrix<Real,ORDERING::COLMAJOR> testMatrixAdd;
-	#endif
+	Matrix testMatrix=Matrix::Zero(n,m);
+	Matrix testMultMatrix(new_m-1, 1, 1.);
+	Matrix testMultResult;
+	Matrix testMatrixCopy;
+	Matrix testMatrixAdd;
 
 	std::cout<<"Executing tests on FullMatrix:"<<std::endl;
 	testMatrix.print(std::cout);
@@ -102,7 +101,7 @@ int main(){
 	#endif
 
 	//Create a vector for which the matrix multiplication is not valid
-	FullMatrix<Real,ORDERING::COLMAJOR> testVector(new_m-1,1,1.);
+	Matrix testVector(new_m-1,1,1.);
 	
 	/*
 	#ifdef VERBOSE
@@ -132,7 +131,7 @@ int main(){
 	#endif
 
 	std::cout<<"Test: Correctness of result in matrix-vector multiplication: ";
-	FullMatrix<Real,ORDERING::COLMAJOR> testResult=testMatrix*testVector;
+	Matrix testResult=testMatrix*testVector;
 	Real correctVal=new_m*(new_m-1)/2;
 	for(size_t i=0;i<testResult.rows();++i)
 		if(testResult[i]!=correctVal+i*new_m)
@@ -251,9 +250,9 @@ int main(){
 	std::cout<<correct<<std::endl;
 	correct=true;
 
-	//Now check the scale method
+	//Now check the overload of the operator for scaling
 	testMatrixCopy(0,0)=testMatrix(0,0);
-	testMatrixCopy.scale(scalar);
+	testMatrixCopy*=scalar;
 
 	#ifdef VERBOSE
 	std::cout<<std::endl;

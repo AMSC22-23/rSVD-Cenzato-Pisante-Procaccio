@@ -539,6 +539,26 @@ TODO: think more about this
 
 			return toReturn;
 		}
+		/*
+			Overload of the operator *= 
+		*/
+		friend FullMatrix& operator*=(FullMatrix& lhs, const Real scale){
+#pragma omp parallel for shared(lhs,scale)
+			for(size_t i=0;i<lhs.m_entries.size();++i)
+				lhs.m_entries[i]*=scale;
+
+			return lhs;
+		}
+		/*
+			Overload of the operator /= 
+		*/
+		friend FullMatrix& operator/=(FullMatrix& lhs, const Real scale){
+#pragma omp parallel for shared(lhs,scale)
+			for(size_t i=0;i<lhs.m_entries.size();++i)
+				lhs.m_entries[i]/=scale;
+
+			return lhs;
+		}
 
 		/*
 			 Method to access the number of rows of the matrix
@@ -703,14 +723,6 @@ Hyphothesis: col<m_cols && toInsert.size()<=m_rows
 			
 			return toReturn;
 		}
-		/*
-			 Method to multiply the current matrix by a constant
-		 */
-		void scale(const Real k){
-			for(size_t i=0;i<m_entries.size();++i)
-				m_entries[i]*=k;
-		}
-
 		/*
 			 Method for retrieving the Frobenius norm
 		 */
