@@ -228,10 +228,24 @@ Observing the scatterplots presented in Figures 2 and 3, it becomes evident that
 
 
 \section{Singular Value Decomposition}
-The SVD class contains different methods that can be used to perform the Singular Value Decomposition.
+Having explored the principles and applications of Principal Component Analysis (PCA) and Image Compression, we now turn our attention to the underlying mathematical technique : Singular Value Decomposition (SVD). It is a matrix factorization technique that decomposes a given matrix into three separate matrices, revealing essential information about the structure and properties of the original matrix.
+
+For a given matrix $A \in \mathbb{R}^{m \times n}$, the SVD factorization is expressed as:
+\begin{align*}
+    A & = U \Sigma V^T \\
+\end{align*}
+where:
+\begin{align*}
+    U & : \text{Left singular vectors matrix} \in \mathbb{R}^{m \times m} \\
+    \Sigma & : \text{semi-Diagonal matrix of singular values} \in \mathbb{R}^{m \times n} \\
+    V^T & : \text{Transpose of right singular vectors matrix} \in \mathbb{R}^{n \times n}
+\end{align*}
+
+The diagonal elements of $\Sigma$ represent the singular values, and the columns of $U$ and $V$ are the left and right singular vectors, respectively. Notably, SVD is applicable to any matrix, regardless of its size or properties.
+
 
 \subsection{SVD with Power Method}
-The SVD can be computed using the Power Method. This is an algorithm which converges to the eigenvector that corresponds to the maximal eigenvalue of the matrix taken into consideration.
+The SVD can be computed using the Power Method. The latter is an algorithm which converges to the eigenvector that corresponds to the maximal eigenvalue of the matrix taken into consideration.
 
 \vspace{\baselineskip}
     The pseudo-algorithm used to compute the SVD is the following:
@@ -349,6 +363,29 @@ However, this algorithm requires the computation of the matrix \(B = A^T \cdot A
 \end{algorithm}
 
    The resulting SVD is an approximation of the original matrix $A$, with only the first $r$ singular values and corresponding singular vectors computed.
+
+\subsection{Gaussian matrix}
+The \texttt{SVD::genmat} function generates a random matrix of dimensions $m \times n$ filled with values sampled from a standard normal distribution (with mean $0$ and standard deviation $1$). The function utilizes OpenMP for parallelization to enhance computational efficiency.
+
+\begin{itemize}
+    \item \textbf{Matrix Initialization:} The function initializes a matrix $M$ of size $m \times n$ to store the generated random values.
+    
+    \item \textbf{Parallelization with OpenMP:} The function utilizes OpenMP directives to parallelize the loop responsible for generating random values.
+    
+    \item \textbf{Thread-Specific Random Seeds:} Within the parallel section, each thread obtains a unique random seed by adding its thread rank to the value obtained from \texttt{std::random\_device}. This ensures that each thread generates distinct random values.
+\end{itemize}
+
+\subsubsection*{MPI Parallelized Matrix Generation}
+
+The \texttt{genmat} function employs MPI parallelization to generate a random matrix distributed among different processes. It calculates the distribution of rows among processes, and generates local matrices on each process. Random values are sampled from a standard normal distribution, and the local matrices are gathered to construct the global matrix.
+
+
+\subsubsection*{Comments}
+
+An observation from our experiments reveals that the MPI version outperformed the OpenMP implementation when dealing with large matrix dimensions, such as $5000 \times 5000$. However, it is noteworthy that our typical application scenarios involve smaller matrices, typically on the order of $1 \times 10^{-3}$.
+
+The parallelization choices were made to optimize the performance of the function in diverse computing environments. While the MPI version demonstrated superior efficiency with larger matrices, the OpenMP approach remains relevant for smaller matrices, balancing the trade-off between computational resources and scalability.
+
 
 \subsection{Results}
 Several tests were conducted to validate the efficiency and correctness of the proposed methods. The tolerance \(\epsilon\) was set to \(10^{-8}\), and the tests were performed on matrices of increasing size generated randomly within the range of -10 to 10.

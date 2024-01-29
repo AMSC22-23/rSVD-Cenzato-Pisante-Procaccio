@@ -77,12 +77,7 @@ public:
         auto [U, s, V] = svd.svd_with_PM(A.transpose());
         std::inclusive_scan(s.data(), s.data() + s.rows(), s.data());
        
-#ifdef EIGEN
-        return s / s(s.rows() - 1);
-#else
         return s * (1 / s(s.rows() - 1, 0));
-
-#endif
     }
 
     Matrix image_compression(const stbi_uc *R, int channels, int channel, int Heigth, int Width, int r, int p)
