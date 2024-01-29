@@ -53,9 +53,11 @@ The `SVD` test computes the Singular Value Decomposition of a matrix both using 
 
 The command to run it is:
 ```
-./svd [flag] [m] [n] [r]
+./svd [exportmat] [flag] [m] [n] [r]
 ```
-Where flag, m, n and r are optional:
+Where exportmat, flag, m, n and r are optional:
+
++ `exportmat` can be set to 1 in order to export the computed vectors containing the eigenvalues in the different methods (default is set to false which can be obtained by setting the variable to 0).
 
 + `flag` = 0 (which is the default): computes 2 algorithms that use the power method and the rSVD; `flag` = 1: computes PM1 and PM2; `flag` = 2: computes PM1 and rSVD; `flag` = 3: computes PM1 and pseudo-inverse using PM1; any other value computes only PM1.
 
@@ -94,7 +96,7 @@ The command to run the test is:
 ./pca
 ```
 
-It returns a matrix containing the first 50 principal components of the dataset.
+It returns a matrix containing the first 50 principal components of the dataset. It also prints the variance explained by the 1-st eigenvalue and the time of execution of the PCA.
 
 # BENCHMARKS
 
