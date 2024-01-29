@@ -6,7 +6,7 @@ In order to execute the files you need of course [Python](https://www.makeuseof.
 
 ### General format
 
-The format of the files should be a *.txt* file where the first line is the dimension of the matrix (**rows x cols**) and the columns are spaced using only a single ' '.
+The format of the files should be a *.txt* file where the first line is the dimension of the matrix (**rows x cols**) and the columns are spaced using only a single ' '. 
 
 ### Calculating SVD and QR
 
@@ -36,3 +36,14 @@ python python_test_complete.py test_matrix_1.txt test_matrix_2.txt
 
 It will print if the matrices are compatible (rows and columns are the same number) and for each row it prints the difference value by value.
 
+### Check svd
+This test is used to check the correctness of the svd algorithm using the power method. Before running this test, it must be runned the svd_test with the flag `exportmat = 1`. Then the command is:
+```
+python svd.py
+```
+
+### Check pseudoinverse
+This test is used to check the correctness of the computation of the pseudoinverse. Before running this test, it must be runned the svd_test with the flag `exportmat = 1` and `flag=3` in order to obtain the files needed. Then the command is:
+```
+python pseudoinv.py
+```

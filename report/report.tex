@@ -477,7 +477,37 @@ From these tests it can be seen that:
 
 \end{itemize}
 
+Additionally, from the depicted plot, it is evident that with an increment in target ranks, the error norm in the factorization of a 150 x 150 Gaussian random matrix, computed using the rSVD method, decreases. This observation aligns with expectations, as the execution time also proportionally increases.
 
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.55\linewidth]{rsvd.png}
+    \caption{\label{pca1}rSVD with incrementing target rank.}
+    \end{figure}
+
+
+    \subsection{Moore-Pensrose pseudoinverse}
+    The Moore-Penrose Pseudoinverse provides a generalization of the matrix inverse for non-square matrices or matrices that may not have a unique inverse (for example if they are not full rank).  
+    
+    Its computation uses the Singular Value Decomposition.
+    
+    \begin{algorithm}
+    \caption{Calculate Pseudoinverse}
+    \begin{algorithmic}[1]
+    \Function{pseudoinverse}{$A$}
+        \State \Comment{Perform Singular Value Decomposition on matrix $A$}
+        \State $(U, s, V) \gets \text{svd\_with\_PM}(A)$
+    
+        \For{$i \gets 0$ \textbf{to} $k-1$} \Comment{Number of singular values}
+            \State $s[i] \gets \frac{1}{s[i]}$  \Comment{Invert singular values}
+        \EndFor
+    
+        \State{Multiply inverted singular values with the transposed matrices}
+    \EndFunction
+    \end{algorithmic}
+    \end{algorithm}
+    
+    It's worth highlighting that with this algorithm, there is no need to verify whether the singular value is non-zero. This is because the Singular Value Decomposition (SVD) exclusively includes eigenvalues that are non-zero along with their associated eigenvectors.
 
 \section{QR Decomposition}
 

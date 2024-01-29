@@ -134,7 +134,6 @@ void exportmatrix(Matrix A, std::string outputFileName)
     std::ofstream outputFile(outputFileName);
     if (outputFile.is_open())
     {
-        outputFile << A.rows() << " " << A.cols() << std::endl;
         outputFile << A;
         std::cout << "Computed matrix has been written to " << outputFileName << std::endl;
         // Close the file

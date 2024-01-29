@@ -30,14 +30,13 @@ class SVD{
     /* Computes the Moore-Penrose pseudo-inverse of a matrix A (m x n) using SVD */
     Matrix pseudoinverse(const Matrix A){
         auto[U,s,V]=svd_with_PM(A);
-        size_t k =s.rows();        
-        for(size_t i=0; i<k; i++){ 
-            #ifdef EIGEN
-            s[i] = 1 / s[i];
-            #else
-            s(i,0) = 1 / s(i,0);         
-            #endif
+        if(s(0,0) == 0) {
+            Matrix a(1,1);
+            return a;
         }
+        size_t k =s.rows();        
+        for(size_t i=0; i<k; i++)
+            s(i,0) = 1 / s(i,0);         
         return mult_SVD(V,s,U);
     }
 
