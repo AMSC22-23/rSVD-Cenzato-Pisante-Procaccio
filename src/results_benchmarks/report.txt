@@ -173,3 +173,235 @@ There are other possibilities for growing even more the project , for instance I
 An interesting starting point would be the function std::ranges::view::chunk and chunk_view (described here: https://en.cppreference.com/w/cpp/ranges/chunk_view) to split the 1D vector in chunks of equal size.
 But this implementation requires C++ 23, which is only supported by the newest compiler versions, and we would need to change all the versions of our current compiler.
 I personally do not think that we can get any substantial improvement with respect to the expression templates implementation, but it can be very interesting to study a more “functional” and modern approach to the problem, since there is not a lot of literature on this topic yet.
+
+
+\documentclass{article}
+
+\usepackage{amsmath}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{listings}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{graphicx}
+\graphicspath{{images/}}
+\usepackage{subfigure}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx} %LaTeX package to import graphics
+\graphicspath{{images/}} %configuring the graphicx package
+\usepackage[export]{adjustbox}
+\usepackage{subfigure}
+\usepackage{amsmath}
+\newcommand\numberthis{\addtocounter{equation}{1}\tag{\theequation}}
+\DeclareMathOperator{\sign}{sign}
+\usepackage[a4paper, total={6in, 8in}]{geometry}
+
+\setcounter{section}{-1}
+
+% Define colors for code highlighting
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+% Define code listing style
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+% Set code listing style
+\lstset{style=mystyle}
+
+\geometry{a4paper, margin=1in}
+
+\begin{document}
+
+\title{QR Factorization Report}
+\author{Your Name}
+\date{\today}
+\maketitle
+
+
+\section{Introduction}
+
+QR factorization is a fundamental numerical technique used in linear algebra to decompose a matrix into the product of an orthogonal matrix and an upper triangular matrix. This factorization plays a crucial role in various applications, including solving systems of linear equations, least squares problems, and eigenvalue computations.
+
+The decomposition of a matrix $A$ into the product $A = QR$ involves obtaining an orthogonal matrix $Q$ and an upper triangular matrix $R$. The orthogonal matrix $Q$ captures the rotation and reflection components, while the upper triangular matrix $R$ contains the essential information about the original matrix.
+
+In this report, we delve into the QR factorization process, specifically focusing on two distinct algorithms: the Givens rotation and the Householder reflection. These algorithms provide numerical methods to transform a given matrix into its QR factorization, each with its unique approach to introducing zeros below the main diagonal.
+
+The Givens algorithm employs sequential rotations to eliminate elements below the diagonal, while the Householder algorithm uses successive reflections to achieve a similar result.
+
+In the subsequent sections, we provide an in-depth overview of our version of the Givens and Householder algorithms, discussing their implementation details, computational considerations, and performance characteristics.
+
+
+\section{Overview of Givens Algorithm}
+
+The Givens algorithm is a numerical technique used for QR factorization. The Givens rotation is employed to introduce zero elements below the diagonal of the matrix, gradually transforming it into its triangular form.
+\begin{algorithm}
+\caption{Givens QR Factorization}
+\begin{algorithmic}[1]
+\Procedure{GivensQR}{$A$}
+    \State $m, n \gets \text{dimensions of } A$
+    \State Initialize $Q$ as identity matrix
+    \State $R \gets A$
+    
+    \For{$j \gets 1$ \textbf{to} $n$}
+        \For{$i \gets m$ \textbf{downto} $j+1$}
+            \State Compute Givens rotation parameters $c, s$ for $R(i-1, j), R(i, j)$
+            \State Apply Givens rotation to update $R$ and $Q$
+        \EndFor
+    \EndFor
+    
+    \State \textbf{return} $Q, R$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Parallelization}
+
+
+\subsubsection{Givens Algorithm with OpenMP}
+
+The OpenMP implementation of the Givens algorithm effectively parallelizes computations across multiple threads. This approach involves parallelizing the outer loop over matrix columns (\(j\)), enabling concurrent computation on independent columns. Thread-specific variables, including \(c\), \(s\), \(a\), \(b\), and \(tmp\), are marked as private to ensure thread safety and prevent potential data races. The use of \texttt{\#pragma omp single} guarantees that critical initial calculations are executed by a single thread, avoiding race conditions. Atomic addition (\(tmp = 0.0;\)) is employed to prevent data races when updating shared variables within the parallel region. Computation on matrices \(Q\) and \(R\) is efficiently integrated within the parallel region, eliminating the need for additional synchronization mechanisms.
+
+\subsubsection{Givens Algorithm with MPI}
+
+The MPI implementation of the Givens algorithm adopts a distributed computing approach, distributing matrix columns across multiple processes. This is achieved by leveraging the message passing property of MPI. Each process iterates over different columns and starts executing only after the \((j-1)\)-th column has computed the \((m-1)\)-th and \((m-2)\)-th rows. This is shown in {figure}[h] .
+
+
+
+Synchronization of the computation involves exchanging flags (\texttt{syncflag}) to coordinate the execution among processes. The use of \texttt{MPI\_Scatterv} efficiently distributes portions of the original matrix (\(R\)) to each process. This operation is particularly effective in minimizing communication overhead and ensuring efficient data movement. Similarly, \texttt{MPI\_Gatherv} is employed to collect the results from each process and reconstruct the final matrix, completing the distributed computation.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\linewidth]{Applying-Givens-rotations-in-parallel.jpg}
+    \caption{Visualization of the MPI Givens algorithm.}
+    \label{fig:mpi_givens}
+\end{figure}
+
+
+
+\subsection{General Observations and Recommendations}
+
+Both implementations exhibit a noticeable speedup starting from an average matrix size of 100 when executed on a standard PC with the specifications attached at the end of the report.
+
+The MPI approach theoretically aims for a speedup of \( \frac{n}{2} \), although the actual achieved speedup is likely lower due to the substantial overhead introduced by message passing. Despite this, the MPI implementation demonstrates superior scalability compared to the OpenMP approach.
+
+Below are the presented results:
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\linewidth]{grafico.pdf}
+    \caption{Speedup comparison between MPI and OpenMP implementations.}
+    \label{fig:speedup_comparison}
+\end{figure}
+
+These results highlight a significant improvement in performance, particularly for larger matrix sizes. The MPI approach showcases a more scalable behavior, confirming its suitability for parallelizing the Givens algorithm.
+
+
+
+\subsection{Results and Performance}
+The implementation avoids explicitly constructing the Givens rotation matrix and directly computes the changes to matrices $Q$ and $R$ during each iteration. This approach can be computationally efficient, especially for large matrices.
+
+
+
+\section{Overview of Householder Algorithm}
+
+The Householder algorithm is another numerical technique used for QR factorization, a process that decomposes a matrix into the product of an orthogonal matrix (Q) and an upper triangular matrix (R). Similar to the Givens algorithm, the Householder transformation is employed to introduce zero elements below the diagonal of the matrix.
+
+In the implementation provided, the Householder algorithm is applied to a given matrix $A$ to obtain its QR factorization, where $Q$ is an orthogonal matrix and $R$ is an upper triangular matrix.
+
+\begin{algorithm}
+\caption{Householder QR Factorization}
+\begin{algorithmic}[1]
+\Procedure{HouseholderQR}{$A$}
+    \State $m, n \gets \text{dimensions of } A$
+    \State Initialize matrices $Q$ and $R$
+    \State $Q \gets I_m$ \tcp{Initialize $Q$ as identity matrix}
+    \State $R \gets A$
+    
+    \For{$j \gets 1$ \textbf{to} $\min(m, n)$}
+        \State Compute Householder vector $v$ from $R(j:m, j)$
+        \State Compute Householder transformation matrix $P$
+        \State Update $R$ and $Q$ using $P$
+    \EndFor
+    
+    \State \textbf{return} $Q, R$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+
+\subsection{Parallelization}
+The parallelized Householder QR factorization algorithm begins by initializing matrices for orthogonal transformations \([Q]\), rotation matrices \([P]\), and the input matrix \([R]\). It employs OpenMP parallelization to enhance efficiency, distributing the computation of vectors and matrices across multiple threads. The algorithm iteratively computes Householder vectors, transforming the input matrix into upper triangular form. The computed orthogonal transformations \([Q]\) and upper triangular matrix \([R]\) are updated concurrently within parallel sections, exploiting parallelism for accelerated computation. To improve numerical stability, the algorithm normalizes the Householder vectors and applies the transformations to the input matrix. Additionally, a parallel loop efficiently zeroes out the lower triangular portion of the resulting upper triangular matrix. The algorithm utilizes critical sections to ensure correct matrix updates within parallel regions.
+
+\subsection{General Observations and Recommendations}
+Such implementation exhibits a good speedup, as shown in the figure below.
+
+
+
+\section{Computational Considerations}
+One can assert that, in general, for dense matrices, it is advantageous to use the Householder algorithm for QR factorization. On the other hand, if the matrix to be factorized already has many zero diagonals below the main diagonal, then the Givens algorithm may be more convenient from a computational perspective. This is based on both the reduced computation time and the fewer number of operations performed. The choice between Householder and Givens algorithms is influenced by the matrix structure and the specific requirements of the computation. Householder transformations are preferred for their numerical stability and efficiency in handling dense matrices, while Givens rotations are advantageous when dealing with matrices exhibiting sparsity, particularly with many zero diagonals below the main diagonal. Choosing the Givens algorithm is advantageous for scenarios that demand sparsity preservation, numerical stability, and incremental updates, but careful consideration is necessary for optimal performance in specific problem contexts.
+
+
+\newpage
+
+\section*{Image Compression}
+\setcounter{section}{0}
+\section{Introduction}
+Images can be represented through three color channels: red, green, and blue, each as a $(m \times n)$ matrix with values ranging from 0 to 255. Alternatively, images can be in grayscale, where each pixel is represented by a single intensity value. In the context of compression, we will focus on compressing the matrices representing individual color channels.
+
+To compress a matrix $A$, we seek an approximation requiring significantly less storage space. Singular Value Decomposition (SVD) proves advantageous for this purpose. SVD decomposes $A$ into three matrices, $U$, $\Sigma$, and $V$, ordered by their contributions to $A$. This ordering facilitates efficient approximation by retaining only the most significant components of these matrices.
+
+For compression, a parameter $k$ is chosen to determine the number of singular values considered for the approximation. A higher $k$ improves approximation quality but also increases the data required for encoding. The compression process involves selecting only the first $k$ columns of matrices $U$ and $V$, and the upper-left $(k \times k)$ square of $\Sigma$, which contains the $k$ largest (and therefore most important) singular values. Additionally, the oversampling factor $p$ can be added to retrieve addiditional information. 
+
+It's worth noting that a similar approach can be employed for grayscale images, where the compression is achieved through the decomposition of a single intensity matrix. This versatility allows for an efficient compression strategy that adapts to both color and grayscale representations.
+
+\section{Overview of Image Compression algorithm}
+The C++ code utilizes Singular Value Decomposition (SVD) for image compression, setting parameters for rank ($r$) and oversampling ($p$). It loads a PNG image using the STB library, instantiates the `APPLICATIONS` class, and measures compression time. The code adapts to RGB or grayscale, applying SVD-based compression accordingly. After compression, a backward conversion restores the image. Key metrics like uncompressed size, compressed size, ratio, and duration are computed. The decompressed image is saved, and memory is freed. The pseudocode succinctly outlines these steps in the \texttt{main} function.
+\begin{algorithm}
+\caption{Main Function for Image Compression}
+\begin{algorithmic}[1]
+\Procedure{main}{}
+    \State Set compression parameters $r$ and $p$
+    \State Set input and output file paths
+    \State Load input image from file
+    \If{RGB image}
+        \For{each color channel}
+            \State Perform image compression using rSVD
+            \State Perform backward conversion to obtain decompressed image
+        \EndFor
+    \Else
+        \State Perform image compression using rSVD (grayscale)
+        \For{each color channel}
+            \State Perform backward conversion to obtain decompressed image
+        \EndFor
+    \EndIf
+    \State Save decompressed image to file
+    \State Free allocated memory
+    \State \textbf{return} 0
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\section{Testing and results}
+Testing was done for the nicest and most wellness picture in the entire world.
+
+\end{document}
