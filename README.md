@@ -103,7 +103,7 @@ It returns a matrix containing the first 50 principal components of the dataset.
 In this test, we performed the image compression of a png image in RGB format
 
 Such image, included in the data directory, is directly converted inside the imagecompr.cpp by using the stb library.
-Target rank can be added in the command. Compression rate is inversely proportional to the target rank.
+Target rank can be added in the command. Compression rate is inversely proportional to the target rank. If r, p are not specified, default r and p are used.
 
 The command to run the test is:
 
