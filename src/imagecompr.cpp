@@ -11,13 +11,14 @@
  *
  * return 0 if the program runs successfully, -1 on failure.
  */
-int main()
+int main(int argc, char **argv)
 {
     /**
      * DEfinition of the scale of compression
      */
-    int r = 3;
-    int p = 10;
+    int r = (argc >= 2) ? std::stoul(argv[1]) : 20;
+    int p = (argc >= 3) ? std::stoul(argv[2]) : 10;
+    
     /**
      * Upload the input image in png format and
      * set the output file image

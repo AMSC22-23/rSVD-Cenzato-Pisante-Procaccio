@@ -13,25 +13,13 @@
 \usepackage{listings}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
-\graphicspath{{images/}}
-\usepackage{subfigure}
 \usepackage[utf8]{inputenc}
 \usepackage{graphicx} %LaTeX package to import graphics
 \graphicspath{{images/}} %configuring the graphicx package
 \usepackage[export]{adjustbox}
-\usepackage{subfigure}
 \usepackage{subcaption}
 \newcommand\numberthis{\addtocounter{equation}{1}\tag{\theequation}}
 \DeclareMathOperator{\sign}{sign}
-\usepackage[a4paper, total={6in, 8in}]{geometry}
-
-\setcounter{section}{-1}
-
-% Define colors for code highlighting
-\definecolor{codegreen}{rgb}{0,0.6,0}
-\definecolor{codegray}{rgb}{0.5,0.5,0.5}
-\definecolor{codepurple}{rgb}{0.58,0,0.82}
-\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
 
 % Define code listing style
 \lstdefinestyle{mystyle}{
@@ -57,33 +45,54 @@
 \lstset{style=mystyle}
 
 \geometry{a4paper, margin=1in}
-\usepackage[colorlinks=true, allcolors=blue]{hyperref}
-
-\title{rSVD}
-\author{Cenzato, Pisante, Procaccio}
-
+\usepackage[colorlinks=true, allcolors=black]{hyperref}
 \begin{document}
-\maketitle
 
-\section{Introduction}
-SVD decomposes $A$ into three matrices, $U$, $\Sigma$, and $V$, ordered by their contributions to $A$. This ordering facilitates efficient approximation by retaining only the most significant components of these matrices.
+\title{rSVD and related Applications}
+\author{Cenzato, Pisante, Procaccio}
+\date{\today}
+\maketitle
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.4\linewidth]{20151029123608!Logo_Politecnico_Milano.png}
+\end{figure}
+\newpage
+
+
+\tableofcontents
+\newpage
+
+\section*{Introduction}
+
+This project delves into a comprehensive investigation at the convergence of Image Compression, Principal Component Analysis (PCA), Singular Value Decomposition (SVD), and QR Decomposition, utilizing the capabilities of the C++ programming language. This undertaking surpasses mere theoretical abstraction, involving the practical implementation of algorithms and the introduction of specialized data structures to amplify computational efficiency.
+
+This report begins with the description of the Image Compression Algorithm elucidating the theoretical foundations. The subsequent Testing and Results section systematically explores and substantiates claims with empirical evidence.
+
+Moving into the domain of Principal Component Analysis (PCA), an introductory discourse lays the groundwork, explaining PCA's role in dimensionality reduction. A meticulous Overview of PCA Algorithm follows, delving into the intricacies of the method, culminating in a presentation of practical insights derived from systematic Test Results.
+
+The academic trajectory extends to Singular Value Decomposition (SVD), where the robustness of the algorithm is demonstrated through the incorporation of the Power Method. A nuanced exploration of rSVD, the role of the Gaussian Matrix in SVD, and an analytical scrutiny of obtained Results collectively underscore the computational efficiency achieved. This section concludes with an examination of the Moore-Pensrose Pseudoinverse within the SVD framework.
+
+The exploration persists with an examination of QR Decomposition, commencing with a formal Overview of Givens Algorithm. This section includes a detailed exploration of parallelization strategies using OpenMP and MPI, complemented by methodical General Observations and Recommendations. Additionally, the discourse extends to the Householder Algorithm, elucidating parallelization strategies and expounding on pivotal Computational Considerations.
+
+The academic discourse concludes with an examination of the meticulously crafted Matrix Implementation, covering critical facets such as Transposition, Multiplication, and the strategic incorporation of Lazy Evaluation. Rigorous evaluation through systematic Benchmarks provides a quantitative lens into the computational efficiency of the custom matrix implementation.
 
 
 
 \newpage
-
+\setcounter{section}{0}
 \section{Image Compression}
 \subsection{Introduction}
+To compress a matrix $A$, we seek an approximation requiring significantly less storage space. Randomized Singular Value Decomposition (rSVD) proves advantageous for this purpose. SVD decomposes $A$ into three matrices, $U$, $\Sigma$, and $V$, ordered by their contributions to $A$. This ordering facilitates efficient approximation by retaining only the most significant components of these matrices.
+
+For compression, a parameter $k$ is chosen to determine the number of singular values considered for the approximation. A higher $k$ improves approximation quality but also increases the data required for encoding. The compression process involves selecting only the first $k$ columns of matrices $U$ and $V$, and the upper-left $(k \times k)$ square of $\Sigma$, which contains the $k$ largest (and therefore most important) singular values. Additionally, the oversampling factor $p$ can be added to retrieve addiditional information. 
+
 Images can be represented through three color channels: red, green, and blue, each as a $(m \times n)$ matrix with values ranging from 0 to 255. Alternatively, images can be in grayscale, where each pixel is represented by a single intensity value. In the context of compression, we will focus on compressing the matrices representing individual color channels.
-
-To compress a matrix $A$, we seek an approximation requiring significantly less storage space. Randomized Singular Value Decomposition (rSVD) proves advantageous for this purpose. 
-
-For compression, a parameter $k$ is chosen to determine the number of singular values considered for the approximation. A higher $k$ improves approximation quality but also increases the data required for encoding. Additionally, the oversampling factor $p$ can be added to retrieve addiditional information. 
 
 It's worth noting that a similar approach can be employed for grayscale images, where the compression is achieved through the decomposition of a single intensity matrix. This versatility allows for an efficient compression strategy that adapts to both color and grayscale representations.
 
+
 \subsection{Overview of Image Compression algorithm}
-The C++ code utilizes Singular Value Decomposition (SVD) for image compression, setting parameters for rank ($r$) and oversampling ($p$). It loads a PNG image using the STB library, instantiates the `APPLICATIONS` class, and measures compression time. The code adapts to RGB or grayscale, applying rSVD-based compression accordingly. After compression, a backward conversion restores the image. Key metrics like uncompressed size, compressed size, ratio, and duration are computed. The decompressed image is saved, and memory is freed. The pseudocode succinctly outlines these steps in the \texttt{main} function.
+The C++ code utilizes Singular Value Decomposition (SVD) for image compression, setting parameters for rank $r$ and oversampling $p$. It loads a PNG image using the STB library, instantiates the `APPLICATIONS` class, and measures compression time. The code adapts to RGB or grayscale, applying rSVD-based compression accordingly. After compression, a backward conversion restores the image. Key metrics like uncompressed size, compressed size, ratio, and duration are computed. The decompressed image is saved, and memory is freed. The pseudocode succinctly outlines these steps in the \texttt{main} function.
 \begin{algorithm}
 \caption{Main Function for Image Compression}
 \begin{algorithmic}[1]
@@ -108,46 +117,60 @@ The C++ code utilizes Singular Value Decomposition (SVD) for image compression, 
 \EndProcedure
 \end{algorithmic}
 \end{algorithm}
+In addition, such algorithm has been parallelized with openmp. In particular, the compression of the 3 colours is done in parallel. This provides a good speedup of the process.
 
 \subsection{Testing and results}
-Testing was done for the nicest and most wellness picture in the entire world.
-
-
+The compression testing was conducted on an input image Figure~\ref{fig:Original_image} in PNG format. The image underwent processing in both RGB and grayscale formats, yielding substantial results.
 \begin{figure}[h]
-  \centering
+    \centering
+    \includegraphics[width=0.4\linewidth]{luna_rossa.png}
+    \caption{Original image}
+    \label{fig:Original_image}
+\end{figure}
+In particular, the results are depicted in Figure~\ref{fig:group_of_four}. It is evident that the choice of the target rank has substantial implications. For a smaller value of \(r\), the compressed image exhibits a good approximation of the input image, placing a specific emphasis on key features such as the boat and sail shape, text on the boat, and the horizon. Additionally, the brightness of colors is well-preserved.
 
-  \begin{subfigure}{0.2\textwidth}
-    \includegraphics[width=\textwidth]{luna_rossa.png}
-    \caption{Immagine input}
-    \label{fig:sub1}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}{0.45\textwidth}
-    \includegraphics[width=\linewidth]{luna_rossa_out10010.png}
-    \caption{r = 100, p = 10}
-    \label{fig:sub2}
-  \end{subfigure}
+\begin{figure}
+    \centering
 
-  \vspace{\baselineskip} % Aggiunge uno spazio verticale tra le due coppie di immagini
+    \subfloat[r=100, p=10]{\includegraphics[width=0.35\textwidth]{luna_rossa_out10010}\label{fig:lr100}}
+    \hfill
+    \subfloat[r=50, p=10]{\includegraphics[width=0.35\textwidth]{luna_rossa_out5010.png}\label{fig:lr50}}
 
-  \begin{subfigure}{0.45\textwidth}
-    \includegraphics[width=\linewidth]{luna_rossa_out5010.png}
-    \caption{r = 50, p = 10}
-    \label{fig:sub3}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}{0.45\textwidth}
-    \includegraphics[width=\linewidth]{luna_rossa_out1210.png}
-    \caption{r = 12, p = 10}
-    \label{fig:sub4}
-  \end{subfigure}
+    \vspace{1em} % Spacing between the rows of images
 
-  \caption{Quattro immagini a due a due}
-  \label{fig:all}
+    \subfloat[r=12, p=10]{\includegraphics[width=0.35\textwidth]{luna_rossa_out1210.png}\label{fig:lr12}}
+    \hfill
+    \subfloat[r=2, p=10]{\includegraphics[width=0.35\textwidth]{luna_rossa_out0210.png}}\label{fig:lr02}
+
+    \caption{Results for different target ranks}
+    \label{fig:group_of_four}
 \end{figure}
 
 
+In addition the Figure~\ref{fig:variance} shows the cumulative variance with respect to the target rank. It's worth noticing that the first 20 components detain around 80\% of the total information.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.4\linewidth]{imagecomprvar.jpg}
+    \caption{Cumulative variance}
+    \label{fig:variance}
+\end{figure}
 
+It is essential to highlight that the algorithm has also been implemented for grayscaling. Specifically, grayscale values can be obtained by applying one of three available grayscaling methods within the dedicated function:
+\vspace{\baselineskip}
+
+\[
+\text{{grayscaleImage}}(i, j) = \frac{{0.21 \cdot \text{{red}} + 0.72 \cdot \text{{green}} + 0.07 \cdot \text{{blue}}}}{{255.}}
+\]
+
+\[
+\text{{grayscaleImage}}(i, j) = \frac{{\text{{red}} + \text{{green}} + \text{{blue}}}}{3 \cdot 255.}
+\]
+
+\[
+\text{{grayscaleImage}}(i, j) = \frac{{\text{{max}}(\text{{red}}, \text{{green}}, \text{{blue}}) + \text{{min}}(\text{{red}}, \text{{green}}, \text{{blue}})}}{2 \cdot 255.}
+\]
+
+\newpage
 
 \section{PCA}
 
@@ -195,46 +218,47 @@ Each column of the dataset represents measurements taken from a patient. There a
 Each row represents the ion intensity level at a specific mass-charge value indicated in MZ. There are 2000 mass-charge values, and each row represents the ion-intensity levels of the patients at that particular mass-charge value.
 
 \vspace{\baselineskip}
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.55\linewidth]{pca_explained_variance200.png}
+\caption{\label{fig:pca1}plot of the explained variance of the dataset.}
+\end{figure}
+
+\begin{figure}
+    \centering
+
+    \subfloat[r=100, p=10]{\includegraphics[width=0.4\textwidth]{pca_2scatterplot.png}\label{fig:sub1}}
+    \hfill
+    \subfloat[r=50, p=10]{\includegraphics[width=0.4\textwidth]{pca_3scatterplot.png}\label{fig:sub2}}
+\end{figure}
+
 This dataset has an extensive array of features, making a comprehensive analysis challenging. To address this complexity, we applied Principal Component Analysis (PCA).
 
 As illustrated in {figure} [h], the singular values exhibit a rapid decline. Moreover, we observe that the first three singular values explain nearly 90\% of the dataset's variance.
 
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.55\linewidth]{pca_explained_variance200.png}
-\caption{\label{pca1}plot of the explained variance of the dataset.}
-\end{figure}
 
-Observing the scatterplots presented in Figures 2 and 3, it becomes evident that a separation between patients with and without cancer is achieved by considering only the first two or three principal components. This highlights the effectiveness of dimensionality reduction through Principal Component Analysis (PCA) in elucidating patterns indicative of cancer presence in the dataset.
+Observing the scatterplots presented in Figures~\ref{fig:pca2} and \ref{fig:pca3}, it becomes evident that a separation between patients with and without cancer is achieved by considering only the first two or three principal components. This highlights the effectiveness of dimensionality reduction through Principal Component Analysis (PCA) in elucidating patterns indicative of cancer presence in the dataset.
 
-\begin{figure}
-\centering
-\includegraphics[width=0.35\linewidth]{pca_2scatterplot.png}
-\caption{\label{pca2}scatterplot of the first 2 principal components.}
-\end{figure}
 
-\begin{figure}
-\centering
-\includegraphics[width=0.35\linewidth]{pca_3scatterplot.png}
-\caption{\label{pca3}scatterplot of the first 3 principal components.}
-\end{figure}
 
+\newpage
 
 
 
 \section{Singular Value Decomposition}
 Having explored the principles and applications of Principal Component Analysis (PCA) and Image Compression, we now turn our attention to the underlying mathematical technique : Singular Value Decomposition (SVD). It is a matrix factorization technique that decomposes a given matrix into three separate matrices, revealing essential information about the structure and properties of the original matrix.
 
-For a given matrix $A \in \mathbb{R}^{m \times n}$, the SVD factorization is expressed as:
-\begin{align*}
+For a given matrix \( A \in \mathbb{R}^{m \times n} \), the SVD factorization is expressed as:
+
+\begin{align}
     A & = U \Sigma V^T \\
-\end{align*}
+\end{align}
 where:
-\begin{align*}
+\begin{align}
     U & : \text{Left singular vectors matrix} \in \mathbb{R}^{m \times m} \\
     \Sigma & : \text{semi-Diagonal matrix of singular values} \in \mathbb{R}^{m \times n} \\
     V^T & : \text{Transpose of right singular vectors matrix} \in \mathbb{R}^{n \times n}
-\end{align*}
+\end{align}
 
 The diagonal elements of $\Sigma$ represent the singular values, and the columns of $U$ and $V$ are the left and right singular vectors, respectively. Notably, SVD is applicable to any matrix, regardless of its size or properties.
 
@@ -508,6 +532,7 @@ Additionally, from the depicted plot, it is evident that with an increment in ta
     \end{algorithm}
     
     It's worth highlighting that with this algorithm, there is no need to verify whether the singular value is non-zero. This is because the Singular Value Decomposition (SVD) exclusively includes eigenvalues that are non-zero along with their associated eigenvectors.
+\newpage
 
 \section{QR Decomposition}
 
@@ -547,15 +572,13 @@ The Givens algorithm is a numerical technique used for QR factorization. The Giv
 
 \subsubsection{Givens Algorithm with OpenMP}
 
-The OpenMP implementation of the Givens algorithm effectively parallelizes computations across multiple threads. This approach involves parallelizing the outer loop over matrix columns (\(j\)), enabling concurrent computation on independent columns. Thread-specific variables, including \(c\), \(s\), \(a\), \(b\), and \(tmp\), are marked as private to ensure thread safety and prevent potential data races. The use of \texttt{\#pragma omp single} guarantees that critical initial calculations are executed by a single thread, avoiding race conditions. Atomic addition (\(tmp = 0.0;\)) is employed to prevent data races when updating shared variables within the parallel region. Computation on matrices \(Q\) and \(R\) is efficiently integrated within the parallel region, eliminating the need for additional synchronization mechanisms.
+The OpenMP implementation of the Givens algorithm effectively parallelizes computations across multiple threads. This approach involves parallelizing the outer loop over matrix columns (\(j\)), enabling concurrent computation on independent columns. Thread-specific variables, including \(c\), \(s\), \(a\), \(b\), and \(tmp\), are marked as private to ensure thread safety and prevent potential data races. The use of \texttt{\#pragma omp single} guarantees that critical initial calculations are executed by a single thread, avoiding race conditions. Computation on matrices \(Q\) and \(R\) is efficiently integrated within the parallel region, eliminating the need for additional synchronization mechanisms.
 
 \subsubsection{Givens Algorithm with MPI}
 
-The MPI implementation of the Givens algorithm adopts a distributed computing approach, distributing matrix columns across multiple processes. This is achieved by leveraging the message passing property of MPI. Each process iterates over different columns and starts executing only after the \((j-1)\)-th column has computed the \((m-1)\)-th and \((m-2)\)-th rows. This is shown in {figure}[h] .
+The MPI implementation of the Givens algorithm adopts a distributed computing approach, distributing matrix columns across multiple processes. This is achieved by leveraging the message passing property of MPI. Each process iterates over different columns and starts executing only after the \((j-1)\)-th column has computed the \((m-1)\)-th and \((m-2)\)-th rows. This is shown in figure~\ref{fig:mpi_givens}.
 
-
-
-Synchronization of the computation involves exchanging flags (\texttt{syncflag}) to coordinate the execution among processes. The use of \texttt{MPI\_Scatterv} efficiently distributes portions of the original matrix (\(R\)) to each process. This operation is particularly effective in minimizing communication overhead and ensuring efficient data movement. Similarly, \texttt{MPI\_Gatherv} is employed to collect the results from each process and reconstruct the final matrix, completing the distributed computation.
+Synchronization of the computation involves exchanging flags (\texttt{syncflag}) to coordinate the execution among processes. The use of \texttt{MPI\_Recv} and {MPI\_Send} between process 0 and the other processes distributes portions of the original matrix (\(R\)) and (\(Q\)) to each working process. This operation is particularly effective in terms of computation. However, the data movement is the main bottleneck of such algorithm.
 
 \begin{figure}[h]
     \centering
@@ -568,64 +591,117 @@ Synchronization of the computation involves exchanging flags (\texttt{syncflag})
 
 \subsubsection{General Observations and Recommendations}
 
-Both implementations exhibit a noticeable speedup starting from an average matrix size of 100 when executed on a standard PC with the specifications attached at the end of the report.
+The MPI approach theoretically aims for a speedup of \( \frac{n}{2} \), although the actual performance is hardly influenced by the data movement. This should be improved by avoiding the movement of the whole matrix between every processor.
 
-The MPI approach theoretically aims for a speedup of \( \frac{n}{2} \), although the actual achieved speedup is likely lower due to the substantial overhead introduced by message passing. Despite this, the MPI implementation demonstrates superior scalability compared to the OpenMP approach.
-
-Below are the presented results:
+Below in figure~\ref{fig:speedup_comparison} are the presented results:
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.8\linewidth]{grafico.pdf}
+    \includegraphics[width=0.5\linewidth]{mpi.pdf}
     \caption{Speedup comparison between MPI and OpenMP implementations.}
     \label{fig:speedup_comparison}
 \end{figure}
 
-These results highlight a significant improvement in performance, particularly for larger matrix sizes. The MPI approach showcases a more scalable behavior, confirming its suitability for parallelizing the Givens algorithm.
+These results don't highlight any significant improvement in performance, particularly for larger matrix sizes. The MPI approach showcases a bottleneck with respect to data movement, which we weren't able to fix in time.
 
 
 
-\subsubsection{Results and Performance}
-The implementation avoids explicitly constructing the Givens rotation matrix and directly computes the changes to matrices $Q$ and $R$ during each iteration. This approach can be computationally efficient, especially for large matrices.
 
 
 
 \subsection{Overview of Householder Algorithm}
 
-The Householder algorithm is another numerical technique used for QR factorization, a process that decomposes a matrix into the product of an orthogonal matrix (Q) and an upper triangular matrix (R). Similar to the Givens algorithm, the Householder transformation is employed to introduce zero elements below the diagonal of the matrix.
+The Householder algorithm is another numerical technique used for QR factorization, a process that decomposes a matrix into the product of an orthogonal matrix \(Q\) and an upper triangular matrix \(R\). Similar to the Givens algorithm, the Householder transformation is employed to introduce zero elements below the diagonal of the matrix.
 
-In the implementation provided, the Householder algorithm is applied to a given matrix $A$ to obtain its QR factorization, where $Q$ is an orthogonal matrix and $R$ is an upper triangular matrix.
+We provided two implementations, since our first implementation showd some low performances for bigger matrix. For this reason, we will discuss only the most performant implementation. All the results are showe at figure~\ref{fig:speedup_comparison_qr} .
+The implementation provided, the Householder algorithm is applied to a given matrix $A$ to obtain its QR factorization, where $Q$ is an orthogonal matrix and $R$ is an upper triangular matrix.
 
 \begin{algorithm}
-\caption{Householder QR Factorization}
+\caption{QR Decomposition with Householder Transformation}
 \begin{algorithmic}[1]
-\Procedure{HouseholderQR}{$A$}
-    \State $m, n \gets \text{dimensions of } A$
-    \State Initialize matrices $Q$ and $R$
-    \State $Q \gets I_m$ \tcp{Initialize $Q$ as identity matrix}
-    \State $R \gets A$
+\Function{lec18hqr1}{$A$}
+    \State $[m, n] \gets \text{size}(A)$
+    \State $Q \gets \text{eye}(m)$ \Comment{Initialize orthogonal transform}
+    \State $R \gets A$ \Comment{Initialize transformed matrix}
     
-    \For{$j \gets 1$ \textbf{to} $\min(m, n)$}
-        \State Compute Householder vector $v$ from $R(j:m, j)$
-        \State Compute Householder transformation matrix $P$
-        \State Update $R$ and $Q$ using $P$
+    \For{$j \gets 1$ \textbf{to} $n$}
+        \State \Comment{Find $H = I - \tau \cdot w \cdot w'$ to put zeros below $R(j, j)$}
+        \State $normx \gets \text{norm}(R(j{:}, j))$
+        \State $s \gets -\text{sign}(R(j, j))$
+        \State $u1 \gets R(j, j) - s \cdot normx$
+        \State $w \gets R(j{:}, j) / u1$
+        \State $w(1) \gets 1$
+        \State $\tau \gets -s \cdot u1 / normx$
+        
+        \State \Comment{Update $R$: $R \gets HR$, $Q$: $Q \gets QH$}
+        \State $R(j{:}, :) \gets R(j{:}, :) - (\tau \cdot w) \cdot (w^T \cdot R(j{:}, :))$
+        \State $Q(:, j{:}) \gets Q(:, j{:}) - (Q(:, j{:}) \cdot w) \cdot (\tau \cdot w^T)$
     \EndFor
     
-    \State \textbf{return} $Q, R$
-\EndProcedure
+    \State \textbf{return} $(Q, R)$
+\EndFunction
 \end{algorithmic}
 \end{algorithm}
 
+It should be noticed that such implementation avoids explicitly to construct the Givens rotation matrix and directly computes the changes to matrices $Q$ and $R$ during each iteration. This approach can be computationally efficient, especially for large matrices.
 
 \subsubsection{Parallelization}
-The parallelized Householder QR factorization algorithm begins by initializing matrices for orthogonal transformations \([Q]\), rotation matrices \([P]\), and the input matrix \([R]\). It employs OpenMP parallelization to enhance efficiency, distributing the computation of vectors and matrices across multiple threads. The algorithm iteratively computes Householder vectors, transforming the input matrix into upper triangular form. The computed orthogonal transformations \([Q]\) and upper triangular matrix \([R]\) are updated concurrently within parallel sections, exploiting parallelism for accelerated computation. To improve numerical stability, the algorithm normalizes the Householder vectors and applies the transformations to the input matrix. Additionally, a parallel loop efficiently zeroes out the lower triangular portion of the resulting upper triangular matrix. The algorithm utilizes critical sections to ensure correct matrix updates within parallel regions.
+The Householder algorithm was parallelized using OpenMP directives to improve its computational efficiency. The parallelization was strategically applied to different parts of the algorithm to exploit concurrent processing capabilities.
 
-Such implementation exhibits a good speedup, as shown in the figure below.
+In the section responsible for calculating the norm (normx), OpenMP parallelization was employed. This involved distributing the workload across multiple threads, each contributing to the summation of squared elements in the specified range of the matrix R. A reduction clause ensured the correct accumulation of the norm, and subsequent computations were encapsulated within a single section.
+
+The initialization of the vector w was parallelized, with individual threads assigned to compute distinct portions of the vector. Outside the loop, the value w(j, 0) was set independently within a single section.
+
+The computation of temporary vectors and matrices, such as \texttt{tmp\_R}, \texttt{R}, \texttt{tmp\_Q}, and \texttt{Q}, was parallelized using OpenMP directives. For instance, the calculation of the temporary vector \texttt{tmp\_R} was distributed among threads. Nested loops involved in updating matrices \texttt{R} and \texttt{Q} were parallelized using the \texttt{collapse(2)} clause, optimizing thread utilization.
+
+The final section involved resetting temporary vectors (\texttt{tmp\_R} and \texttt{tmp\_Q}) and the variable \texttt{normx}. This operation was enclosed in a single section to ensure that the reset was performed by a single thread, avoiding potential race conditions.
+
+
+The parallelization strategy aimed to maximize concurrency, efficiently utilizing available computational resources, and ultimately reducing the overall execution time of the Householder algorithm. Each pragma-annotated section denoted a specific part of the algorithm where parallel execution was strategically applied.
 
 
 \subsection{Computational Considerations}
-One can assert that, in general, for dense matrices, it is advantageous to use the Householder algorithm for QR factorization. On the other hand, if the matrix to be factorized already has many zero diagonals below the main diagonal, then the Givens algorithm may be more convenient from a computational perspective. This is based on both the reduced computation time and the fewer number of operations performed. The choice between Householder and Givens algorithms is influenced by the matrix structure and the specific requirements of the computation. Householder transformations are preferred for their numerical stability and efficiency in handling dense matrices, while Givens rotations are advantageous when dealing with matrices exhibiting sparsity, particularly with many zero diagonals below the main diagonal. Choosing the Givens algorithm is advantageous for scenarios that demand sparsity preservation, numerical stability, and incremental updates, but careful consideration is necessary for optimal performance in specific problem contexts.
+One can assert that, in general, for dense matrices, it is advantageous to use the Householder algorithm for QR factorization. On the other hand, if the matrix to be factorized already has many zero diagonals below the main diagonal, then the Givens algorithm may be more convenient from a computational perspective. This is based on both the reduced computation time and the fewer number of operations performed. The choice between Householder and Givens algorithms is influenced by the matrix structure and the specific requirements of the computation. Householder transformations are preferred for their numerical stability and efficiency in handling dense matrices, while Givens rotations are advantageous when dealing with matrices exhibiting sparsity, particularly with many zero diagonals below the main diagonal. This is shown in the figure~\ref{fig:sparsity_test}.
 
+
+\subsection{Results and Performance}
+Both algorithms respond well to the increase in size, with givens being a bit more scalable. Householder tends to be a bit quicker serially, which is in line with the theory.
+Speedup diagram looks to be valuable from sizes of around 150x150 due to the big overhead related to the creation of the threads.
+Finally, sparsity plays a big role in the performance of these algorithms. In particular, we can see in figure~\ref{fig:sparsity_test} how the performance of the Givens rotation algorithm increases proportionally to the zeros of the subdiagonal part of the input matrix. For dense matrix, depending on the input matrix, the two algorithm looked comparable as shown in figure~\ref{fig:timeQR}.
+
+
+    \begin{figure}[htbp]
+    \begin{minipage}{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{timeQR.pdf}
+        \caption{Time Duration with respect to size}
+        \label{fig:timeQR}
+    \end{minipage}%
+    \hfill
+    \begin{minipage}{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{SpeedUpQR.pdf}
+        \caption{Speedup with respect to size}
+        \label{fig:spQR}
+    \end{minipage}%
+    \hfill
+    \begin{minipage}{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{sparsity.pdf}
+        \caption{Time duration with mpi}
+        \label{fig:sparsity_test}
+    \end{minipage}
+\end{figure}
+
+
+
+
+
+
+
+
+    
+\newpage
 
 \section{MATRIX IMPLEMENTATION}
 
@@ -698,17 +774,14 @@ The implementation is different for row-major and col-major matrices, and for bo
 
 The results below show the performance of the matrix-matrix multiplication for increasing sizes of the matrices, both without compiler optimization and with the flags \texttt{"-O3 -march=native"} activated.
 
-\begin{figure}[htbp]
+\begin{figure}
     \centering
-    \includegraphics[width=0.4\textwidth]{matmult_noopt.png}
-    \caption{Photo of matmult\_noopt.png}
-\end{figure}
 
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.4\textwidth]{matmult_opt.png}
-    \caption{Photo of matmult\_opt.png}
-\end{figure}
+    \subfloat[Photo of sumlong\_nolazy.png]{\includegraphics[width=0.5\textwidth]{matmult_noopt.png}\label{fig:sub1}}
+    \hfill
+    \subfloat[Photo of sumlong\_lazy.png]{\includegraphics[width=0.5\textwidth]{matmult_opt.png}}\label{fig:sub4}
+
+    \end{figure}
 
 Here we can notice two main properties:
 
@@ -768,61 +841,41 @@ The tests in order to understand the improvements were performed on 5 different 
     \item \texttt{c = a * (a + b * 2.) * a.transpose(); // MIXED}
 \end{itemize}
 
-\begin{figure}[htbp]
+\begin{figure}
     \centering
-    \includegraphics[width=0.4\textwidth]{sumshort_lazy.png}
-    \caption{Photo of sumshort\_lazy.png}
-\end{figure}
 
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.4\textwidth]{sumshort_nolazy.png}
-    \caption{Photo of sumshort\_nolazy.png}
-\end{figure}
+    \subfloat[Photo of sumlong\_nolazy.png]{\includegraphics[width=0.5\textwidth]{sumlong_nolazy.png}\label{fig:sub1}}
+    \hfill
+    \subfloat[Photo of sumlong\_lazy.png]{\includegraphics[width=0.5\textwidth]{sumlong_lazy.png}}\label{fig:sub4}
+    
 
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.4\textwidth]{sumlong_lazy.png}
-    \caption{Photo of sumlong\_lazy.png}
-\end{figure}
+    \vspace{1em} % Spacing between the rows of images
 
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.4\textwidth]{sumlong_nolazy.png}
-    \caption{Photo of sumlong\_nolazy.png}
+    \subfloat[Photo of sumshort\_nolazy.png]{\includegraphics[width=0.5\textwidth]{sumshort_nolazy.png}\label{fig:sub3}}
+    \hfill
+    \subfloat[Photo of sumshort\_lazy.png]{\includegraphics[width=0.5\textwidth]{sumshort_lazy.png}\label{fig:sub2}}
+    \vspace{1em} % Spacing between the rows of images
+
+    \subfloat[Photo of prodshort_lazy.png]{\includegraphics[width=0.5\textwidth]{prodshort_lazy.png}\label{fig:sub3}}
+    \hfill
+    \subfloat[Photo of mixed_nolazy.png]{\includegraphics[width=0.5\textwidth]{mixed_nolazy.png}\label{fig:sub2}}
+    \vspace{1em} % Spacing between the rows of images
+
+    \subfloat[Photo of prodshort_lazy.png]{\includegraphics[width=0.5\textwidth]{prodshort_lazy.png}\label{fig:sub3}}
+    \hfill
+    \subfloat[Photo of mixed_lazy.png]{\includegraphics[width=0.5\textwidth]{prodshort_nolazy.png}\label{fig:sub2}}
+
+    \caption{Impact of lazy evaluation on matrix sum}
+    \label{fig:lazy_nolazy_prod}
 \end{figure}
 
 Here we can see that using lazy evaluation on the sum of matrices has a huge impact since for the long operation the speedup reaches 25x.
 
 Now since this operation is not very realistic, we can see that only with a small operation we get an approximate 2.5x speedup, and since is just 1 against the 9 sums of before, the results are expected (we create 9 temporaries and do a last assignment -> 10 operations in total).
 
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.4\textwidth]{prodshort_lazy.png}
-    \caption{Photo of prodshort\_lazy.png}
-\end{figure}
-
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.4\textwidth]{prodshort_nolazy.png}
-    \caption{Photo of prodshort\_nolazy.png}
-\end{figure}
-
 Also for the product of multiple scalars, we get a similar speedup, this time is actually higher since we have to do fewer accesses to the memory because we work only with one matrix.
 
 Interestingly, we can see that for the lazy product, an OpenMP implementation gives some performance increase, not much but it is still approximately a 1.1x speedup.
-
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.4\textwidth]{mixed_nolazy.png}
-    \caption{Photo of mixed\_nolazy.png}
-\end{figure}
-
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.4\textwidth]{mixed_lazy.png}
-    \caption{Photo of mixed\_lazy.png}
-\end{figure}
 
 For a mixed operation, we can see that the graph very much resembles the matrix-matrix multiplication, just with a lot more time since now we perform 3 multiplications.
 
@@ -844,7 +897,7 @@ Then the best-performing time (the fastest) is kept after all the tests have bee
 
 The formula for how many iterations have to be performed is the following exponential:
 
-\[\text{times} = \text{floor}(2. + (\text{end} – 2.) \times \exp\left(\]
+\[\text{times} = \text{floor}(2. + (\text{end} – 2.) \times \exp\left((\text{tau}/\text{end})\times(\text{start}-\text{i})))
 
 where \(i\) is the current dimension of the matrix, \(\text{{start}}\) is the initial dimension, \(\text{{end}}\) is the final dimension, and \(\tau\) is a constant decided differently for each operation.
 

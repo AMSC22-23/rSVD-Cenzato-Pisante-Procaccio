@@ -1,6 +1,6 @@
 #include "QR_Decomposition.hpp"
 
-std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve_parallel(Matrix A)
+std::tuple<Matrix, Matrix> QR_Decomposition::Givens_solve_parallel(const Matrix A)
 {
 
     int m = A.rows();
@@ -120,7 +120,7 @@ void setQR_for_svd_parallel(Matrix Q, Matrix R)
     }
 }
 
-std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve_parallel(const Matrix &A)
+std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve_2_parallel(const Matrix &A)
 {
     int m = A.rows();
     int n = A.cols();
@@ -179,7 +179,7 @@ std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve_parallel(const Ma
     return std::make_tuple(Q, R);
 }
 
-std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve_2_parallel(const Matrix &A)
+std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve_parallel(const Matrix &A)
 {
     int m = A.rows();
     int n = A.cols();
@@ -216,20 +216,13 @@ std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve_2_parallel(const 
 #pragma omp for
             for (int i = j + 1; i < m; i++)
             {
-#ifdef EIGEN
-                w(i) = R(i, j) / u1;
-#else
                 w(i, 0) = R(i, j) / u1;
-#endif
             }
 
 #pragma omp single
             {
-#ifdef EIGEN
-                w(j) = 1;
-#else
+
                 w(j, 0) = 1;
-#endif
                 tau = -s * u1 / normx;
             }
 /**
@@ -240,11 +233,8 @@ std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve_2_parallel(const 
             {
                 for (int i = j; i < m; i++)
                 {
-#ifdef EIGEN
-                    tmp_R(l) += w(i) * R(i, l);
-#else
+
                     tmp_R(l, 0) += w(i, 0) * R(i, l);
-#endif
                 }
             }
 
@@ -254,11 +244,8 @@ std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve_2_parallel(const 
 
                 for (int l = j; l < n; ++l)
                 {
-#ifdef EIGEN
-                    R(i, l) -= (tau * w(i)) * tmp_R(l);
-#else
+
                     R(i, l) -= (tau * w(i, 0)) * tmp_R(l, 0);
-#endif
                 }
             }
 
@@ -267,11 +254,8 @@ std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve_2_parallel(const 
             {
                 for (int l = j; l < m; ++l)
                 {
-#ifdef EIGEN
-                    tmp_Q(k) += Q(k, l) * w(l);
-#else
+
                     tmp_Q(k, 0) += Q(k, l) * w(l, 0);
-#endif
                 }
             }
 
@@ -280,11 +264,8 @@ std::tuple<Matrix, Matrix> QR_Decomposition::HouseHolder_solve_2_parallel(const 
             {
                 for (int l = j; l < m; ++l)
                 {
-#if EIGEN
-                    Q(k, l) -= tmp_Q(k) * w(l) * tau;
-#else
+
                     Q(k, l) -= tmp_Q(k, 0) * w(l, 0) * tau;
-#endif
                 }
             }
         }

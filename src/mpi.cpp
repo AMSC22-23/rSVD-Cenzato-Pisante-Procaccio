@@ -3,7 +3,6 @@
 #include <tuple>
 #include <iostream>
 #include <cstdlib>
-#include <ctime>
 #include <chrono>
 
 using Matrix = Eigen::MatrixXd;
@@ -297,68 +296,62 @@ std::tuple<Matrix, Matrix> Givens_solve_mpi(const Matrix &A, const int rank, con
 
 int main(int argc, char **argv)
 {
-    MPI_Init(&argc, &argv);
+        Vector dur_mpi(50);
+        MPI_Init(&argc, &argv);
+        int m = (argc >= 2) ? std::stoul(argv[1]) : 60;
 
-    int rank, size;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
+        int rank, size;
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-    int m = 500;
-    int n = 500;
-
-    Matrix A(m, n);
-    for (int i = 0; i < m; ++i)
-    {
-        for (int j = 0; j < n; ++j)
-        {
-            // Assegna un valore casuale compreso tra 1 e 100 alla cella (i, j)
-            A(i, j) = rand() % 100 + 1;
-        }
-    }
-
-    /*
- if (rank == 0)
- {
-
-     A = Eigen::MatrixXd::Zero(m, n);
-     for (int i = 0; i < m; ++i)
-     {
-         A(i, i) = 2.0; // Elementi diagonali
-         if (i < m - 1)
-         {
-             A(i, i + 1) = -1.0; // Elementi sopra la diagonale
-             A(i + 1, i) = -1.0; // Elementi sotto la diagonale
-         }
-     }
- }
- */
-
-    MPI_Bcast(A.data(), m * n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-
-    std::cout << "Partiamo" << std::endl;
-    auto start_givens = std::chrono::high_resolution_clock::now();
-
-    MPI_Barrier(MPI_COMM_WORLD);
-    auto [Qgp, Rgp] = Givens_solve_mpi(A, rank, size);
-
-    auto end_givens = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> duration_g;
-    duration_g = (end_givens - start_givens);
-
-    if (rank == 0)
-    {
-        std::cout << "durata:" << std::endl;
-        std::cout << duration_g.count() << std::endl;
-    }
-
-    /*
+        
+        int n = m;
+        Matrix A(m, n);
         if (rank == 0)
         {
-            std::cout << "R=" << std::endl;
-            std::cout << Rgp << std::endl;
-        }
-    */
 
-    MPI_Finalize();
+            for (int i = 0; i < m; ++i)
+            {
+                for (int j = 0; j < n; ++j)
+                {
+                    // Assegna un valore casuale compreso tra 1 e 100 alla cella (i, j)
+                    A(i, j) = rand() % 100 + 1;
+                }
+            }
+        }
+        /*
+     if (rank == 0)
+     {
+
+         A = Eigen::MatrixXd::Zero(m, n);
+         for (int i = 0; i < m; ++i)
+         {
+             A(i, i) = 2.0; // Elementi diagonali
+             if (i < m - 1)
+             {
+                 A(i, i + 1) = -1.0; // Elementi sopra la diagonale
+                 A(i + 1, i) = -1.0; // Elementi sotto la diagonale
+             }
+         }
+     }
+     */
+
+        MPI_Bcast(A.data(), m * n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+        auto start_givens = std::chrono::high_resolution_clock::now();
+
+        auto [Qgp, Rgp] = Givens_solve_mpi(A, rank, size);
+
+        auto end_givens = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> duration_g;
+        duration_g = (end_givens - start_givens);
+
+        if (rank == 0)
+        {
+            std::cout << duration_g.count() << std::endl;
+        }
+
+        MPI_Finalize();
+    
     return 0;
 }

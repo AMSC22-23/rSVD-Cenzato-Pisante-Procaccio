@@ -12,15 +12,15 @@ def readTXT(filename):
         for i in range(len(numbers)):
             T[count,i]=numbers[i]
         count=count+1
-    in_file.close();
-    return T;
+    in_file.close()
+    return T
 
-filename = "/home/ari/rSVD-Cenzato-Pisante-Procaccio/src/s_pm.txt"
-s_R = readTXT(filename)
-filename = "/home/ari/rSVD-Cenzato-Pisante-Procaccio/src/s_pm.txt"
-s_B = readTXT(filename)
-filenameR = "/home/ari/rSVD-Cenzato-Pisante-Procaccio/src/s_pm.txt"
-s_G = readTXT(filename)
+filename_R = "/home/giuseppepisante/HPC/AMSC-Proj/rSVD-Cenzato-Pisante-Procaccio/python/redS.txt"
+s_R = readTXT(filename_R)
+filename_G = "/home/giuseppepisante/HPC/AMSC-Proj/rSVD-Cenzato-Pisante-Procaccio/python/redG.txt"
+s_G = readTXT(filename_G)
+filename_B = "/home/giuseppepisante/HPC/AMSC-Proj/rSVD-Cenzato-Pisante-Procaccio/python/redB.txt"
+s_B = readTXT(filename_B)
 
 fig, axs =plt.subplots(2,3, figsize=(18,12))
 
@@ -48,5 +48,5 @@ axs[1][2].plot(np.cumsum(s_B**2)/np.sum(s_B**2), '*-')
 axs[1][2].set_title('explained variance of B') 
 plt.grid(True)
 
-output_path = '/home/ari/rSVD-Cenzato-Pisante-Procaccio/python/output/image-compression-variance.png'
+output_path = '/home/giuseppepisante/HPC/AMSC-Proj/rSVD-Cenzato-Pisante-Procaccio/python/compression_variance.txt'
 plt.savefig(output_path, bbox_inches='tight', pad_inches=0)
