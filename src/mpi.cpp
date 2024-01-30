@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <chrono>
+//TO RUN: mpic++ -I${mkEigenInc} mpi.cpp -o mpi -O3
 
 using Matrix = Eigen::MatrixXd;
 using Vector = Eigen::VectorXd;
