@@ -1,3 +1,4 @@
+//@note a note of stile. Normally you put first system headers and then yours.
 #include "fullMatrix.hpp"
 #include <chrono>
 #include <algorithm>

@@ -9,6 +9,7 @@
 class APPLICATIONS
 {
 public:
+//@note ths constuctor is identical to what the compiler would generate. So it is useless to define it.
     APPLICATIONS()
     {
     }
@@ -79,11 +80,14 @@ public:
        
         return s * (1 / s(s.rows() - 1, 0));
     }
-
+//@note try to avoid using pointers in C++ as much as possible. Use references instead.
     Matrix image_compression(const stbi_uc *R, int channels, int channel, int Heigth, int Width, int r, int p)
     {
         Matrix X;
-
+//@note try to avoid using cpp macros. Use C++ features instead.
+// for instance, you could have created an enumerator for the RGB and grayscale values.
+// and use a template taking the enumerato as a parameter.
+// Inside the code you could have then used if constexpr to choose the right path.
 #ifdef RGB
         X = ExctractComponentLuminosity(R, channels, channel, Heigth, Width);
 #else

@@ -8,6 +8,7 @@ public:
     /**
      * Build the constructor
     */
+   //#note The constructor is not needed here. The synthetic constructor provided by the compiler is enough.
     QR_Decomposition() {};
 
     /**
@@ -17,6 +18,8 @@ public:
     /**
      * Function HouseHolder_solve uses HouseHolder to find the QR factorization 
     */
+   //@note Since the types are the same you could have also used std::array<Matrix,2> instead of std::tuple<Matrix,Matrix>
+   // just a matter of taste.
     std::tuple<Matrix, Matrix> HouseHolder_solve(const Matrix A);
     std::tuple<Matrix, Matrix> HouseHolder_solve_2(Matrix A);
 
@@ -39,6 +42,7 @@ public:
     /**
      *I call the distructor
     */
+   //@note The destructor is not needed here. The synthetic destructor provided by the compiler is enough.
 ~QR_Decomposition() = default;
 
 private:

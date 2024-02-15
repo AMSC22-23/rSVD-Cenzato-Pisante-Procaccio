@@ -44,7 +44,7 @@ CPPFLAGS+=-DLAZY
 endif
 
 #Compiler version
-CXX=g++
+CXX=mpic++
 #Preprocessor flags
 CPPFLAGS+= -I./include 
 #Compiler flags

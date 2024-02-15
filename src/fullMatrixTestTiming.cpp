@@ -42,7 +42,7 @@ void constructHilbertMatrix(Matrix& h){
 }
 
 int main(int argc, char**argv){
-
+	//@note its ok, but I suggest to use tools like getpot to parse command line arguments
 	size_t m1=(argc>=2)?std::stoul(argv[1]):1000;
 	size_t n1=(argc>=3)?std::stoul(argv[2]):1000;
 	size_t m2=n1;

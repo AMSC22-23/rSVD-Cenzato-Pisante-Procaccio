@@ -23,6 +23,7 @@ int main(int argc, char **argv)
      * Upload the input image in png format and
      * set the output file image
      */
+    //@note try to avoid hardcoding file names. Have them as command line arguments or read from a file passed as command line argument
     const char *filename = "../data/luna_rossa.png";
     const char *outputFilename = "../data_output/luna_rossa_out.png";
 
