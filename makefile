@@ -76,7 +76,7 @@ all:
 	$(MAKE) fullMatrix
 	$(MAKE) compression
 	$(MAKE) pca
-	$(MAXE) benchmarks
+	$(MAKE) benchmarks
 
 clean: 
 	$(RM) $(BUILD)/*.o
